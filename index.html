@@ -1,0 +1,3320 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>船舶燃費・速力計算アプリ Pro | 海事教育ツール</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚓</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+/* ============================================================
+   CSS変数 & テーマ
+============================================================ */
+:root {
+    --primary-navy: #1e3a5f;
+    --secondary-blue: #2c5f8d;
+    --accent-cyan: #4a9eff;
+    --light-blue: #e3f2fd;
+    --white: #ffffff;
+    --gray-light: #f5f7fa;
+    --gray-medium: #c8d6e5;
+    --gray-dark: #576574;
+    --success-green: #2ecc71;
+    --warning-yellow: #f39c12;
+    --danger-red: #e74c3c;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+
+    --bg-main: #f0f4f8;
+    --bg-card: #ffffff;
+    --bg-header: linear-gradient(135deg, #1e3a5f 0%, #2c5f8d 100%);
+    --text-main: #2d3748;
+    --text-sub: #576574;
+    --border-color: #c8d6e5;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.18);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --font-main: 'Noto Sans JP', sans-serif;
+    --transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+[data-theme="dark"] {
+    --bg-main: #0f1923;
+    --bg-card: #1a2535;
+    --bg-header: linear-gradient(135deg, #0d1f36 0%, #162d4a 100%);
+    --text-main: #e2e8f0;
+    --text-sub: #94a3b8;
+    --border-color: #2d3f55;
+    --gray-light: #1e2d3f;
+    --gray-medium: #2d3f55;
+    --light-blue: #1a2d45;
+    --white: #1a2535;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   リセット & ベース
+============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: var(--font-main);
+    background: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.7;
+    min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* ============================================================
+   ヘッダー
+============================================================ */
+.app-header {
+    background: var(--bg-header);
+    color: #fff;
+    padding: 1rem 0;
+    box-shadow: var(--shadow-lg);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: var(--transition);
+}
+
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent-cyan), #2980b9);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(74,158,255,0.4);
+}
+
+.logo-text h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.logo-text .tagline {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    letter-spacing: 0.05em;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-badge {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.header-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--success-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.btn-icon-header {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.btn-icon-header:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-1px);
+}
+
+/* ============================================================
+   メインレイアウト
+============================================================ */
+.app-body {
+    display: flex;
+    gap: 0;
+    min-height: calc(100vh - 70px);
+}
+
+/* サイドバー */
+.sidebar {
+    width: 240px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 70px;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.sidebar-section {
+    padding: 0 1rem 1.5rem;
+}
+
+.sidebar-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-sub);
+    padding: 0 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    position: relative;
+}
+
+.nav-item i { width: 18px; text-align: center; font-size: 1rem; }
+
+.nav-item:hover {
+    background: var(--gray-light);
+    color: var(--primary-navy);
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, #e8f4fd, #d1eaf9);
+    color: var(--primary-navy);
+    font-weight: 700;
+}
+
+[data-theme="dark"] .nav-item.active {
+    background: linear-gradient(135deg, #1a3a5c, #0f2840);
+    color: var(--accent-cyan);
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 3px;
+    background: var(--accent-cyan);
+    border-radius: 0 3px 3px 0;
+}
+
+.nav-badge {
+    margin-left: auto;
+    background: var(--danger-red);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.sidebar-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.5rem 1rem 1rem;
+}
+
+/* メインコンテンツ */
+.main-content {
+    flex: 1;
+    padding: 2rem 1.5rem;
+    overflow-x: hidden;
+    min-width: 0;
+}
+
+/* タブコンテンツ */
+.tab-content {
+    display: none;
+    animation: fadeSlideIn 0.3s ease;
+}
+.tab-content.active { display: block; }
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   カード共通
+============================================================ */
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    transition: var(--transition);
+}
+
+.card:hover { box-shadow: var(--shadow-md); }
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 2px solid var(--gray-light);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary-navy);
+}
+
+[data-theme="dark"] .card-title { color: var(--accent-cyan); }
+
+.card-title i { color: var(--accent-cyan); }
+
+/* ============================================================
+   ページタイトル
+============================================================ */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-subtitle {
+    color: var(--text-sub);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ============================================================
+   計算モード選択
+============================================================ */
+.calc-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.calc-mode-btn {
+    background: var(--gray-light);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 1rem 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.calc-mode-btn .mode-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.calc-mode-btn .mode-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.calc-mode-btn .mode-unit {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    background: var(--gray-medium);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+}
+
+.calc-mode-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.calc-mode-btn.active {
+    border-color: var(--accent-cyan);
+    background: linear-gradient(135deg, #e8f4fd, #d1eaf9);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.15);
+}
+
+[data-theme="dark"] .calc-mode-btn.active {
+    background: linear-gradient(135deg, #1a3a5c, #0f2840);
+}
+
+/* 各モードのアイコン色 */
+.icon-efficiency { background: linear-gradient(135deg, #4a9eff, #2980b9); }
+.icon-speed      { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+.icon-range      { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.icon-time       { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.icon-fuel       { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.icon-cost       { background: linear-gradient(135deg, #1abc9c, #16a085); }
+.icon-co2        { background: linear-gradient(135deg, #576574, #2f3640); }
+
+/* ============================================================
+   計算フォーム
+============================================================ */
+.calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 900px) { .calc-grid { grid-template-columns: 1fr; } }
+
+.form-group { margin-bottom: 1.25rem; }
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.form-label i { color: var(--accent-cyan); font-size: 0.8rem; }
+
+.input-wrapper {
+    display: flex;
+    align-items: stretch;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+    background: var(--bg-card);
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.15);
+}
+
+.input-wrapper input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    font-size: 1rem;
+    font-family: var(--font-main);
+    background: transparent;
+    color: var(--text-main);
+    outline: none;
+    min-width: 0;
+}
+
+.unit-tag {
+    padding: 0 1rem;
+    background: var(--gray-light);
+    color: var(--primary-navy);
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    border-left: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .unit-tag { color: var(--accent-cyan); }
+
+.form-hint {
+    font-size: 0.78rem;
+    color: var(--text-sub);
+    margin-top: 0.35rem;
+}
+
+/* ============================================================
+   ボタン
+============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--success-green), #27ae60);
+    color: white;
+    box-shadow: 0 4px 12px rgba(46,204,113,0.3);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46,204,113,0.4);
+}
+
+.btn-secondary {
+    background: var(--gray-light);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+.btn-secondary:hover { background: var(--gray-medium); }
+
+.btn-blue {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--secondary-blue));
+    color: white;
+    box-shadow: 0 4px 12px rgba(74,158,255,0.3);
+}
+.btn-blue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74,158,255,0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-red), #c0392b);
+    color: white;
+}
+.btn-danger:hover { transform: translateY(-2px); }
+
+.btn-sm { padding: 0.4rem 0.875rem; font-size: 0.8rem; }
+.btn-lg { padding: 1rem 2rem; font-size: 1rem; width: 100%; }
+.btn-full { width: 100%; }
+
+/* ============================================================
+   結果表示
+============================================================ */
+.result-hero {
+    background: linear-gradient(135deg, var(--primary-navy), var(--secondary-blue));
+    color: white;
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.result-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -20%;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+.result-hero-label {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.result-hero-value {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+}
+
+.result-hero-unit {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
+
+.result-meta {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.result-meta-chip {
+    background: rgba(255,255,255,0.2);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* 計算ステップ */
+.calc-steps {
+    background: var(--gray-light);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.calc-step-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.625rem 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.calc-step-item:last-child { border-bottom: none; }
+
+.step-num {
+    width: 24px; height: 24px;
+    background: var(--accent-cyan);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.step-text {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+/* 追加情報カード */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.info-chip {
+    background: var(--gray-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.875rem;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.info-chip:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+.info-chip-label {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    margin-bottom: 0.35rem;
+}
+
+.info-chip-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-navy);
+}
+
+[data-theme="dark"] .info-chip-value { color: var(--accent-cyan); }
+
+/* 結果アクションバー */
+.result-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* ============================================================
+   計算履歴
+============================================================ */
+.history-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--gray-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.history-item:hover {
+    border-color: var(--accent-cyan);
+    background: var(--light-blue);
+}
+
+.history-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.history-info { flex: 1; min-width: 0; }
+.history-mode { font-size: 0.8rem; color: var(--text-sub); }
+.history-result { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+
+.history-time {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    white-space: nowrap;
+}
+
+.history-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+}
+
+.history-empty i { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.4; }
+
+/* ============================================================
+   単位変換ツール
+============================================================ */
+.converter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.converter-card {
+    background: var(--gray-light);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.converter-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.converter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 0.625rem;
+}
+
+.converter-row:last-child { margin-bottom: 0; }
+
+.converter-row input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    background: var(--bg-card);
+    color: var(--text-main);
+    outline: none;
+    transition: var(--transition);
+    min-width: 0;
+}
+
+.converter-row input:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(74,158,255,0.15);
+}
+
+.converter-row input[readonly] {
+    background: var(--light-blue);
+    color: var(--primary-navy);
+    font-weight: 600;
+}
+
+[data-theme="dark"] .converter-row input[readonly] {
+    background: #0f2840;
+    color: var(--accent-cyan);
+}
+
+.converter-unit {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-sub);
+    white-space: nowrap;
+    min-width: 50px;
+}
+
+.converter-arrow {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 0.8rem;
+    padding: 0.2rem;
+}
+
+/* ============================================================
+   演習問題
+============================================================ */
+.exercise-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.4rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text-sub);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: var(--font-main);
+}
+
+.filter-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+.filter-btn.active {
+    background: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+    color: white;
+}
+
+/* スコアボード */
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.score-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    text-align: center;
+}
+
+.score-num {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-label {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    margin-top: 0.25rem;
+}
+
+.score-correct { color: var(--success-green); }
+.score-incorrect { color: var(--danger-red); }
+.score-total { color: var(--accent-cyan); }
+
+/* 演習カード */
+.exercise-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+}
+
+.exercise-card.solved-correct { border-color: var(--success-green); }
+.exercise-card.solved-incorrect { border-color: var(--danger-red); }
+
+.exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.exercise-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    flex: 1;
+}
+
+.difficulty-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.diff-easy   { background: rgba(46,204,113,0.15); color: #27ae60; }
+.diff-medium { background: rgba(243,156,18,0.15); color: #e67e22; }
+.diff-hard   { background: rgba(231,76,60,0.15);  color: #c0392b; }
+
+.exercise-question {
+    background: var(--light-blue);
+    border-left: 4px solid var(--accent-cyan);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.exercise-question ul { padding-left: 1.25rem; margin: 0.5rem 0; }
+.exercise-question li { margin-bottom: 0.25rem; }
+
+.exercise-answer-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+    margin-bottom: 0.875rem;
+}
+
+.exercise-answer-row input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-family: var(--font-main);
+    background: var(--bg-card);
+    color: var(--text-main);
+    outline: none;
+    transition: var(--transition);
+}
+
+.exercise-answer-row input:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.15);
+}
+
+.exercise-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.exercise-feedback {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    display: none;
+}
+
+.exercise-feedback.show { display: block; animation: fadeSlideIn 0.3s ease; }
+.feedback-correct   { background: rgba(46,204,113,0.1); border: 1.5px solid var(--success-green); }
+.feedback-incorrect { background: rgba(231,76,60,0.1);  border: 1.5px solid var(--danger-red); }
+.feedback-hint      { background: rgba(243,156,18,0.1); border: 1.5px solid var(--warning-yellow); }
+.feedback-solution  { background: var(--light-blue);    border: 1.5px solid var(--accent-cyan); }
+
+.feedback-title {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+}
+
+/* ============================================================
+   シミュレーション
+============================================================ */
+.sim-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.sim-results { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+
+.comparison-table-wrap { overflow-x: auto; }
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.comparison-table th {
+    background: var(--primary-navy);
+    color: white;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    text-align: center;
+    position: sticky;
+    top: 0;
+}
+
+.comparison-table td {
+    padding: 0.625rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.comparison-table tr:nth-child(even) td { background: var(--gray-light); }
+.comparison-table tr:hover td { background: var(--light-blue); }
+
+.row-optimal td { background: rgba(46,204,113,0.12) !important; font-weight: 700; }
+.row-base    td { background: rgba(74,158,255,0.08) !important; }
+
+.table-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 0.3rem;
+}
+
+.badge-optimal { background: rgba(46,204,113,0.2); color: #27ae60; }
+.badge-base    { background: rgba(74,158,255,0.2); color: var(--secondary-blue); }
+
+/* 推奨カード */
+.recommendation-card {
+    background: linear-gradient(135deg, var(--primary-navy), var(--secondary-blue));
+    color: white;
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+}
+
+.recommendation-card h3 {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.rec-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+}
+
+.rec-stat {
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    text-align: center;
+    backdrop-filter: blur(5px);
+}
+
+.rec-stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+.rec-stat-label { font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem; }
+
+.rec-body {
+    background: rgba(255,255,255,0.1);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.rec-tip {
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius-md);
+    padding: 0.875rem 1.25rem;
+    margin-top: 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+}
+
+/* シミュレーション エクスポートボタン */
+.sim-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   用語辞典
+============================================================ */
+.glossary-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 1rem;
+    transition: var(--transition);
+}
+
+.search-box:focus-within {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.15);
+}
+
+.search-box i { color: var(--text-sub); font-size: 0.9rem; }
+
+.search-box input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    color: var(--text-main);
+    outline: none;
+}
+
+.glossary-stats {
+    font-size: 0.8rem;
+    color: var(--text-sub);
+    white-space: nowrap;
+    align-self: center;
+}
+
+.glossary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.glossary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.glossary-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--secondary-blue));
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.glossary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.glossary-card:hover::after { opacity: 1; }
+
+.glossary-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+}
+
+.glossary-term {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-navy);
+}
+
+[data-theme="dark"] .glossary-term { color: var(--accent-cyan); }
+
+.glossary-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+
+.btn-icon-sm {
+    width: 28px; height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    transition: var(--transition);
+    color: white;
+}
+
+.btn-icon-sm.edit   { background: var(--accent-cyan); }
+.btn-icon-sm.delete { background: var(--danger-red); }
+.btn-icon-sm:hover  { transform: scale(1.1); }
+
+.glossary-reading {
+    font-size: 0.8rem;
+    color: var(--text-sub);
+    margin-bottom: 0.625rem;
+    font-style: italic;
+}
+
+.glossary-definition {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text-main);
+    margin-bottom: 0.625rem;
+}
+
+.glossary-example {
+    background: var(--light-blue);
+    border-left: 3px solid var(--accent-cyan);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 0.8rem;
+    color: var(--text-sub);
+    line-height: 1.6;
+}
+
+.default-badge {
+    padding: 0.15rem 0.5rem;
+    background: var(--light-blue);
+    color: var(--secondary-blue);
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   モーダル
+============================================================ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease;
+    padding: 1rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-close {
+    width: 32px; height: 32px;
+    border: none;
+    background: var(--gray-light);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-sub);
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.modal-close:hover { background: var(--danger-red); color: white; }
+
+.modal-form-group { margin-bottom: 1.25rem; }
+
+.modal-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.4rem;
+}
+
+.modal-required { color: var(--danger-red); }
+
+.modal-input, .modal-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    background: var(--bg-card);
+    color: var(--text-main);
+    outline: none;
+    transition: var(--transition);
+}
+
+.modal-input:focus, .modal-textarea:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.15);
+}
+
+.modal-textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* ============================================================
+   トースト通知
+============================================================ */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 99999;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    animation: toastIn 0.3s ease;
+    max-width: 320px;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(40px); }
+}
+
+.toast-success { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+.toast-error   { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.toast-info    { background: linear-gradient(135deg, #4a9eff, #2980b9); }
+.toast-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+
+/* ============================================================
+   チャートコンテナ
+============================================================ */
+.chart-wrap {
+    position: relative;
+    height: 380px;
+}
+
+/* ============================================================
+   フッター
+============================================================ */
+.app-footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    padding: 1.25rem 0;
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 0.8rem;
+}
+
+/* ============================================================
+   スクロールバー
+============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-medium); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-dark); }
+
+/* ============================================================
+   レスポンシブ
+============================================================ */
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main-content { padding: 1rem; }
+    .result-hero-value { font-size: 2.2rem; }
+    .score-board { grid-template-columns: repeat(3, 1fr); }
+    .score-num { font-size: 1.5rem; }
+    .rec-stats { grid-template-columns: 1fr 1fr; }
+    .modal-box { padding: 1.5rem; }
+    .calc-mode-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+
+    .mobile-nav {
+        display: flex !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-nav { display: none !important; }
+}
+
+/* モバイルナビ */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    z-index: 500;
+    padding: 0.5rem 0 env(safe-area-inset-bottom, 0.5rem);
+}
+
+.mobile-nav-inner {
+    display: flex;
+    justify-content: space-around;
+}
+
+.mobile-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.4rem 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-sub);
+    font-size: 0.65rem;
+    font-family: var(--font-main);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.mobile-nav-btn i { font-size: 1.1rem; }
+.mobile-nav-btn.active { color: var(--accent-cyan); }
+
+@media (max-width: 768px) {
+    body { padding-bottom: 70px; }
+}
+
+/* ============================================================
+   ユーティリティ
+============================================================ */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.text-success { color: var(--success-green); }
+.text-danger  { color: var(--danger-red); }
+.text-warning { color: var(--warning-yellow); }
+.text-muted   { color: var(--text-sub); }
+.fw-bold      { font-weight: 700; }
+
+/* フォームの入力ヒント */
+.formula-box {
+    background: linear-gradient(135deg, #667eea15, #764ba215);
+    border: 1.5px dashed var(--accent-cyan);
+    border-radius: var(--radius-md);
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+}
+
+.formula-box strong { color: var(--primary-navy); }
+[data-theme="dark"] .formula-box strong { color: var(--accent-cyan); }
+
+/* ローディングスピナー */
+.spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* プログレスバー（スコア） */
+.progress-bar-wrap {
+    background: var(--gray-light);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--success-green));
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+    </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header class="app-header">
+    <div class="container">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">⚓</div>
+                <div class="logo-text">
+                    <h1>船舶燃費・速力計算アプリ <span style="font-size:0.7rem; opacity:0.7; font-weight:400;">Pro</span></h1>
+                    <div class="tagline">Marine Fuel & Speed Calculator</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="header-badge">
+                    <span class="dot"></span>
+                    海事教育ツール v2.0
+                </div>
+                <button class="btn-icon-header" id="theme-toggle" title="ダークモード切替">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn-icon-header" id="print-btn" title="印刷">
+                    <i class="fas fa-print"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ボディ -->
+<div class="app-body">
+
+    <!-- サイドバー -->
+    <nav class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">メインメニュー</div>
+            <button class="nav-item active" data-tab="calculator">
+                <i class="fas fa-calculator"></i> 基礎計算
+            </button>
+            <button class="nav-item" data-tab="exercises">
+                <i class="fas fa-book-open"></i> 演習問題
+                <span class="nav-badge" id="sidebar-score-badge">6</span>
+            </button>
+            <button class="nav-item" data-tab="simulation">
+                <i class="fas fa-chart-line"></i> シミュレーション
+            </button>
+            <button class="nav-item" data-tab="glossary">
+                <i class="fas fa-book"></i> 用語辞典
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">ツール</div>
+            <button class="nav-item" data-tab="history">
+                <i class="fas fa-history"></i> 計算履歴
+                <span class="nav-badge" id="history-count-badge">0</span>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">キーボードショートカット</div>
+            <div style="font-size:0.75rem; color:var(--text-sub); line-height:1.9; padding: 0 0.5rem;">
+                <div><kbd style="background:var(--gray-light);border:1px solid var(--border-color);padding:1px 5px;border-radius:3px;font-size:0.7rem;">Ctrl+1〜5</kbd> タブ切替</div>
+                <div><kbd style="background:var(--gray-light);border:1px solid var(--border-color);padding:1px 5px;border-radius:3px;font-size:0.7rem;">Enter</kbd> 計算実行</div>
+                <div><kbd style="background:var(--gray-light);border:1px solid var(--border-color);padding:1px 5px;border-radius:3px;font-size:0.7rem;">Ctrl+D</kbd> ダークモード</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+
+        <!-- ============ 基礎計算タブ ============ -->
+        <div id="calculator" class="tab-content active">
+            <div class="page-header">
+                <div class="page-title"><i class="fas fa-calculator" style="color:var(--accent-cyan)"></i> 基礎計算</div>
+                <div class="page-subtitle">計算モードを選択して数値を入力してください</div>
+            </div>
+
+            <!-- モード選択 -->
+            <div class="card mb-2">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-list-ul"></i> 計算モード選択</div>
+                </div>
+                <div class="calc-mode-grid">
+                    <button class="calc-mode-btn active" data-mode="fuel-efficiency">
+                        <div class="mode-icon icon-efficiency"><i class="fas fa-chart-line"></i></div>
+                        <div class="mode-name">燃料消費率</div>
+                        <div class="mode-unit">NM/kg</div>
+                    </button>
+                    <button class="calc-mode-btn" data-mode="speed">
+                        <div class="mode-icon icon-speed"><i class="fas fa-tachometer-alt"></i></div>
+                        <div class="mode-name">速力</div>
+                        <div class="mode-unit">knot</div>
+                    </button>
+                    <button class="calc-mode-btn" data-mode="range">
+                        <div class="mode-icon icon-range"><i class="fas fa-route"></i></div>
+                        <div class="mode-name">航続距離</div>
+                        <div class="mode-unit">NM</div>
+                    </button>
+                    <button class="calc-mode-btn" data-mode="time">
+                        <div class="mode-icon icon-time"><i class="fas fa-clock"></i></div>
+                        <div class="mode-name">航海時間</div>
+                        <div class="mode-unit">hour</div>
+                    </button>
+                    <button class="calc-mode-btn" data-mode="fuel-consumption">
+                        <div class="mode-icon icon-fuel"><i class="fas fa-gas-pump"></i></div>
+                        <div class="mode-name">燃料消費量</div>
+                        <div class="mode-unit">kg</div>
+                    </button>
+                    <button class="calc-mode-btn" data-mode="fuel-cost">
+                        <div class="mode-icon icon-cost"><i class="fas fa-yen-sign"></i></div>
+                        <div class="mode-name">燃料コスト</div>
+                        <div class="mode-unit">円</div>
+                    </button>
+                    <button class="calc-mode-btn" data-mode="co2">
+                        <div class="mode-icon icon-co2"><i class="fas fa-leaf"></i></div>
+                        <div class="mode-name">CO2排出量</div>
+                        <div class="mode-unit">kg-CO2</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 計算フォーム + 結果 -->
+            <div class="calc-grid">
+                <!-- フォーム -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title" id="calc-mode-title">
+                            <i class="fas fa-chart-line"></i> 燃料消費率を計算
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="clear-inputs-btn">
+                            <i class="fas fa-eraser"></i> クリア
+                        </button>
+                    </div>
+                    <div class="formula-box" id="formula-box">
+                        <strong>計算式:</strong> 燃料消費率 = 航行距離 ÷ 燃料消費量
+                    </div>
+                    <div id="calc-form-container"></div>
+                    <button class="btn btn-primary btn-lg mt-2" id="calculate-btn">
+                        <i class="fas fa-equals"></i> 計算実行
+                    </button>
+                </div>
+
+                <!-- 結果 -->
+                <div class="card" id="result-card" style="display:none;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-check-circle"></i> 計算結果</div>
+                        <div style="display:flex;gap:0.4rem;">
+                            <button class="btn btn-secondary btn-sm" id="copy-result-btn" title="結果をコピー">
+                                <i class="fas fa-copy"></i> コピー
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-hero" id="result-hero"></div>
+                    <div class="card-title mb-1 mt-2" style="font-size:0.875rem;">
+                        <i class="fas fa-list-ul"></i> 計算過程
+                    </div>
+                    <div class="calc-steps" id="calc-steps"></div>
+                    <div class="card-title mb-1 mt-2" style="font-size:0.875rem;">
+                        <i class="fas fa-info-circle"></i> 追加情報
+                    </div>
+                    <div class="info-grid" id="info-grid"></div>
+                    <div class="result-actions">
+                        <button class="btn btn-secondary btn-sm" id="add-to-history-btn">
+                            <i class="fas fa-save"></i> 履歴に保存
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="share-result-btn">
+                            <i class="fas fa-share-alt"></i> 結果を共有
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 単位変換ツール -->
+            <div class="card mt-2">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-exchange-alt"></i> リアルタイム単位変換</div>
+                    <span style="font-size:0.8rem;color:var(--text-sub);">双方向対応</span>
+                </div>
+                <div class="converter-grid">
+                    <!-- 速力 -->
+                    <div class="converter-card">
+                        <div class="converter-title"><i class="fas fa-tachometer-alt" style="color:var(--success-green)"></i> 速力変換</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-knot" placeholder="ノット" step="0.01" min="0">
+                            <span class="converter-unit">knot</span>
+                        </div>
+                        <div class="converter-arrow">⇅</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-kmh" placeholder="km/h" step="0.01" min="0">
+                            <span class="converter-unit">km/h</span>
+                        </div>
+                        <div class="converter-arrow">⇅</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-ms" placeholder="m/s" step="0.001" min="0">
+                            <span class="converter-unit">m/s</span>
+                        </div>
+                    </div>
+                    <!-- 距離 -->
+                    <div class="converter-card">
+                        <div class="converter-title"><i class="fas fa-route" style="color:var(--warning-yellow)"></i> 距離変換</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-nm" placeholder="海里" step="0.01" min="0">
+                            <span class="converter-unit">NM</span>
+                        </div>
+                        <div class="converter-arrow">⇅</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-km" placeholder="キロメートル" step="0.01" min="0">
+                            <span class="converter-unit">km</span>
+                        </div>
+                        <div class="converter-arrow">⇅</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-mile" placeholder="マイル" step="0.01" min="0">
+                            <span class="converter-unit">mi</span>
+                        </div>
+                    </div>
+                    <!-- 重量 -->
+                    <div class="converter-card">
+                        <div class="converter-title"><i class="fas fa-weight" style="color:var(--purple)"></i> 重量変換</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-kg" placeholder="キログラム" step="0.001" min="0">
+                            <span class="converter-unit">kg</span>
+                        </div>
+                        <div class="converter-arrow">⇅</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-ton" placeholder="メトリックトン" step="0.000001" min="0">
+                            <span class="converter-unit">MT</span>
+                        </div>
+                        <div class="converter-arrow">⇅</div>
+                        <div class="converter-row">
+                            <input type="number" id="conv-lton" placeholder="長トン" step="0.000001" min="0">
+                            <span class="converter-unit">LT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 演習問題タブ ============ -->
+        <div id="exercises" class="tab-content">
+            <div class="page-header">
+                <div class="page-title"><i class="fas fa-book-open" style="color:var(--accent-cyan)"></i> 実践演習問題</div>
+                <div class="page-subtitle">計算式を理解しながら実際の問題を解いてみましょう</div>
+            </div>
+
+            <!-- スコアボード -->
+            <div class="card mb-2">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-trophy"></i> 学習進捗</div>
+                    <button class="btn btn-secondary btn-sm" id="reset-score-btn">
+                        <i class="fas fa-redo"></i> リセット
+                    </button>
+                </div>
+                <div class="score-board">
+                    <div class="score-item">
+                        <div class="score-num score-correct" id="score-correct">0</div>
+                        <div class="score-label">正解</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-num score-incorrect" id="score-incorrect">0</div>
+                        <div class="score-label">不正解</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-num score-total" id="score-total">0</div>
+                        <div class="score-label">回答数</div>
+                    </div>
+                </div>
+                <div style="padding:0 0.5rem;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-sub);margin-bottom:0.25rem;">
+                        <span>正答率</span>
+                        <span id="score-rate">—</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- フィルター -->
+            <div class="exercise-filters">
+                <button class="filter-btn active" data-filter="all">すべて</button>
+                <button class="filter-btn" data-filter="easy">🟢 初級</button>
+                <button class="filter-btn" data-filter="medium">🟡 中級</button>
+                <button class="filter-btn" data-filter="hard">🔴 上級</button>
+                <button class="filter-btn" data-filter="unsolved">未解答</button>
+            </div>
+
+            <div id="exercise-list"></div>
+        </div>
+
+        <!-- ============ シミュレーションタブ ============ -->
+        <div id="simulation" class="tab-content">
+            <div class="page-header">
+                <div class="page-title"><i class="fas fa-chart-line" style="color:var(--accent-cyan)"></i> 速力別シミュレーション</div>
+                <div class="page-subtitle">速力を変えた場合の燃料・時間・コストを比較分析します</div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-sliders-h"></i> シミュレーション条件</div>
+                </div>
+                <div class="sim-form-grid">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-map-marked-alt"></i> 航行距離</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sim-distance" value="2900" min="1" step="1">
+                            <span class="unit-tag">NM</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-tachometer-alt"></i> 基準速力</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sim-base-speed" value="15" min="1" step="0.5">
+                            <span class="unit-tag">knot</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-gas-pump"></i> 基準燃費（基準速力時）</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sim-base-efficiency" value="0.25" min="0.01" step="0.01">
+                            <span class="unit-tag">NM/kg</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-yen-sign"></i> 燃料単価</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sim-fuel-price" value="150" min="1" step="1">
+                            <span class="unit-tag">円/kg</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-clock"></i> 時間価値</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sim-time-value" value="10000" min="0" step="1000">
+                            <span class="unit-tag">円/h</span>
+                        </div>
+                        <div class="form-hint">1時間の遅延コスト（機会費用）</div>
+                    </div>
+                    <div class="form-group" style="align-self:flex-end;">
+                        <button class="btn btn-primary btn-full" id="simulate-btn">
+                            <i class="fas fa-play"></i> シミュレーション実行
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sim-results-wrap" style="display:none;">
+                <div class="sim-results">
+                    <!-- 推奨カード -->
+                    <div class="recommendation-card" id="recommendation"></div>
+
+                    <!-- 表 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-table"></i> 速力別比較表</div>
+                            <div class="sim-actions">
+                                <button class="btn btn-secondary btn-sm" id="export-csv-btn">
+                                    <i class="fas fa-file-csv"></i> CSV出力
+                                </button>
+                                <button class="btn btn-secondary btn-sm" id="export-json-btn">
+                                    <i class="fas fa-file-code"></i> JSON出力
+                                </button>
+                            </div>
+                        </div>
+                        <div class="comparison-table-wrap" id="comparison-table-wrap"></div>
+                    </div>
+
+                    <!-- グラフ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-chart-bar"></i> グラフ分析</div>
+                            <div style="display:flex;gap:0.4rem;">
+                                <button class="btn btn-secondary btn-sm chart-type-btn active" data-type="line">折れ線</button>
+                                <button class="btn btn-secondary btn-sm chart-type-btn" data-type="bar">棒グラフ</button>
+                            </div>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="comparison-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 用語辞典タブ ============ -->
+        <div id="glossary" class="tab-content">
+            <div class="page-header">
+                <div class="page-title"><i class="fas fa-book" style="color:var(--accent-cyan)"></i> 海事用語辞典</div>
+                <div class="page-subtitle">海事・燃費関連の専門用語を検索・管理できます</div>
+            </div>
+
+            <div class="glossary-toolbar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="glossary-search" placeholder="用語を検索…">
+                </div>
+                <div class="glossary-stats" id="glossary-stats">読み込み中…</div>
+                <button class="btn btn-primary btn-sm" id="add-term-btn">
+                    <i class="fas fa-plus"></i> 用語を追加
+                </button>
+            </div>
+            <div class="glossary-grid" id="glossary-grid"></div>
+        </div>
+
+        <!-- ============ 計算履歴タブ ============ -->
+        <div id="history" class="tab-content">
+            <div class="page-header">
+                <div class="page-title"><i class="fas fa-history" style="color:var(--accent-cyan)"></i> 計算履歴</div>
+                <div class="page-subtitle">過去の計算結果を確認・再利用できます</div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-list"></i> 履歴一覧</div>
+                    <button class="btn btn-danger btn-sm" id="clear-history-btn">
+                        <i class="fas fa-trash"></i> 全削除
+                    </button>
+                </div>
+                <div class="history-list" id="history-list">
+                    <div class="history-empty">
+                        <i class="fas fa-inbox"></i>
+                        計算履歴がありません。<br>計算結果を「履歴に保存」から追加できます。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- モバイルナビ -->
+<nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+        <button class="mobile-nav-btn active" data-tab="calculator"><i class="fas fa-calculator"></i>計算</button>
+        <button class="mobile-nav-btn" data-tab="exercises"><i class="fas fa-book-open"></i>演習</button>
+        <button class="mobile-nav-btn" data-tab="simulation"><i class="fas fa-chart-line"></i>シミュ</button>
+        <button class="mobile-nav-btn" data-tab="glossary"><i class="fas fa-book"></i>用語</button>
+        <button class="mobile-nav-btn" data-tab="history"><i class="fas fa-history"></i>履歴</button>
+    </div>
+</nav>
+
+<!-- トーストコンテナ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- 用語追加/編集モーダル -->
+<div id="term-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-title">
+                <i class="fas fa-plus-circle" style="color:var(--accent-cyan)"></i> 新しい用語を追加
+            </div>
+            <button class="modal-close" id="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="term-form">
+            <input type="hidden" id="modal-term-id" value="">
+            <div class="modal-form-group">
+                <label class="modal-label"><i class="fas fa-tag"></i> 用語名 <span class="modal-required">*</span></label>
+                <input type="text" class="modal-input" id="modal-term-name" placeholder="例: バラスト水" required>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label"><i class="fas fa-microphone"></i> 読み方 / 英語表記 <span class="modal-required">*</span></label>
+                <input type="text" class="modal-input" id="modal-term-reading" placeholder="例: ballast water" required>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label"><i class="fas fa-align-left"></i> 定義・解説 <span class="modal-required">*</span></label>
+                <textarea class="modal-textarea" id="modal-term-definition" placeholder="用語の定義や詳しい説明" rows="4" required></textarea>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label"><i class="fas fa-lightbulb"></i> 使用例 <span class="modal-required">*</span></label>
+                <textarea class="modal-textarea" id="modal-term-example" placeholder="実務的な使用例" rows="3" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" style="flex:1;" id="modal-submit-btn">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+                <button type="button" class="btn btn-secondary" style="flex:1;" id="modal-cancel-btn">
+                    <i class="fas fa-times"></i> キャンセル
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- フッター -->
+<footer class="app-footer">
+    <div class="container">
+        <p>TSOL-AIHARA作成 船舶燃費・速力計算アプリ</p>
+    </div>
+</footer>
+
+<script>
+// ============================================================
+// 定数・設定
+// ============================================================
+const KNOT_TO_KMH  = 1.852;
+const KNOT_TO_MS   = 0.514444;
+const NM_TO_KM     = 1.852;
+const NM_TO_MI     = 1.15078;
+const KG_TO_MT     = 0.001;
+const KG_TO_LT     = 1/1016.047;
+const CO2_FACTOR   = 3.15;   // kg-CO2 per kg HFO
+const FUEL_PRICE_DEFAULT = 150;
+
+// ============================================================
+// 計算モード定義（7モード）
+// ============================================================
+const CALC_MODES = {
+    'fuel-efficiency': {
+        title: '燃料消費率を計算',
+        icon: 'fa-chart-line',
+        formula: '計算式: 燃料消費率 = 航行距離 ÷ 燃料消費量',
+        color: '#4a9eff',
+        inputs: [
+            { id: 'distance', label: '航行距離', unit: 'NM', icon: 'fa-map-marked-alt', min: 0.1, step: 1 },
+            { id: 'fuel-consumed', label: '燃料消費量', unit: 'kg', icon: 'fa-gas-pump', min: 0.1, step: 1 }
+        ],
+        calculate(inp) {
+            const d = +inp.distance, f = +inp['fuel-consumed'];
+            const eff = d / f;
+            return {
+                value: eff.toFixed(4), unit: 'NM/kg',
+                label: '燃料消費率',
+                steps: [
+                    `燃料消費率 = 航行距離 ÷ 燃料消費量`,
+                    `燃料消費率 = ${d.toLocaleString('ja-JP')} NM ÷ ${f.toLocaleString('ja-JP')} kg`,
+                    `燃料消費率 = ${eff.toFixed(4)} NM/kg`
+                ],
+                info: [
+                    { label: '1kgで航行できる距離', value: `${eff.toFixed(3)} NM` },
+                    { label: '100NM当たり燃料', value: `${(100/eff).toFixed(1)} kg` },
+                    { label: '燃費評価', value: eff>0.3?'🌟 優良':eff>0.2?'✅ 標準':'⚠️ 要改善' },
+                    { label: 'CO2排出(参考)', value: `${(f*CO2_FACTOR).toFixed(0)} kg` }
+                ]
+            };
+        }
+    },
+    'speed': {
+        title: '速力を計算',
+        icon: 'fa-tachometer-alt',
+        formula: '計算式: 速力 = 航行距離 ÷ 航行時間',
+        color: '#2ecc71',
+        inputs: [
+            { id: 'distance', label: '航行距離', unit: 'NM', icon: 'fa-map-marked-alt', min: 0.1, step: 1 },
+            { id: 'time', label: '航行時間', unit: 'hour', icon: 'fa-clock', min: 0.1, step: 0.5 }
+        ],
+        calculate(inp) {
+            const d = +inp.distance, t = +inp.time;
+            const spd = d / t;
+            const kmh = spd * KNOT_TO_KMH;
+            return {
+                value: spd.toFixed(2), unit: 'knot',
+                label: '速力',
+                steps: [
+                    `速力 = 航行距離 ÷ 航行時間`,
+                    `速力 = ${d.toLocaleString('ja-JP')} NM ÷ ${t} hour`,
+                    `速力 = ${spd.toFixed(2)} knot`
+                ],
+                info: [
+                    { label: '換算 (km/h)', value: `${kmh.toFixed(2)} km/h` },
+                    { label: '換算 (m/s)', value: `${(spd*KNOT_TO_MS).toFixed(3)} m/s` },
+                    { label: '速力分類', value: spd>20?'🚀 高速':spd>15?'✅ 標準':spd>10?'🐢 経済速力':'🐌 低速' },
+                    { label: '1時間の航行距離', value: `${spd.toFixed(2)} NM/h` }
+                ]
+            };
+        }
+    },
+    'range': {
+        title: '航続距離を計算',
+        icon: 'fa-route',
+        formula: '計算式: 航続距離 = 燃料搭載量 × 燃料消費率',
+        color: '#f39c12',
+        inputs: [
+            { id: 'fuel-capacity', label: '燃料搭載量', unit: 'kg', icon: 'fa-gas-pump', min: 1, step: 100 },
+            { id: 'efficiency', label: '燃料消費率', unit: 'NM/kg', icon: 'fa-chart-line', min: 0.001, step: 0.01 }
+        ],
+        calculate(inp) {
+            const fc = +inp['fuel-capacity'], eff = +inp.efficiency;
+            const range = fc * eff;
+            const km = range * NM_TO_KM;
+            return {
+                value: range.toFixed(1), unit: 'NM',
+                label: '航続距離',
+                steps: [
+                    `航続距離 = 燃料搭載量 × 燃料消費率`,
+                    `航続距離 = ${fc.toLocaleString('ja-JP')} kg × ${eff} NM/kg`,
+                    `航続距離 = ${range.toFixed(1)} NM`
+                ],
+                info: [
+                    { label: 'km換算', value: `${km.toFixed(0)} km` },
+                    { label: '燃料50%時の航続距離', value: `${(range*0.5).toFixed(1)} NM` },
+                    { label: '予備10%除外時', value: `${(range*0.9).toFixed(1)} NM` },
+                    { label: '地球一周比較', value: `約${(range/21600*100).toFixed(1)}%` }
+                ]
+            };
+        }
+    },
+    'time': {
+        title: '航海時間を計算',
+        icon: 'fa-clock',
+        formula: '計算式: 航海時間 = 航行距離 ÷ 速力',
+        color: '#9b59b6',
+        inputs: [
+            { id: 'distance', label: '航行距離', unit: 'NM', icon: 'fa-map-marked-alt', min: 0.1, step: 1 },
+            { id: 'speed', label: '速力', unit: 'knot', icon: 'fa-tachometer-alt', min: 0.1, step: 0.5 }
+        ],
+        calculate(inp) {
+            const d = +inp.distance, spd = +inp.speed;
+            const t = d / spd;
+            const days = Math.floor(t/24), hrs = Math.floor(t%24), mins = Math.round((t%1)*60);
+            return {
+                value: t.toFixed(2), unit: 'hour',
+                label: '航海時間',
+                steps: [
+                    `航海時間 = 航行距離 ÷ 速力`,
+                    `航海時間 = ${d.toLocaleString('ja-JP')} NM ÷ ${spd} knot`,
+                    `航海時間 = ${t.toFixed(2)} hour`
+                ],
+                info: [
+                    { label: '日時分換算', value: `${days}日 ${hrs}時間 ${mins}分` },
+                    { label: '10%増速した場合', value: `${(t/1.1).toFixed(2)} hour` },
+                    { label: '10%減速した場合', value: `${(t/0.9).toFixed(2)} hour` },
+                    { label: '1日以内完了', value: t<=24?'✅ 可能':'❌ 不可' }
+                ]
+            };
+        }
+    },
+    'fuel-consumption': {
+        title: '燃料消費量を計算',
+        icon: 'fa-gas-pump',
+        formula: '計算式: 燃料消費量 = 航行距離 ÷ 燃料消費率',
+        color: '#e74c3c',
+        inputs: [
+            { id: 'distance', label: '航行距離', unit: 'NM', icon: 'fa-map-marked-alt', min: 0.1, step: 1 },
+            { id: 'efficiency', label: '燃料消費率', unit: 'NM/kg', icon: 'fa-chart-line', min: 0.001, step: 0.01 }
+        ],
+        calculate(inp) {
+            const d = +inp.distance, eff = +inp.efficiency;
+            const fuel = d / eff;
+            const tons = fuel * KG_TO_MT;
+            const cost = fuel * FUEL_PRICE_DEFAULT;
+            return {
+                value: fuel.toFixed(1), unit: 'kg',
+                label: '燃料消費量',
+                steps: [
+                    `燃料消費量 = 航行距離 ÷ 燃料消費率`,
+                    `燃料消費量 = ${d.toLocaleString('ja-JP')} NM ÷ ${eff} NM/kg`,
+                    `燃料消費量 = ${fuel.toFixed(1)} kg`
+                ],
+                info: [
+                    { label: 'メトリックトン換算', value: `${tons.toFixed(3)} MT` },
+                    { label: '燃料コスト(¥150/kg)', value: `¥${cost.toLocaleString('ja-JP', {maximumFractionDigits:0})}` },
+                    { label: 'CO2排出量', value: `${(fuel*CO2_FACTOR).toFixed(0)} kg` },
+                    { label: '予備込み(+15%)', value: `${(fuel*1.15).toFixed(1)} kg` }
+                ]
+            };
+        }
+    },
+    'fuel-cost': {
+        title: '燃料コストを計算',
+        icon: 'fa-yen-sign',
+        formula: '計算式: コスト = 燃料消費量 × 燃料単価',
+        color: '#1abc9c',
+        inputs: [
+            { id: 'distance', label: '航行距離', unit: 'NM', icon: 'fa-map-marked-alt', min: 0.1, step: 1 },
+            { id: 'efficiency', label: '燃料消費率', unit: 'NM/kg', icon: 'fa-chart-line', min: 0.001, step: 0.01 },
+            { id: 'fuel-price', label: '燃料単価', unit: '円/kg', icon: 'fa-yen-sign', min: 1, step: 1, defaultValue: 150 }
+        ],
+        calculate(inp) {
+            const d = +inp.distance, eff = +inp.efficiency, price = +inp['fuel-price'];
+            const fuel = d / eff;
+            const cost = fuel * price;
+            const co2  = fuel * CO2_FACTOR;
+            return {
+                value: Math.round(cost).toLocaleString('ja-JP'), unit: '円',
+                label: '燃料コスト',
+                steps: [
+                    `燃料消費量 = ${d.toLocaleString('ja-JP')} NM ÷ ${eff} NM/kg = ${fuel.toFixed(1)} kg`,
+                    `燃料コスト = 燃料消費量 × 単価`,
+                    `燃料コスト = ${fuel.toFixed(1)} kg × ¥${price}/kg = ¥${Math.round(cost).toLocaleString('ja-JP')}`
+                ],
+                info: [
+                    { label: '燃料消費量', value: `${fuel.toFixed(1)} kg` },
+                    { label: '燃料量(MT)', value: `${(fuel*KG_TO_MT).toFixed(3)} MT` },
+                    { label: 'CO2排出量', value: `${co2.toFixed(0)} kg` },
+                    { label: '1NMあたりコスト', value: `¥${(cost/d).toFixed(1)}` }
+                ]
+            };
+        }
+    },
+    'co2': {
+        title: 'CO2排出量を計算',
+        icon: 'fa-leaf',
+        formula: '計算式: CO2排出量 = 燃料消費量 × 3.15（HFO換算）',
+        color: '#576574',
+        inputs: [
+            { id: 'distance', label: '航行距離', unit: 'NM', icon: 'fa-map-marked-alt', min: 0.1, step: 1 },
+            { id: 'efficiency', label: '燃料消費率', unit: 'NM/kg', icon: 'fa-chart-line', min: 0.001, step: 0.01 }
+        ],
+        calculate(inp) {
+            const d = +inp.distance, eff = +inp.efficiency;
+            const fuel = d / eff;
+            const co2  = fuel * CO2_FACTOR;
+            const trees = Math.round(co2 / 21.77); // 成木1本あたり年間吸収量
+            return {
+                value: co2.toFixed(0), unit: 'kg-CO2',
+                label: 'CO2排出量',
+                steps: [
+                    `燃料消費量 = ${d.toLocaleString('ja-JP')} NM ÷ ${eff} NM/kg = ${fuel.toFixed(1)} kg`,
+                    `CO2排出量 = 燃料消費量 × CO2係数(HFO)`,
+                    `CO2排出量 = ${fuel.toFixed(1)} kg × 3.15 = ${co2.toFixed(0)} kg-CO2`
+                ],
+                info: [
+                    { label: '燃料消費量', value: `${fuel.toFixed(1)} kg` },
+                    { label: 'CO2(トン)', value: `${(co2/1000).toFixed(3)} t-CO2` },
+                    { label: '吸収に必要な木', value: `約${trees.toLocaleString('ja-JP')} 本・年` },
+                    { label: 'EEOI参考値', value: `${(co2/d).toFixed(2)} kg/NM` }
+                ]
+            };
+        }
+    }
+};
+
+// ============================================================
+// アプリ状態
+// ============================================================
+let currentMode = 'fuel-efficiency';
+let lastResult  = null;
+let simData     = [];
+let compChart   = null;
+let chartType   = 'line';
+
+// スコア
+let score = JSON.parse(localStorage.getItem('shipScore') || '{"correct":0,"incorrect":0,"solved":[]}');
+
+// 履歴
+let calcHistory = JSON.parse(localStorage.getItem('calcHistory') || '[]');
+
+// ============================================================
+// タブ切替
+// ============================================================
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-tab]').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-btn[data-tab]').forEach(el => el.classList.remove('active'));
+
+    const content = document.getElementById(tabId);
+    if (content) content.classList.add('active');
+
+    document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(el => {
+        if (el.classList.contains('nav-item') || el.classList.contains('mobile-nav-btn')) {
+            el.classList.add('active');
+        }
+    });
+}
+
+// ============================================================
+// 計算フォーム生成
+// ============================================================
+function buildCalcForm(mode) {
+    const cfg = CALC_MODES[mode];
+    const container = document.getElementById('calc-form-container');
+    const titleEl   = document.getElementById('calc-mode-title');
+    const formulaEl = document.getElementById('formula-box');
+
+    titleEl.innerHTML = `<i class="fas ${cfg.icon}"></i> ${cfg.title}`;
+    formulaEl.innerHTML = `<strong>💡 計算式:</strong> ${cfg.formula}`;
+
+    let html = '';
+    cfg.inputs.forEach(inp => {
+        const defVal = inp.defaultValue !== undefined ? inp.defaultValue : '';
+        html += `
+        <div class="form-group">
+            <label class="form-label"><i class="fas ${inp.icon}"></i> ${inp.label}</label>
+            <div class="input-wrapper">
+                <input type="number" id="inp-${inp.id}"
+                    placeholder="${inp.label}を入力"
+                    min="${inp.min}" step="${inp.step||1}"
+                    value="${defVal}">
+                <span class="unit-tag">${inp.unit}</span>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+// ============================================================
+// 計算実行
+// ============================================================
+function runCalculation() {
+    const cfg = CALC_MODES[currentMode];
+    const inp = {};
+    let valid = true;
+
+    cfg.inputs.forEach(i => {
+        const el = document.getElementById(`inp-${i.id}`);
+        const v  = el.value.trim();
+        if (!v || isNaN(+v) || +v <= 0) {
+            valid = false;
+            el.closest('.input-wrapper').style.borderColor = 'var(--danger-red)';
+            el.closest('.input-wrapper').style.boxShadow = '0 0 0 3px rgba(231,76,60,0.15)';
+        } else {
+            el.closest('.input-wrapper').style.borderColor = '';
+            el.closest('.input-wrapper').style.boxShadow  = '';
+            inp[i.id] = v;
+        }
+    });
+
+    if (!valid) {
+        showToast('すべての項目に正しい数値を入力してください。', 'error');
+        return;
+    }
+
+    const res = cfg.calculate(inp);
+    lastResult = { mode: currentMode, title: cfg.title, inputs: inp, result: res, ts: Date.now() };
+    displayResult(res, cfg.color);
+}
+
+// ============================================================
+// 結果表示
+// ============================================================
+function displayResult(res, color) {
+    document.getElementById('result-card').style.display = 'block';
+
+    // ヒーロー
+    document.getElementById('result-hero').innerHTML = `
+        <div class="result-hero-label">${res.label}</div>
+        <div class="result-hero-value">${res.value}</div>
+        <div class="result-hero-unit">${res.unit}</div>
+        <div class="result-meta">
+            ${res.info.slice(0,2).map(i=>`<div class="result-meta-chip"><i class="fas fa-info-circle"></i> ${i.label}: ${i.value}</div>`).join('')}
+        </div>
+    `;
+
+    // ステップ
+    document.getElementById('calc-steps').innerHTML = res.steps.map((s,i)=>`
+        <div class="calc-step-item">
+            <div class="step-num">${i+1}</div>
+            <div class="step-text">${s}</div>
+        </div>`).join('');
+
+    // 追加情報
+    document.getElementById('info-grid').innerHTML = res.info.map(i=>`
+        <div class="info-chip">
+            <div class="info-chip-label">${i.label}</div>
+            <div class="info-chip-value">${i.value}</div>
+        </div>`).join('');
+
+    document.getElementById('result-card').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ============================================================
+// 履歴
+// ============================================================
+function saveToHistory() {
+    if (!lastResult) { showToast('先に計算を実行してください。', 'warning'); return; }
+    calcHistory.unshift(lastResult);
+    if (calcHistory.length > 50) calcHistory = calcHistory.slice(0,50);
+    localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+    updateHistoryBadge();
+    renderHistory();
+    showToast('履歴に保存しました。', 'success');
+}
+
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!calcHistory.length) {
+        list.innerHTML = `<div class="history-empty"><i class="fas fa-inbox"></i>計算履歴がありません。<br>計算結果を「履歴に保存」から追加できます。</div>`;
+        return;
+    }
+    const colors = { 'fuel-efficiency':'#4a9eff', speed:'#2ecc71', range:'#f39c12', time:'#9b59b6', 'fuel-consumption':'#e74c3c', 'fuel-cost':'#1abc9c', co2:'#576574' };
+    const icons  = { 'fuel-efficiency':'fa-chart-line', speed:'fa-tachometer-alt', range:'fa-route', time:'fa-clock', 'fuel-consumption':'fa-gas-pump', 'fuel-cost':'fa-yen-sign', co2:'fa-leaf' };
+
+    list.innerHTML = calcHistory.map((h,i) => `
+        <div class="history-item" onclick="restoreFromHistory(${i})">
+            <div class="history-icon" style="background:${colors[h.mode]||'#4a9eff'}">
+                <i class="fas ${icons[h.mode]||'fa-calculator'}"></i>
+            </div>
+            <div class="history-info">
+                <div class="history-mode">${h.title}</div>
+                <div class="history-result">${h.result.value} ${h.result.unit}</div>
+            </div>
+            <div class="history-time">${formatTime(h.ts)}</div>
+        </div>`).join('');
+}
+
+function restoreFromHistory(idx) {
+    const h = calcHistory[idx];
+    currentMode = h.mode;
+    document.querySelectorAll('.calc-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === currentMode));
+    buildCalcForm(currentMode);
+    CALC_MODES[currentMode].inputs.forEach(i => {
+        const el = document.getElementById(`inp-${i.id}`);
+        if (el && h.inputs[i.id]) el.value = h.inputs[i.id];
+    });
+    lastResult = h;
+    displayResult(h.result, '#4a9eff');
+    switchTab('calculator');
+    showToast('履歴を復元しました。', 'info');
+}
+
+function clearHistory() {
+    if (!calcHistory.length) return;
+    if (!confirm('計算履歴をすべて削除しますか？')) return;
+    calcHistory = [];
+    localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+    updateHistoryBadge();
+    renderHistory();
+    showToast('履歴を削除しました。', 'info');
+}
+
+function updateHistoryBadge() {
+    document.getElementById('history-count-badge').textContent = calcHistory.length;
+}
+
+function formatTime(ts) {
+    const d = new Date(ts);
+    const now = new Date();
+    const diff = (now - d) / 1000;
+    if (diff < 60) return `${Math.floor(diff)}秒前`;
+    if (diff < 3600) return `${Math.floor(diff/60)}分前`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}時間前`;
+    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ============================================================
+// 結果コピー
+// ============================================================
+function copyResult() {
+    if (!lastResult) { showToast('先に計算を実行してください。', 'warning'); return; }
+    const r = lastResult.result;
+    const text = [
+        `【${lastResult.title}】`,
+        `結果: ${r.value} ${r.unit}`,
+        '',
+        '＜計算過程＞',
+        ...r.steps.map((s,i)=>`${i+1}. ${s}`),
+        '',
+        '＜追加情報＞',
+        ...r.info.map(i=>`・${i.label}: ${i.value}`)
+    ].join('\n');
+    navigator.clipboard.writeText(text).then(()=>showToast('結果をクリップボードにコピーしました。','success')).catch(()=>showToast('コピーに失敗しました。','error'));
+}
+
+// ============================================================
+// 単位変換（双方向）
+// ============================================================
+function setupConverters() {
+    // 速力
+    const cKnot = document.getElementById('conv-knot');
+    const cKmh  = document.getElementById('conv-kmh');
+    const cMs   = document.getElementById('conv-ms');
+
+    const setSpeed = (knot) => {
+        cKmh.value = knot !== '' ? (knot * KNOT_TO_KMH).toFixed(3) : '';
+        cMs.value  = knot !== '' ? (knot * KNOT_TO_MS).toFixed(4)  : '';
+    };
+    cKnot.addEventListener('input', () => setSpeed(cKnot.value !== '' ? +cKnot.value : ''));
+    cKmh.addEventListener('input', () => {
+        const v = cKmh.value !== '' ? +cKmh.value : '';
+        if (v !== '') {
+            cKnot.value = (v / KNOT_TO_KMH).toFixed(3);
+            cMs.value   = (v / 3.6).toFixed(4);
+        } else { cKnot.value = ''; cMs.value = ''; }
+    });
+    cMs.addEventListener('input', () => {
+        const v = cMs.value !== '' ? +cMs.value : '';
+        if (v !== '') {
+            cKnot.value = (v / KNOT_TO_MS).toFixed(3);
+            cKmh.value  = (v * 3.6).toFixed(3);
+        } else { cKnot.value = ''; cKmh.value = ''; }
+    });
+
+    // 距離
+    const cNm   = document.getElementById('conv-nm');
+    const cKm   = document.getElementById('conv-km');
+    const cMile = document.getElementById('conv-mile');
+
+    cNm.addEventListener('input', () => {
+        const v = cNm.value;
+        cKm.value   = v !== '' ? (+v * NM_TO_KM).toFixed(3) : '';
+        cMile.value = v !== '' ? (+v * NM_TO_MI).toFixed(3) : '';
+    });
+    cKm.addEventListener('input', () => {
+        const v = cKm.value;
+        if (v !== '') {
+            cNm.value   = (+v / NM_TO_KM).toFixed(3);
+            cMile.value = (+v / NM_TO_KM * NM_TO_MI).toFixed(3);
+        } else { cNm.value = ''; cMile.value = ''; }
+    });
+    cMile.addEventListener('input', () => {
+        const v = cMile.value;
+        if (v !== '') {
+            cNm.value = (+v / NM_TO_MI).toFixed(3);
+            cKm.value = (+v / NM_TO_MI * NM_TO_KM).toFixed(3);
+        } else { cNm.value = ''; cKm.value = ''; }
+    });
+
+    // 重量
+    const cKg   = document.getElementById('conv-kg');
+    const cTon  = document.getElementById('conv-ton');
+    const cLton = document.getElementById('conv-lton');
+
+    cKg.addEventListener('input', () => {
+        const v = cKg.value;
+        cTon.value  = v !== '' ? (+v * KG_TO_MT).toFixed(6)  : '';
+        cLton.value = v !== '' ? (+v * KG_TO_LT).toFixed(6) : '';
+    });
+    cTon.addEventListener('input', () => {
+        const v = cTon.value;
+        if (v !== '') {
+            cKg.value   = (+v / KG_TO_MT).toFixed(2);
+            cLton.value = (+v / KG_TO_MT * KG_TO_LT).toFixed(6);
+        } else { cKg.value = ''; cLton.value = ''; }
+    });
+    cLton.addEventListener('input', () => {
+        const v = cLton.value;
+        if (v !== '') {
+            cKg.value  = (+v / KG_TO_LT).toFixed(2);
+            cTon.value = (+v / KG_TO_LT * KG_TO_MT).toFixed(6);
+        } else { cKg.value = ''; cTon.value = ''; }
+    });
+}
+
+// ============================================================
+// 演習問題データ
+// ============================================================
+const EXERCISES = [
+    {
+        id:1, title:'例題1: 燃料消費量の計算（東京→シンガポール）', difficulty:'easy',
+        question:`<p><strong>シナリオ：</strong> 東京からシンガポールへ航行します。</p>
+<ul><li>航行距離: 2,900 NM</li><li>計画速力: 15 knot</li><li>燃料消費率: 0.25 NM/kg</li></ul>
+<p><strong>問題：</strong> この航海に必要な燃料量（kg）を計算してください。</p>`,
+        answer:11600, tolerance:100, unit:'kg',
+        hint:'燃料消費量 = 航行距離 ÷ 燃料消費率 の公式を使います。',
+        solution:{
+            steps:['使用する公式: 燃料消費量 = 航行距離 ÷ 燃料消費率','値を代入: 燃料消費量 = 2,900 NM ÷ 0.25 NM/kg','計算: 燃料消費量 = 11,600 kg','答え: 11,600 kg（約11.6 MT）'],
+            explanation:'この航海では約11.6トンの燃料が必要です。実際には予備燃料として10〜15%程度多めに搭載します。'
+        }
+    },
+    {
+        id:2, title:'例題2: 航続距離の計算', difficulty:'easy',
+        question:`<p><strong>シナリオ：</strong> 燃料を満載した状態です。</p>
+<ul><li>燃料搭載量: 500 MT（500,000 kg）</li><li>燃料消費率: 0.30 NM/kg</li></ul>
+<p><strong>問題：</strong> この船舶の航続距離（NM）を計算してください。</p>`,
+        answer:150000, tolerance:1000, unit:'NM',
+        hint:'航続距離 = 燃料搭載量 × 燃料消費率 の公式を使います。',
+        solution:{
+            steps:['使用する公式: 航続距離 = 燃料搭載量 × 燃料消費率','単位統一: 500 MT = 500,000 kg','値を代入: 航続距離 = 500,000 kg × 0.30 NM/kg','計算: 航続距離 = 150,000 NM'],
+            explanation:'約15万海里の航続距離があります。これは地球を約7周できる距離に相当します。'
+        }
+    },
+    {
+        id:3, title:'例題3: 航海時間の計算（横浜→上海）', difficulty:'easy',
+        question:`<p><strong>シナリオ：</strong> 横浜から上海へ航行します。</p>
+<ul><li>航行距離: 1,500 NM</li><li>計画速力: 12 knot</li></ul>
+<p><strong>問題：</strong> 必要な航海時間（hour）を計算してください。</p>`,
+        answer:125, tolerance:1, unit:'hour',
+        hint:'航海時間 = 航行距離 ÷ 速力 の公式を使います。',
+        solution:{
+            steps:['使用する公式: 航海時間 = 航行距離 ÷ 速力','値を代入: 航海時間 = 1,500 NM ÷ 12 knot','計算: 航海時間 = 125 hour','日時換算: 125時間 = 5日5時間'],
+            explanation:'約5日間の航海となります。実際には気象・海流の影響で前後します。'
+        }
+    },
+    {
+        id:4, title:'例題4: 実速力の計算', difficulty:'medium',
+        question:`<p><strong>シナリオ：</strong> 実際の航行記録から速力を求めます。</p>
+<ul><li>航行距離: 840 NM</li><li>航行時間: 48 hour</li></ul>
+<p><strong>問題：</strong> この船舶の実速力（knot）を計算してください。</p>`,
+        answer:17.5, tolerance:0.5, unit:'knot',
+        hint:'実速力 = 航行距離 ÷ 航行時間 の公式を使います。',
+        solution:{
+            steps:['使用する公式: 実速力 = 航行距離 ÷ 航行時間','値を代入: 実速力 = 840 NM ÷ 48 hour','計算: 実速力 = 17.5 knot','時速換算: 17.5 knot = 32.41 km/h'],
+            explanation:'約17.5ノットは標準的な商船の巡航速力です。'
+        }
+    },
+    {
+        id:5, title:'例題5: 燃料消費率の評価', difficulty:'medium',
+        question:`<p><strong>シナリオ：</strong> 試験航行の結果から燃費性能を評価します。</p>
+<ul><li>航行距離: 3,600 NM</li><li>燃料消費量: 18,000 kg</li></ul>
+<p><strong>問題：</strong> この船舶の燃料消費率（NM/kg）を計算してください。</p>`,
+        answer:0.2, tolerance:0.01, unit:'NM/kg',
+        hint:'燃料消費率 = 航行距離 ÷ 燃料消費量 の公式を使います。',
+        solution:{
+            steps:['使用する公式: 燃料消費率 = 航行距離 ÷ 燃料消費量','値を代入: 燃料消費率 = 3,600 NM ÷ 18,000 kg','計算: 燃料消費率 = 0.2 NM/kg'],
+            explanation:'燃料消費率0.2 NM/kgは標準的な性能です。0.25以上であれば優良です。'
+        }
+    },
+    {
+        id:6, title:'例題6: 経済速力での燃料計算（立方則）', difficulty:'hard',
+        question:`<p><strong>シナリオ：</strong> 速力変更で燃料消費を最適化します。</p>
+<ul><li>航行距離: 2,400 NM</li><li>基準速力: 18 knot</li><li>基準燃費: 0.22 NM/kg</li><li>経済速力: 15 knot</li></ul>
+<p>速力と燃料消費の関係は<strong>立方則</strong>（速力³に比例）に従います。<br>
+経済速力での燃費 = 基準燃費 × (基準速力 ÷ 経済速力)³</p>
+<p><strong>問題：</strong> 経済速力（15ノット）での燃料消費量（kg）を計算してください。</p>`,
+        answer:6313, tolerance:300, unit:'kg',
+        hint:'まず速力比の3乗を計算して経済速力での燃費を求め、その後燃料消費量を計算します。',
+        solution:{
+            steps:['ステップ1: 速力比 = 18 ÷ 15 = 1.2','ステップ2: 燃費比(立方則) = 1.2³ = 1.728','ステップ3: 経済燃費 = 0.22 NM/kg × 1.728 = 0.38016 NM/kg','ステップ4: 燃料消費量 = 2,400 NM ÷ 0.38016 NM/kg ≈ 6,313 kg'],
+            explanation:'速力を約17%下げることで燃料消費を大幅に削減できます。立方則により、速力10%削減で燃料約27%削減になります。'
+        }
+    }
+];
+
+// ============================================================
+// 演習問題レンダリング
+// ============================================================
+function renderExercises(filter='all') {
+    const list = document.getElementById('exercise-list');
+    let filtered = EXERCISES;
+    if (filter === 'easy')   filtered = EXERCISES.filter(e=>e.difficulty==='easy');
+    if (filter === 'medium') filtered = EXERCISES.filter(e=>e.difficulty==='medium');
+    if (filter === 'hard')   filtered = EXERCISES.filter(e=>e.difficulty==='hard');
+    if (filter === 'unsolved') filtered = EXERCISES.filter(e=>!score.solved.includes(e.id));
+
+    list.innerHTML = filtered.map(ex => {
+        const solved = score.solved.includes(ex.id);
+        const diffLabel = {easy:'🟢 初級', medium:'🟡 中級', hard:'🔴 上級'}[ex.difficulty];
+        const diffClass = {easy:'diff-easy', medium:'diff-medium', hard:'diff-hard'}[ex.difficulty];
+        return `
+        <div class="exercise-card${solved?' solved-correct':''}" id="ex-card-${ex.id}">
+            <div class="exercise-header">
+                <div class="exercise-title"><i class="fas fa-question-circle" style="color:var(--accent-cyan)"></i> ${ex.title}</div>
+                <span class="difficulty-badge ${diffClass}">${diffLabel}</span>
+            </div>
+            <div class="exercise-question">${ex.question}</div>
+            <div class="exercise-answer-row">
+                <input type="number" id="ex-ans-${ex.id}" placeholder="計算結果を入力" step="any">
+                <span class="unit-tag">${ex.unit}</span>
+            </div>
+            <div class="exercise-buttons">
+                <button class="btn btn-primary btn-sm" onclick="checkAnswer(${ex.id})">
+                    <i class="fas fa-check"></i> 答え合わせ
+                </button>
+                <button class="btn btn-sm" style="background:var(--warning-yellow);color:white;" onclick="showHint(${ex.id})">
+                    <i class="fas fa-lightbulb"></i> ヒント
+                </button>
+                <button class="btn btn-blue btn-sm" onclick="showSolution(${ex.id})">
+                    <i class="fas fa-book-open"></i> 解答を見る
+                </button>
+            </div>
+            <div class="exercise-feedback" id="ex-fb-${ex.id}"></div>
+        </div>`;
+    }).join('');
+}
+
+function checkAnswer(id) {
+    const ex  = EXERCISES.find(e=>e.id===id);
+    const inp = document.getElementById(`ex-ans-${id}`);
+    const fb  = document.getElementById(`ex-fb-${id}`);
+    const val = parseFloat(inp.value);
+
+    if (isNaN(val)) { showToast('数値を入力してください。','warning'); return; }
+
+    const diff = Math.abs(val - ex.answer);
+    const ok   = diff <= ex.tolerance;
+
+    if (ok) {
+        if (!score.solved.includes(id)) { score.correct++; score.solved.push(id); }
+        fb.className = 'exercise-feedback feedback-correct show';
+        fb.innerHTML = `<div class="feedback-title"><i class="fas fa-check-circle"></i> 正解！</div>
+            <p>素晴らしい！正しい答えを導き出しました。</p>
+            <p><strong>正解:</strong> ${ex.answer.toLocaleString('ja-JP')} ${ex.unit} &nbsp;|&nbsp; <strong>あなたの回答:</strong> ${val.toLocaleString('ja-JP')} ${ex.unit}</p>`;
+        document.getElementById(`ex-card-${id}`).classList.add('solved-correct');
+        playBeep(true);
+        showToast('正解です！', 'success');
+    } else {
+        if (!score.solved.includes(id)) score.incorrect++;
+        fb.className = 'exercise-feedback feedback-incorrect show';
+        const pct = ((diff/ex.answer)*100).toFixed(1);
+        fb.innerHTML = `<div class="feedback-title"><i class="fas fa-times-circle"></i> 惜しい！もう一度挑戦してみましょう</div>
+            <p><strong>あなたの回答:</strong> ${val.toLocaleString('ja-JP')} ${ex.unit}</p>
+            <p><strong>正解との差:</strong> ${diff.toLocaleString('ja-JP')} ${ex.unit}（約${pct}%）</p>
+            <p>ヒントを参考に計算式を見直してみてください。</p>`;
+        showToast('不正解です。ヒントを参考にしてください。', 'error');
+    }
+
+    score.total = score.correct + score.incorrect;
+    saveScore();
+    updateScoreBoard();
+    fb.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function showHint(id) {
+    const ex = EXERCISES.find(e=>e.id===id);
+    const fb = document.getElementById(`ex-fb-${id}`);
+    fb.className = 'exercise-feedback feedback-hint show';
+    fb.innerHTML = `<div class="feedback-title"><i class="fas fa-lightbulb"></i> ヒント</div><p>${ex.hint}</p>`;
+    fb.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function showSolution(id) {
+    const ex = EXERCISES.find(e=>e.id===id);
+    const fb = document.getElementById(`ex-fb-${id}`);
+    fb.className = 'exercise-feedback feedback-solution show';
+    const steps = ex.solution.steps.map((s,i)=>`<div class="calc-step-item"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('');
+    fb.innerHTML = `
+        <div class="feedback-title"><i class="fas fa-book-open"></i> 解答と解説</div>
+        <div class="calc-steps mb-1">${steps}</div>
+        <div style="background:var(--light-blue);border-left:3px solid var(--accent-cyan);padding:0.75rem 1rem;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:0.875rem;">
+            <strong>解説:</strong> ${ex.solution.explanation}
+        </div>`;
+    fb.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function saveScore() { localStorage.setItem('shipScore', JSON.stringify(score)); }
+
+function updateScoreBoard() {
+    document.getElementById('score-correct').textContent   = score.correct;
+    document.getElementById('score-incorrect').textContent = score.incorrect;
+    document.getElementById('score-total').textContent     = score.correct + score.incorrect;
+    const total = score.correct + score.incorrect;
+    const rate  = total > 0 ? Math.round(score.correct/total*100) : 0;
+    document.getElementById('score-rate').textContent = total > 0 ? `${rate}%` : '—';
+    document.getElementById('progress-bar').style.width = rate + '%';
+    document.getElementById('sidebar-score-badge').textContent = EXERCISES.length - score.solved.length;
+}
+
+function resetScore() {
+    if (!confirm('学習進捗をリセットしますか？')) return;
+    score = { correct:0, incorrect:0, solved:[] };
+    saveScore();
+    updateScoreBoard();
+    renderExercises();
+    showToast('スコアをリセットしました。', 'info');
+}
+
+function playBeep(ok) {
+    try {
+        const ctx  = new (window.AudioContext||window.webkitAudioContext)();
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = ok ? 523.25 : 261.63;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
+    } catch(e){}
+}
+
+// ============================================================
+// シミュレーション
+// ============================================================
+function runSimulation() {
+    const dist     = +document.getElementById('sim-distance').value;
+    const baseSpd  = +document.getElementById('sim-base-speed').value;
+    const baseEff  = +document.getElementById('sim-base-efficiency').value;
+    const fPrice   = +document.getElementById('sim-fuel-price').value;
+    const tValue   = +document.getElementById('sim-time-value').value;
+
+    if ([dist,baseSpd,baseEff,fPrice,tValue].some(v=>isNaN(v)||v<=0)) {
+        showToast('すべての項目に正しい数値を入力してください。', 'error');
+        return;
+    }
+
+    const speeds = [];
+    const minSpd = Math.max(5, Math.floor(baseSpd*0.5));
+    const maxSpd = Math.ceil(baseSpd*1.3);
+    const step   = Math.max(1, Math.floor((maxSpd-minSpd)/10));
+    for (let s=minSpd; s<=maxSpd; s+=step) speeds.push(s);
+    if (!speeds.includes(baseSpd)) { speeds.push(baseSpd); speeds.sort((a,b)=>a-b); }
+
+    simData = speeds.map(spd => {
+        const ratio   = spd / baseSpd;
+        const eff     = baseEff / Math.pow(ratio, 3);
+        const fuel    = dist / eff;
+        const time    = dist / spd;
+        const fCost   = fuel * fPrice;
+        const tCost   = time * tValue;
+        const total   = fCost + tCost;
+        const co2     = fuel * CO2_FACTOR;
+        return { spd, eff, fuel, time, fCost, tCost, total, co2, isBase: spd===baseSpd };
+    });
+
+    const optIdx = simData.reduce((mi,c,ci,a)=>c.total<a[mi].total?ci:mi, 0);
+    simData[optIdx].isOptimal = true;
+
+    document.getElementById('sim-results-wrap').style.display = 'block';
+    renderSimTable();
+    renderSimChart();
+    renderRecommendation(baseSpd);
+    document.getElementById('sim-results-wrap').scrollIntoView({ behavior:'smooth' });
+}
+
+function renderSimTable() {
+    const wrap = document.getElementById('comparison-table-wrap');
+    const rows = simData.map(r => {
+        const cls = r.isOptimal ? 'row-optimal' : r.isBase ? 'row-base' : '';
+        const badge = r.isOptimal ? '<span class="table-badge badge-optimal">★最適</span>' : r.isBase ? '<span class="table-badge badge-base">●基準</span>' : '';
+        return `<tr class="${cls}">
+            <td><strong>${r.spd}</strong>${badge}</td>
+            <td>${r.eff.toFixed(4)}</td>
+            <td>${Math.round(r.fuel).toLocaleString('ja-JP')}</td>
+            <td>${r.time.toFixed(1)}<br><small style="color:var(--text-sub)">(${Math.floor(r.time/24)}日${Math.floor(r.time%24)}h)</small></td>
+            <td>¥${Math.round(r.fCost).toLocaleString('ja-JP')}</td>
+            <td>${Math.round(r.co2).toLocaleString('ja-JP')}</td>
+            <td><strong>¥${Math.round(r.total).toLocaleString('ja-JP')}</strong></td>
+        </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table class="comparison-table">
+        <thead><tr>
+            <th>速力(knot)</th><th>燃費(NM/kg)</th><th>燃料(kg)</th>
+            <th>航海時間(h)</th><th>燃料コスト</th><th>CO2(kg)</th><th>総コスト</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderSimChart() {
+    const ctx = document.getElementById('comparison-chart').getContext('2d');
+    if (compChart) compChart.destroy();
+    const speeds = simData.map(r=>r.spd);
+    compChart = new Chart(ctx, {
+        type: chartType,
+        data: {
+            labels: speeds,
+            datasets: [
+                { label:'燃料消費量(kg)', data: simData.map(r=>r.fuel.toFixed(0)), borderColor:'rgb(231,76,60)', backgroundColor:'rgba(231,76,60,0.1)', yAxisID:'y', tension:0.4 },
+                { label:'航海時間(hour)', data: simData.map(r=>r.time.toFixed(1)), borderColor:'rgb(52,152,219)', backgroundColor:'rgba(52,152,219,0.1)', yAxisID:'y1', tension:0.4 },
+                { label:'総コスト(千円)', data: simData.map(r=>(r.total/1000).toFixed(1)), borderColor:'rgb(46,204,113)', backgroundColor:'rgba(46,204,113,0.2)', yAxisID:'y2', tension:0.4, borderWidth:3 }
+            ]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false,
+            interaction:{ mode:'index', intersect:false },
+            plugins:{
+                title:{ display:true, text:'速力別パフォーマンス比較', font:{size:14,weight:'bold'} },
+                legend:{ position:'top' }
+            },
+            scales:{
+                x:{ title:{ display:true, text:'速力 (knot)', font:{weight:'bold'} } },
+                y:{ type:'linear', position:'left', title:{ display:true, text:'燃料消費量(kg)', color:'rgb(231,76,60)', font:{weight:'bold'} }, ticks:{color:'rgb(231,76,60)'} },
+                y1:{ type:'linear', position:'right', title:{ display:true, text:'航海時間(h)', color:'rgb(52,152,219)', font:{weight:'bold'} }, ticks:{color:'rgb(52,152,219)'}, grid:{drawOnChartArea:false} },
+                y2:{ display:false }
+            }
+        }
+    });
+}
+
+function renderRecommendation(baseSpd) {
+    const opt  = simData.find(r=>r.isOptimal);
+    const base = simData.find(r=>r.isBase);
+    const fuelSave = base.fuel - opt.fuel;
+    const fuelPct  = ((fuelSave/base.fuel)*100).toFixed(1);
+    const costSave = base.total - opt.total;
+    const timeDiff = opt.time - base.time;
+    const co2Save  = base.co2 - opt.co2;
+
+    const rec = document.getElementById('recommendation');
+    rec.innerHTML = `
+        <h3><i class="fas fa-star"></i> 最適速力の推奨分析</h3>
+        <div class="rec-stats">
+            <div class="rec-stat">
+                <div class="rec-stat-value">${opt.spd} <span style="font-size:1rem">knot</span></div>
+                <div class="rec-stat-label">推奨速力</div>
+            </div>
+            <div class="rec-stat">
+                <div class="rec-stat-value">${fuelPct}<span style="font-size:1rem">%</span></div>
+                <div class="rec-stat-label">燃料削減率</div>
+            </div>
+            <div class="rec-stat">
+                <div class="rec-stat-value">¥${Math.round(Math.abs(costSave)/1000).toLocaleString('ja-JP')}K</div>
+                <div class="rec-stat-label">コスト変化</div>
+            </div>
+            <div class="rec-stat">
+                <div class="rec-stat-value">${Math.round(Math.abs(co2Save)).toLocaleString('ja-JP')}</div>
+                <div class="rec-stat-label">CO2削減(kg)</div>
+            </div>
+        </div>
+        <div class="rec-body">
+            ${opt.spd < baseSpd
+                ? `📊 <strong>分析結果:</strong> 基準速力 <strong>${baseSpd} knot</strong> から <strong>${opt.spd} knot</strong> に減速することで、燃料を <strong>${Math.round(fuelSave).toLocaleString('ja-JP')} kg（${fuelPct}%）</strong> 削減でき、総コストを <strong>¥${Math.round(Math.abs(costSave)).toLocaleString('ja-JP')}</strong> 節約できます。航海時間は ${timeDiff.toFixed(1)} 時間増加します。`
+                : opt.spd > baseSpd
+                ? `📊 <strong>分析結果:</strong> 基準速力 <strong>${baseSpd} knot</strong> から <strong>${opt.spd} knot</strong> に増速することで、時間価値を考慮した総コストを <strong>¥${Math.round(Math.abs(costSave)).toLocaleString('ja-JP')}</strong> 削減できます。航海時間は ${Math.abs(timeDiff).toFixed(1)} 時間短縮されます。`
+                : `📊 <strong>分析結果:</strong> 現在の基準速力 <strong>${baseSpd} knot</strong> がすでに最適です。燃料コストと時間コストのバランスが取れています。`
+            }
+        </div>
+        <div class="rec-tip">
+            <i class="fas fa-info-circle"></i> <strong>立方則について:</strong> 船舶の燃料消費は速力の3乗に比例します。速力を10%削減すると、燃料消費は約27%削減（0.9³ ≈ 0.73）されます。到着期限に余裕がある場合はスロースチーミングを推奨します。
+        </div>
+    `;
+}
+
+// CSVエクスポート
+function exportCSV() {
+    if (!simData.length) { showToast('先にシミュレーションを実行してください。','warning'); return; }
+    const headers = '速力(knot),燃費(NM/kg),燃料(kg),航海時間(h),燃料コスト(円),CO2(kg),総コスト(円),備考';
+    const rows = simData.map(r =>
+        `${r.spd},${r.eff.toFixed(4)},${Math.round(r.fuel)},${r.time.toFixed(2)},${Math.round(r.fCost)},${Math.round(r.co2)},${Math.round(r.total)},${r.isOptimal?'★最適':r.isBase?'●基準':''}`
+    );
+    const csv = [headers,...rows].join('\n');
+    const bom = '\uFEFF';
+    downloadFile(bom+csv, 'simulation_result.csv', 'text/csv');
+    showToast('CSVをダウンロードしました。','success');
+}
+
+function exportJSON() {
+    if (!simData.length) { showToast('先にシミュレーションを実行してください。','warning'); return; }
+    const json = JSON.stringify(simData, null, 2);
+    downloadFile(json, 'simulation_result.json', 'application/json');
+    showToast('JSONをダウンロードしました。','success');
+}
+
+function downloadFile(content, filename, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content],{type}));
+    a.download = filename;
+    a.click();
+}
+
+// ============================================================
+// 用語辞典データ
+// ============================================================
+const DEFAULT_GLOSSARY = [
+    {id:'d1',  term:'NM（海里）',        reading:'Nautical Mile',             definition:'海上での距離を表す単位。1海里は緯度1分に相当し、約1,852メートルに等しい。航海では主にこの単位が使用される。', example:'東京からシンガポールまでの距離は約2,900 NMです。', isDefault:true},
+    {id:'d2',  term:'knot（ノット）',     reading:'ノット',                    definition:'船舶の速度を表す単位。1ノットは1時間に1海里進む速さ。1 knot = 約1.852 km/h = 約0.514 m/s。', example:'商船の標準的な巡航速力は15〜20 knotです。', isDefault:true},
+    {id:'d3',  term:'燃料消費率',         reading:'ねんりょうしょうひりつ',    definition:'燃料1kg当たりに航行できる距離（NM）を示す指標。単位はNM/kg。値が大きいほど燃費が良い。', example:'燃料消費率が0.25 NM/kgの場合、1kgで0.25海里航行できます。', isDefault:true},
+    {id:'d4',  term:'航続距離',           reading:'こうぞくきょり',            definition:'船舶が燃料補給なしに航行できる最大距離。燃料搭載量と燃料消費率から算出される。', example:'燃料500 MT、燃費0.3 NM/kgの場合、航続距離は150,000 NMとなります。', isDefault:true},
+    {id:'d5',  term:'立方則',             reading:'りっぽうそく',              definition:'船舶の燃料消費量が速力の3乗に比例する法則。速力を10%削減すると燃料消費は約27%削減される（0.9³≈0.73）。', example:'速力を18 knotから15 knotに下げると、燃料消費は大幅に削減されます。', isDefault:true},
+    {id:'d6',  term:'経済速力',           reading:'けいざいそくりょく',        definition:'燃料コストと時間コストのバランスが最も良い速力。通常、最高速力の70〜80%程度で、立方則を考慮して決定される。', example:'最高速力20 knotの船舶の経済速力は通常14〜16 knotです。', isDefault:true},
+    {id:'d7',  term:'実速力',             reading:'じっそくりょく',            definition:'実際の航行記録から計算された速力。気象・海象条件の影響を含んだ実績値で、計画速力とは異なる場合がある。', example:'計画速力15 knotでも、向かい風により実速力は13 knotでした。', isDefault:true},
+    {id:'d8',  term:'バンカー',           reading:'bunker',                   definition:'船舶用の燃料のこと。主に重油（HFO: Heavy Fuel Oil）、軽油（MGO: Marine Gas Oil）、LNGが使用される。', example:'バンカー価格の変動は運航コストに大きく影響します。', isDefault:true},
+    {id:'d9',  term:'スロースチーミング', reading:'slow steaming',            definition:'燃料消費を削減するために、通常よりも低い速力で航行する運航方式。経済性と環境性能の向上が目的。', example:'スロースチーミングにより、燃料コストを30%削減しました。', isDefault:true},
+    {id:'d10', term:'喫水',               reading:'きっすい',                  definition:'船舶が水面下にある部分の深さ。積荷量によって変化し、喫水が深いほど水の抵抗が増加して燃費が悪化する。', example:'満載時の喫水は15m、空船時は8mです。', isDefault:true},
+    {id:'d11', term:'AIS',                reading:'Automatic Identification System', definition:'船舶自動識別装置。位置・速力・針路などを自動送受信するシステムで、衝突防止や交通管理に使用される。', example:'AISデータから船舶の運航パターンを分析できます。', isDefault:true},
+    {id:'d12', term:'DWT（積載トン数）',  reading:'Deadweight Tonnage',       definition:'船舶が積載できる貨物、燃料、水、食糧などの総重量。船舶のサイズを表す重要な指標。', example:'この船舶のDWTは80,000トンです。', isDefault:true},
+    {id:'d13', term:'トリム',             reading:'trim',                     definition:'船首と船尾の喫水差。トリムを最適化することで水の抵抗を減らし、燃費を改善できる。', example:'適切なトリム調整により、燃費が2%向上しました。', isDefault:true},
+    {id:'d14', term:'ウェザールーティング', reading:'weather routing',         definition:'気象・海象予測を考慮して最適な航路を選定すること。燃料節約と安全航行を両立させる。', example:'ウェザールーティングにより、燃料を5%削減できました。', isDefault:true},
+    {id:'d15', term:'EEOI',               reading:'Energy Efficiency Operational Indicator', definition:'実際の運航における省エネ効率の指標。CO2排出量を輸送仕事量で割った値。単位はg-CO2/(t・NM)。', example:'EEOIを定期的に計測して燃費改善の効果を評価します。', isDefault:true},
+    {id:'d16', term:'CII',                reading:'Carbon Intensity Indicator', definition:'IMO（国際海事機関）が2023年から義務付けた船舶の炭素強度指標。A〜Eでランク付けされ、D・Eは改善計画が必要。', example:'CIIのAランクを維持するためスロースチーミングを実施しました。', isDefault:true},
+];
+
+let glossaryTerms = [];
+
+function loadGlossary() {
+    const custom = JSON.parse(localStorage.getItem('customGlossary') || '[]');
+    glossaryTerms = [...DEFAULT_GLOSSARY, ...custom];
+    glossaryTerms.sort((a,b)=>a.term.localeCompare(b.term,'ja'));
+}
+
+function saveGlossary() {
+    const custom = glossaryTerms.filter(t=>!t.isDefault);
+    localStorage.setItem('customGlossary', JSON.stringify(custom));
+}
+
+function renderGlossary(filter='') {
+    const grid = document.getElementById('glossary-grid');
+    const q    = filter.toLowerCase();
+    const list = q
+        ? glossaryTerms.filter(t=>t.term.toLowerCase().includes(q)||t.reading.toLowerCase().includes(q)||t.definition.includes(q))
+        : glossaryTerms;
+
+    document.getElementById('glossary-stats').textContent =
+        `全${glossaryTerms.length}語（うちカスタム${glossaryTerms.filter(t=>!t.isDefault).length}語）　表示中: ${list.length}語`;
+
+    if (!list.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-sub);">
+            <i class="fas fa-search" style="font-size:2rem;margin-bottom:0.5rem;display:block;opacity:0.4"></i>
+            「${filter}」に一致する用語が見つかりません。
+        </div>`;
+        return;
+    }
+
+    grid.innerHTML = list.map(t => {
+        const isCustom = !t.isDefault;
+        return `
+        <div class="glossary-card">
+            <div class="glossary-card-header">
+                <div class="glossary-term">${highlight(t.term, q)}</div>
+                ${isCustom
+                    ? `<div class="glossary-actions">
+                        <button class="btn-icon-sm edit" onclick="openEditModal('${t.id}')" title="編集"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon-sm delete" onclick="deleteGlossaryTerm('${t.id}')" title="削除"><i class="fas fa-trash"></i></button>
+                       </div>`
+                    : `<span class="default-badge">デフォルト</span>`
+                }
+            </div>
+            <div class="glossary-reading">${highlight(t.reading, q)}</div>
+            <div class="glossary-definition">${highlight(t.definition, q)}</div>
+            <div class="glossary-example"><strong>例:</strong> ${t.example}</div>
+        </div>`;
+    }).join('');
+}
+
+function highlight(text, q) {
+    if (!q) return text;
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return text.replace(re, '<mark style="background:rgba(74,158,255,0.25);border-radius:2px;padding:0 2px;">$1</mark>');
+}
+
+function deleteGlossaryTerm(id) {
+    const t = glossaryTerms.find(t=>t.id===id);
+    if (!t || !confirm(`「${t.term}」を削除しますか？`)) return;
+    glossaryTerms = glossaryTerms.filter(t=>t.id!==id);
+    saveGlossary();
+    renderGlossary(document.getElementById('glossary-search').value);
+    showToast('用語を削除しました。', 'info');
+}
+
+function openAddModal() {
+    document.getElementById('modal-title').innerHTML = '<i class="fas fa-plus-circle" style="color:var(--accent-cyan)"></i> 新しい用語を追加';
+    document.getElementById('modal-submit-btn').innerHTML = '<i class="fas fa-save"></i> 追加';
+    document.getElementById('modal-term-id').value = '';
+    document.getElementById('modal-term-name').value = '';
+    document.getElementById('modal-term-reading').value = '';
+    document.getElementById('modal-term-definition').value = '';
+    document.getElementById('modal-term-example').value = '';
+    document.getElementById('term-modal').classList.remove('hidden');
+    document.getElementById('modal-term-name').focus();
+}
+
+function openEditModal(id) {
+    const t = glossaryTerms.find(t=>t.id===id);
+    if (!t) return;
+    document.getElementById('modal-title').innerHTML = '<i class="fas fa-edit" style="color:var(--accent-cyan)"></i> 用語を編集';
+    document.getElementById('modal-submit-btn').innerHTML = '<i class="fas fa-save"></i> 更新';
+    document.getElementById('modal-term-id').value = id;
+    document.getElementById('modal-term-name').value = t.term;
+    document.getElementById('modal-term-reading').value = t.reading;
+    document.getElementById('modal-term-definition').value = t.definition;
+    document.getElementById('modal-term-example').value = t.example;
+    document.getElementById('term-modal').classList.remove('hidden');
+    document.getElementById('modal-term-name').focus();
+}
+
+function closeModal() {
+    document.getElementById('term-modal').classList.add('hidden');
+}
+
+function submitGlossaryForm(e) {
+    e.preventDefault();
+    const id  = document.getElementById('modal-term-id').value;
+    const term = {
+        id: id || 'custom-' + Date.now(),
+        term: document.getElementById('modal-term-name').value.trim(),
+        reading: document.getElementById('modal-term-reading').value.trim(),
+        definition: document.getElementById('modal-term-definition').value.trim(),
+        example: document.getElementById('modal-term-example').value.trim(),
+        isDefault: false
+    };
+
+    if (!term.term||!term.reading||!term.definition||!term.example) {
+        showToast('すべての項目を入力してください。', 'error');
+        return;
+    }
+
+    if (id) {
+        const idx = glossaryTerms.findIndex(t=>t.id===id);
+        if (idx !== -1) glossaryTerms[idx] = term;
+    } else {
+        glossaryTerms.push(term);
+    }
+
+    glossaryTerms.sort((a,b)=>a.term.localeCompare(b.term,'ja'));
+    saveGlossary();
+    renderGlossary(document.getElementById('glossary-search').value);
+    closeModal();
+    showToast(id ? '用語を更新しました。' : '用語を追加しました。', 'success');
+}
+
+// ============================================================
+// トースト通知
+// ============================================================
+function showToast(msg, type='info') {
+    const cont  = document.getElementById('toast-container');
+    const icons = { success:'check-circle', error:'times-circle', info:'info-circle', warning:'exclamation-triangle' };
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i> ${msg}`;
+    cont.appendChild(toast);
+    setTimeout(()=>{ toast.style.animation='toastOut 0.3s ease forwards'; setTimeout(()=>toast.remove(),300); }, 3000);
+}
+
+// ============================================================
+// ダークモード
+// ============================================================
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+    const next   = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    document.getElementById('theme-toggle').innerHTML = next==='dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    localStorage.setItem('theme', next);
+}
+
+function loadTheme() {
+    const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('theme-toggle').innerHTML = saved==='dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+}
+
+// ============================================================
+// キーボードショートカット
+// ============================================================
+function setupShortcuts() {
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey||e.metaKey)) {
+            const tabs = ['calculator','exercises','simulation','glossary','history'];
+            if (e.key >= '1' && e.key <= '5') {
+                e.preventDefault();
+                switchTab(tabs[+e.key-1]);
+            }
+            if (e.key==='d') { e.preventDefault(); toggleTheme(); }
+            if (e.key==='Enter') {
+                e.preventDefault();
+                if (document.getElementById('calculator').classList.contains('active')) runCalculation();
+            }
+        }
+        if (e.key==='Escape') closeModal();
+    });
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+function init() {
+    loadTheme();
+
+    // タブ切替
+    document.querySelectorAll('[data-tab]').forEach(el => {
+        if (el.classList.contains('nav-item') || el.classList.contains('mobile-nav-btn')) {
+            el.addEventListener('click', ()=>switchTab(el.dataset.tab));
+        }
+    });
+
+    // 計算モードボタン
+    document.querySelectorAll('.calc-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.calc-mode-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            currentMode = btn.dataset.mode;
+            buildCalcForm(currentMode);
+            document.getElementById('result-card').style.display = 'none';
+        });
+    });
+
+    // 計算ボタン
+    document.getElementById('calculate-btn').addEventListener('click', runCalculation);
+
+    // Enterキーで計算
+    document.addEventListener('keypress', e => {
+        if (e.key==='Enter' && document.getElementById('calculator').classList.contains('active') && !document.getElementById('term-modal').classList.contains('hidden')===false) {
+            const active = document.activeElement;
+            if (active && active.tagName==='INPUT' && active.closest('#calc-form-container')) runCalculation();
+        }
+    });
+
+    // クリアボタン
+    document.getElementById('clear-inputs-btn').addEventListener('click', ()=>{
+        document.querySelectorAll('#calc-form-container input').forEach(el=>el.value='');
+        document.getElementById('result-card').style.display = 'none';
+    });
+
+    // コピー
+    document.getElementById('copy-result-btn').addEventListener('click', copyResult);
+
+    // 結果共有（URLコピー）
+    document.getElementById('share-result-btn').addEventListener('click', ()=>{
+        if (!lastResult) { showToast('先に計算を実行してください。','warning'); return; }
+        copyResult();
+    });
+
+    // 履歴保存
+    document.getElementById('add-to-history-btn').addEventListener('click', saveToHistory);
+
+    // 履歴削除
+    document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
+
+    // シミュレーション
+    document.getElementById('simulate-btn').addEventListener('click', runSimulation);
+    document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+    document.getElementById('export-json-btn').addEventListener('click', exportJSON);
+
+    // グラフ切替
+    document.querySelectorAll('.chart-type-btn').forEach(btn => {
+        btn.addEventListener('click', ()=>{
+            document.querySelectorAll('.chart-type-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            chartType = btn.dataset.type;
+            if (simData.length) renderSimChart();
+        });
+    });
+
+    // ダークモード
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+    // 印刷
+    document.getElementById('print-btn').addEventListener('click', ()=>window.print());
+
+    // 演習フィルター
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', ()=>{
+            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            renderExercises(btn.dataset.filter);
+        });
+    });
+
+    // スコアリセット
+    document.getElementById('reset-score-btn').addEventListener('click', resetScore);
+
+    // 用語辞典
+    document.getElementById('add-term-btn').addEventListener('click', openAddModal);
+    document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+    document.getElementById('term-form').addEventListener('submit', submitGlossaryForm);
+    document.getElementById('term-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('term-modal')) closeModal();
+    });
+    document.getElementById('glossary-search').addEventListener('input', e => {
+        renderGlossary(e.target.value);
+    });
+
+    // 入力値の負数防止 & フォーカス時全選択
+    document.addEventListener('focusin', e => {
+        if (e.target.type === 'number') e.target.select();
+    });
+    document.addEventListener('input', e => {
+        if (e.target.type === 'number' && +e.target.value < 0) e.target.value = '';
+    });
+
+    // 単位変換セットアップ
+    setupConverters();
+
+    // キーボードショートカット
+    setupShortcuts();
+
+    // 初期フォーム
+    buildCalcForm(currentMode);
+
+    // 演習問題
+    renderExercises();
+    updateScoreBoard();
+
+    // 用語辞典
+    loadGlossary();
+    renderGlossary();
+
+    // 履歴
+    renderHistory();
+    updateHistoryBadge();
+
+    console.log('⚓ 船舶燃費・速力計算アプリ Pro v2.0 起動完了');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+</script>
+</body>
+</html>
