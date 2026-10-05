@@ -406,6 +406,12 @@ async function init() {
     const months = await API.getMonths();
     allMonths = months.months || [];
     buildJumpDropdown();
+    // データがある最新月を初期表示にする
+    if (allMonths.length > 0) {
+      const latest = allMonths[allMonths.length - 1];
+      currentYear = latest.year;
+      currentMonth = latest.month;
+    }
   } catch (e) {}
   await loadSchedule();
   setInterval(autoRefresh, 30000); // 30秒ごと自動更新
