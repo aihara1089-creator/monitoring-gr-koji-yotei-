@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>モニタリングGr工事予定表</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --primary-dark: #1e3a8a;
+      --secondary: #0f766e;
+      --accent: #f59e0b;
+      --danger: #dc2626;
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
+
+    /* ===== ヘッダー ===== */
+    .header { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%); color: #fff; padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; height: 56px; display: flex; align-items: center; gap: 16px; }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.02em; flex: 1; }
+    .header-title span { font-size: 12px; opacity: 0.75; font-weight: 400; margin-left: 8px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ===== ボタン ===== */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; white-space: nowrap; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--primary-light); color: #fff; }
+    .btn-primary:hover { background: var(--primary); }
+    .btn-success { background: var(--secondary); color: #fff; }
+    .btn-success:hover { background: #0d6460; }
+    .btn-warning { background: var(--accent); color: #fff; }
+    .btn-warning:hover { background: #d97706; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-ghost { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+    .btn-outline { background: transparent; color: var(--primary-light); border: 1px solid var(--primary-light); }
+    .btn-outline:hover { background: var(--primary-light); color: #fff; }
+    .btn-sm { padding: 3px 8px; font-size: 11px; }
+    .btn-icon { padding: 5px 8px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ===== ナビゲーション (月選択) ===== */
+    .nav-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .nav-month-nav { display: flex; align-items: center; gap: 8px; }
+    .nav-month-label { font-size: 20px; font-weight: 700; color: var(--primary); min-width: 140px; text-align: center; }
+    .nav-jump { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+    .nav-jump select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #fff; }
+    .today-badge { background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 4px; }
+
+    /* ===== メインレイアウト ===== */
+    .main { padding: 16px 20px; }
+
+    /* ===== スケジュールテーブル ===== */
+    .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+    .table-wrapper { overflow-x: auto; }
+    table { border-collapse: collapse; min-width: 100%; }
+    thead { position: sticky; top: 0; z-index: 10; }
+
+    /* 曜日ヘッダー */
+    th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; white-space: nowrap; }
+    th.staff-col { background: #1e3a8a; min-width: 90px; width: 90px; font-size: 12px; padding: 8px 6px; position: sticky; left: 0; z-index: 20; }
+    .th-day { min-width: 44px; width: 44px; }
+    .th-day .day-num { font-size: 13px; font-weight: 700; display: block; padding: 4px 2px 0; }
+    .th-day .day-wd { font-size: 10px; opacity: 0.8; display: block; padding: 0 2px 4px; }
+    th.sat { background: #1d4ed8; }
+    th.sun, th.hol { background: #9f1239; }
+
+    /* 担当者行 */
+    tr { border-bottom: 1px solid var(--border); }
+    tr:hover { background: #f8fafc; }
+    tr:last-child { border-bottom: none; }
+    td { padding: 4px; border: 1px solid var(--border); vertical-align: top; min-height: 40px; height: 44px; }
+    td.staff-name { background: #f1f5f9; font-weight: 600; font-size: 12px; padding: 6px 8px; position: sticky; left: 0; z-index: 5; vertical-align: middle; border-right: 2px solid #cbd5e1; white-space: nowrap; min-width: 90px; width: 90px; }
+    td.day-cell { min-width: 44px; width: 44px; cursor: pointer; position: relative; padding: 2px; }
+    td.day-cell:hover { background: #eff6ff; }
+    td.sat-cell { background: #eff6ff; }
+    td.sun-cell { background: #fff1f2; }
+
+    /* セル内の予定タグ */
+    .entry-tag { display: block; background: #3b82f6; color: #fff; border-radius: 4px; padding: 2px 4px; font-size: 10px; line-height: 1.3; margin-bottom: 2px; cursor: pointer; position: relative; word-break: break-all; }
+    .entry-tag:hover { opacity: 0.85; }
+    .entry-tag.rest { background: #94a3b8; }
+    .entry-tag.meeting { background: #7c3aed; }
+    .entry-tag.color-red { background: #ef4444; }
+    .entry-tag.color-green { background: #10b981; }
+    .entry-tag.color-orange { background: #f97316; }
+    .entry-tag.color-purple { background: #8b5cf6; }
+    .entry-tag.color-teal { background: #14b8a6; }
+    .entry-tag.color-pink { background: #ec4899; }
+    .entry-tag.color-gray { background: #6b7280; }
+
+    .add-btn-cell { display: flex; align-items: center; justify-content: center; height: 100%; color: #cbd5e1; font-size: 16px; opacity: 0; }
+    td.day-cell:hover .add-btn-cell { opacity: 1; color: var(--primary-light); }
+
+    /* グループ区切り */
+    tr.group-header td { background: #e2e8f0; font-weight: 700; color: var(--text-muted); font-size: 11px; padding: 2px 8px; height: 20px; border-bottom: 1px solid #cbd5e1; }
+
+    /* ===== サイドパネル (担当者管理) ===== */
+    .layout { display: flex; gap: 16px; }
+    .schedule-area { flex: 1; min-width: 0; }
+    .side-panel { width: 220px; flex-shrink: 0; }
+    .panel-card { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 14px; margin-bottom: 14px; }
+    .panel-title { font-weight: 700; font-size: 13px; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .staff-list-item { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 6px; margin-bottom: 2px; cursor: grab; }
+    .staff-list-item:hover { background: #f1f5f9; }
+    .staff-list-item .staff-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-light); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .staff-list-item .staff-label { flex: 1; font-size: 12px; font-weight: 500; }
+    .staff-list-item .del-btn { opacity: 0; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 2px; }
+    .staff-list-item:hover .del-btn { opacity: 1; }
+
+    /* ===== モーダル ===== */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-overlay.hidden { display: none; }
+    .modal { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-lg); width: 100%; max-width: 440px; overflow: hidden; animation: slideUp 0.2s ease; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 15px; font-weight: 700; }
+    .modal-close { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; opacity: 0.8; line-height: 1; padding: 0 4px; }
+    .modal-close:hover { opacity: 1; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 14px 20px; background: #f8fafc; display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--border); }
+
+    /* ===== フォーム ===== */
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    input[type=text], input[type=number], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: inherit; transition: border-color 0.15s; background: #fff; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    textarea { resize: vertical; min-height: 70px; }
+
+    /* カラー選択 */
+    .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.1s; }
+    .color-swatch:hover, .color-swatch.selected { border-color: var(--text); transform: scale(1.2); }
+
+    /* ===== 凡例 ===== */
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 10px 14px; background: var(--surface); border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* ===== ローディング/空 ===== */
+    .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+    .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid #e2e8f0; border-top-color: var(--primary-light); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== トースト ===== */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: #1e293b; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px; }
+    .toast.success { border-left: 3px solid #10b981; }
+    .toast.error { border-left: 3px solid #ef4444; }
+    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 768px) {
+      .side-panel { display: none; }
+      .nav-jump { display: none; }
+      .header-title span { display: none; }
+    }
+
+    /* ===== 印刷 ===== */
+    @media print {
+      .header, .nav-bar, .side-panel, .legend { display: none !important; }
+      .main { padding: 0; }
+      .table-container { box-shadow: none; }
+      th { background: #334155 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .entry-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    /* ===== ドラッグ&ドロップ ===== */
+    .dragging { opacity: 0.5; }
+    .drag-over { background: #dbeafe !important; }
+
+    /* ===== 今日強調 ===== */
+    th.today-col { background: #065f46 !important; }
+    td.today-col { background: #ecfdf5 !important; }
+
+    /* ===== 検索バー ===== */
+    .search-bar { display: flex; gap: 8px; align-items: center; }
+    .search-input { padding: 5px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; width: 180px; }
+    .search-input:focus { outline: none; border-color: var(--primary-light); }
+    .highlight { background: #fef08a !important; }
+  </style>
+</head>
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<header class="header">
+  <div class="header-title">
+    モニタリングGr 工事予定表
+  </div>
+  <div class="header-actions">
+    <div class="search-bar">
+      <input type="text" class="search-input" id="searchInput" placeholder="担当者・工事名検索">
+    </div>
+    <button class="btn btn-ghost" onclick="openAddModal()">＋ 予定追加</button>
+    <button class="btn btn-ghost" onclick="window.print()">印刷</button>
+  </div>
+</header>
+
+<!-- ===== ナビゲーション ===== -->
+<div class="nav-bar">
+  <div class="nav-month-nav">
+    <button class="btn btn-outline btn-icon" onclick="changeMonth(-1)" title="前月">◀</button>
+    <div class="nav-month-label" id="monthLabel">読み込み中...</div>
+    <button class="btn btn-outline btn-icon" onclick="changeMonth(1)" title="翌月">▶</button>
+  </div>
+  <button class="btn btn-outline btn-sm" onclick="goToday()">今月</button>
+
+  <div class="nav-jump" style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+    <span style="font-size:12px;color:var(--text-muted);">年月:</span>
+    <select id="jumpYear" onchange="jumpToMonth()" style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;"></select>
+    <select id="jumpMonth" onchange="jumpToMonth()" style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+      <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+      <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+      <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+      <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+    </select>
+  </div>
+</div>
+
+<!-- ===== メイン ===== -->
+<div class="main">
+  <!-- 凡例 -->
+  <div class="legend">
+    <span style="font-size:11px;font-weight:600;color:var(--text-muted);">凡例:</span>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> 工事</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div> 出張</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div> 会議</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div> 重要</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div> 試験</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#94a3b8;"></div> 休み</div>
+    <div style="margin-left:auto;">
+      <span id="entryCount" style="font-size:11px;color:var(--text-muted);"></span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- スケジュール表 -->
+    <div class="schedule-area">
+      <div class="table-container">
+        <div class="table-wrapper">
+          <div id="scheduleTable" class="loading">
+            <div class="spinner"></div>
+            <div>読み込み中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- サイドパネル -->
+    <div class="side-panel">
+      <div class="panel-card">
+        <div class="panel-title">担当者管理</div>
+        <div id="staffList"></div>
+        <div style="margin-top:10px; display:flex; gap:6px;">
+          <input type="text" id="newStaffInput" placeholder="新しい担当者名" style="flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+          <button class="btn btn-primary btn-sm" onclick="addStaff()">追加</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-title">クイック操作</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="openAddModal()" style="justify-content:flex-start;">＋ 予定を追加</button>
+          <button class="btn btn-outline btn-sm" onclick="copyPrevMonth()" style="justify-content:flex-start;">前月からコピー</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()" style="justify-content:flex-start;">CSVエクスポート</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-title">今月の集計</div>
+        <div id="monthSummary" style="font-size:12px; color:var(--text-muted);">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 予定追加/編集モーダル ===== -->
+<div class="modal-overlay hidden" id="scheduleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">予定を追加</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>担当者</label>
+        <select id="formStaff"></select>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1;">
+          <label>年</label>
+          <input type="number" id="formYear" min="2020" max="2030">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>月</label>
+          <select id="formMonth">
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>日</label>
+          <input type="number" id="formDay" min="1" max="31">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>工事/予定内容</label>
+        <textarea id="formContent" rows="3" placeholder="船名・工事内容・場所など"></textarea>
+      </div>
+      <div class="form-group">
+        <label>色</label>
+        <div class="color-picker" id="colorPicker">
+          <div class="color-swatch selected" style="background:#3b82f6;" data-color="#3b82f6" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#10b981;" data-color="#10b981" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#ec4899;" data-color="#ec4899" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#14b8a6;" data-color="#14b8a6" onclick="selectColor(this)"></div>
+          <div class="color-swatch" style="background:#94a3b8;" data-color="#94a3b8" onclick="selectColor(this)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteEntry()" style="margin-right:auto; display:none;">削除</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEntry()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== トースト ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== グローバル状態 =====
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth() + 1;
+let scheduleData = null;
+let editingId = null;
+let selectedColor = '#3b82f6';
+let searchQuery = '';
+let allMonths = [];
+let refreshTimer = null;
+
+// ===== API =====
+const API = {
+  async getSchedule(year, month) {
+    const r = await fetch(`/api/schedule?year=${year}&month=${month}`);
+    return r.json();
+  },
+  async createSchedule(data) {
+    const r = await fetch('/api/schedule', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async updateSchedule(id, data) {
+    const r = await fetch(`/api/schedule/${id}`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async deleteSchedule(id) {
+    const r = await fetch(`/api/schedule/${id}`, { method: 'DELETE' });
+    return r.json();
+  },
+  async getStaff() {
+    const r = await fetch('/api/staff');
+    return r.json();
+  },
+  async addStaff(name) {
+    const r = await fetch('/api/staff', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name})
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  async deleteStaff(name) {
+    const r = await fetch(`/api/staff/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    return r.json();
+  },
+  async getMonths() {
+    const r = await fetch('/api/months');
+    return r.json();
+  }
+};
+
+// ===== 初期化 =====
+async function init() {
+  try {
+    const months = await API.getMonths();
+    allMonths = months.months || [];
+    buildJumpDropdown();
+  } catch (e) {}
+  await loadSchedule();
+  setInterval(autoRefresh, 30000); // 30秒ごと自動更新
+}
+
+async function autoRefresh() {
+  try {
+    const data = await API.getSchedule(currentYear, currentMonth);
+    scheduleData = data;
+    renderTable();
+    renderSummary();
+  } catch (e) {}
+}
+
+// ===== カレンダー読み込み =====
+async function loadSchedule() {
+  document.getElementById('scheduleTable').innerHTML = `<div class="loading"><div class="spinner"></div><div>読み込み中...</div></div>`;
+  try {
+    scheduleData = await API.getSchedule(currentYear, currentMonth);
+    updateMonthLabel();
+    renderTable();
+    renderStaffPanel();
+    renderSummary();
+  } catch (e) {
+    document.getElementById('scheduleTable').innerHTML = `<div class="loading" style="color:#ef4444;">読み込みエラー: ${e.message}</div>`;
+  }
+}
+
+// ===== 月ラベル更新 =====
+function updateMonthLabel() {
+  const today = new Date();
+  const isToday = today.getFullYear() === currentYear && today.getMonth()+1 === currentMonth;
+  document.getElementById('monthLabel').innerHTML =
+    `${currentYear}年 ${currentMonth}月` +
+    (isToday ? ' <span class="today-badge">今月</span>' : '');
+  document.getElementById('jumpYear').value = currentYear;
+  document.getElementById('jumpMonth').value = currentMonth;
+}
+
+// ===== テーブル描画 =====
+function renderTable() {
+  if (!scheduleData) return;
+  const { days, schedules, staff } = scheduleData;
+  const today = new Date();
+  const todayDay = (today.getFullYear() === currentYear && today.getMonth()+1 === currentMonth) ? today.getDate() : -1;
+
+  // 予定をマップ化: staff -> day -> [entries]
+  const entryMap = {};
+  for (const s of schedules) {
+    if (!entryMap[s.staff]) entryMap[s.staff] = {};
+    if (!entryMap[s.staff][s.day]) entryMap[s.staff][s.day] = [];
+    entryMap[s.staff][s.day].push(s);
+  }
+
+  let html = '<table>';
+
+  // ヘッダー行
+  html += '<thead><tr>';
+  html += `<th class="staff-col">担当者</th>`;
+  for (const d of days) {
+    const cls = d.weekday === '土' ? 'sat' : d.weekday === '日' ? 'sun' : '';
+    const todayCls = d.day === todayDay ? 'today-col' : '';
+    html += `<th class="th-day ${cls} ${todayCls}"><span class="day-num">${d.day}</span><span class="day-wd">${d.weekday}</span></th>`;
+  }
+  html += '</tr></thead>';
+
+  // 担当者行
+  html += '<tbody>';
+  const staffList = staff || [];
+  const query = searchQuery.toLowerCase();
+
+  for (const staffName of staffList) {
+    const staffMatch = !query || staffName.toLowerCase().includes(query);
+    const staffEntries = entryMap[staffName] || {};
+
+    // 検索時: その担当者に該当エントリがあれば表示
+    let hasMatch = staffMatch;
+    if (query && !staffMatch) {
+      for (const dayEntries of Object.values(staffEntries)) {
+        for (const e of dayEntries) {
+          if (e.content.toLowerCase().includes(query)) { hasMatch = true; break; }
+        }
+        if (hasMatch) break;
+      }
+    }
+    if (!hasMatch) continue;
+
+    html += '<tr>';
+    html += `<td class="staff-name" title="${staffName}">${staffName}</td>`;
+
+    for (const d of days) {
+      const isSat = d.weekday === '土';
+      const isSun = d.weekday === '日';
+      const isToday2 = d.day === todayDay;
+      const cellCls = [
+        'day-cell',
+        isSat ? 'sat-cell' : '',
+        isSun ? 'sun-cell' : '',
+        isToday2 ? 'today-col' : ''
+      ].filter(Boolean).join(' ');
+
+      const dayEntries = staffEntries[d.day] || [];
+      html += `<td class="${cellCls}" onclick="cellClick('${staffName}', ${d.day}, event)" data-staff="${staffName}" data-day="${d.day}">`;
+
+      if (dayEntries.length > 0) {
+        for (const e of dayEntries) {
+          const highlight = query && e.content.toLowerCase().includes(query) ? 'highlight' : '';
+          const bgColor = e.color || '#3b82f6';
+          const title = e.content.replace(/"/g, '&quot;');
+          html += `<span class="entry-tag ${highlight}" style="background:${bgColor};" data-id="${e.id}" onclick="editEntry(event,'${e.id}')" title="${title}">${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
+        }
+      } else {
+        html += `<div class="add-btn-cell">＋</div>`;
+      }
+      html += '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+
+  document.getElementById('scheduleTable').innerHTML = html;
+  document.getElementById('entryCount').textContent = `${schedules.length} 件の予定`;
+}
+
+// ===== 担当者パネル =====
+function renderStaffPanel() {
+  if (!scheduleData) return;
+  const staff = scheduleData.staff || [];
+  const colors = ['#3b82f6','#10b981','#8b5cf6','#ef4444','#f97316','#ec4899','#14b8a6','#f59e0b','#6366f1'];
+  let html = '';
+  for (const [i, name] of staff.entries()) {
+    const color = colors[i % colors.length];
+    const initials = name.substring(0,2);
+    html += `<div class="staff-list-item">
+      <div class="staff-avatar" style="background:${color};">${initials}</div>
+      <span class="staff-label">${escHtml(name)}</span>
+      <button class="del-btn" onclick="deleteStaff('${name.replace(/'/g,"\\'")}')">x</button>
+    </div>`;
+  }
+  document.getElementById('staffList').innerHTML = html || '<div style="color:var(--text-muted);font-size:12px;">担当者なし</div>';
+}
+
+// ===== 集計パネル =====
+function renderSummary() {
+  if (!scheduleData) return;
+  const { schedules, staff } = scheduleData;
+  const countMap = {};
+  for (const s of schedules) {
+    countMap[s.staff] = (countMap[s.staff] || 0) + 1;
+  }
+  const sorted = Object.entries(countMap).sort((a,b) => b[1]-a[1]).slice(0,8);
+  let html = '';
+  for (const [name, cnt] of sorted) {
+    const pct = Math.min(100, cnt * 5);
+    html += `<div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+        <span>${escHtml(name)}</span><span style="font-weight:600;">${cnt}件</span>
+      </div>
+      <div style="background:#e2e8f0;border-radius:4px;height:4px;overflow:hidden;">
+        <div style="background:var(--primary-light);height:100%;width:${pct}%;border-radius:4px;"></div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('monthSummary').innerHTML = html || '<div>予定なし</div>';
+}
+
+// ===== 月移動 =====
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+  if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+  loadSchedule();
+}
+
+function goToday() {
+  const t = new Date();
+  currentYear = t.getFullYear();
+  currentMonth = t.getMonth() + 1;
+  loadSchedule();
+}
+
+function buildJumpDropdown() {
+  const yearSel = document.getElementById('jumpYear');
+  const years = new Set();
+  const now = new Date();
+  for (let y = 2022; y <= now.getFullYear()+2; y++) years.add(y);
+  for (const m of allMonths) years.add(m.year);
+  yearSel.innerHTML = '';
+  for (const y of [...years].sort()) {
+    yearSel.innerHTML += `<option value="${y}">${y}年</option>`;
+  }
+  yearSel.value = currentYear;
+}
+
+function jumpToMonth() {
+  currentYear = parseInt(document.getElementById('jumpYear').value);
+  currentMonth = parseInt(document.getElementById('jumpMonth').value);
+  loadSchedule();
+}
+
+// ===== セルクリック =====
+function cellClick(staffName, day, event) {
+  if (event.target.classList.contains('entry-tag')) return;
+  openAddModal(staffName, day);
+}
+
+// ===== モーダル =====
+function openAddModal(staffName, day) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '予定を追加';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('formYear').value = currentYear;
+  document.getElementById('formMonth').value = currentMonth;
+  document.getElementById('formDay').value = day || new Date().getDate();
+  document.getElementById('formContent').value = '';
+  selectedColor = '#3b82f6';
+  updateColorPicker();
+
+  const staffSel = document.getElementById('formStaff');
+  const staff = scheduleData?.staff || [];
+  staffSel.innerHTML = staff.map(s => `<option value="${escHtml(s)}" ${s===staffName?'selected':''}>${escHtml(s)}</option>`).join('');
+
+  document.getElementById('scheduleModal').classList.remove('hidden');
+  document.getElementById('formContent').focus();
+}
+
+function editEntry(event, id) {
+  event.stopPropagation();
+  const entry = scheduleData.schedules.find(s => s.id === id);
+  if (!entry) return;
+
+  editingId = id;
+  document.getElementById('modalTitle').textContent = '予定を編集';
+  document.getElementById('deleteBtn').style.display = 'inline-flex';
+  document.getElementById('formYear').value = entry.year;
+  document.getElementById('formMonth').value = entry.month;
+  document.getElementById('formDay').value = entry.day;
+  document.getElementById('formContent').value = entry.content;
+  selectedColor = entry.color || '#3b82f6';
+  updateColorPicker();
+
+  const staffSel = document.getElementById('formStaff');
+  const staff = scheduleData?.staff || [];
+  staffSel.innerHTML = staff.map(s => `<option value="${escHtml(s)}" ${s===entry.staff?'selected':''}>${escHtml(s)}</option>`).join('');
+
+  document.getElementById('scheduleModal').classList.remove('hidden');
+  document.getElementById('formContent').focus();
+}
+
+function closeModal() {
+  document.getElementById('scheduleModal').classList.add('hidden');
+}
+
+async function saveEntry() {
+  const staff = document.getElementById('formStaff').value;
+  const year = parseInt(document.getElementById('formYear').value);
+  const month = parseInt(document.getElementById('formMonth').value);
+  const day = parseInt(document.getElementById('formDay').value);
+  const content = document.getElementById('formContent').value.trim();
+
+  if (!content) { showToast('内容を入力してください', 'error'); return; }
+  if (!staff) { showToast('担当者を選択してください', 'error'); return; }
+
+  try {
+    if (editingId) {
+      await API.updateSchedule(editingId, { staff, year, month, day, content, color: selectedColor });
+      showToast('更新しました', 'success');
+    } else {
+      await API.createSchedule({ staff, year, month, day, content, color: selectedColor });
+      showToast('追加しました', 'success');
+    }
+    closeModal();
+    await loadSchedule();
+  } catch (e) {
+    showToast('エラーが発生しました', 'error');
+  }
+}
+
+async function deleteEntry() {
+  if (!editingId) return;
+  if (!confirm('この予定を削除しますか？')) return;
+  try {
+    await API.deleteSchedule(editingId);
+    showToast('削除しました', 'success');
+    closeModal();
+    await loadSchedule();
+  } catch (e) {
+    showToast('削除エラー', 'error');
+  }
+}
+
+// ===== カラー選択 =====
+function selectColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedColor = el.dataset.color;
+}
+
+function updateColorPicker() {
+  document.querySelectorAll('.color-swatch').forEach(s => {
+    s.classList.toggle('selected', s.dataset.color === selectedColor);
+  });
+}
+
+// ===== 担当者管理 =====
+async function addStaff() {
+  const input = document.getElementById('newStaffInput');
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    await API.addStaff(name);
+    input.value = '';
+    showToast(`${name} を追加しました`, 'success');
+    await loadSchedule();
+  } catch (e) {
+    showToast('追加エラー（既に存在する可能性があります）', 'error');
+  }
+}
+
+async function deleteStaff(name) {
+  if (!confirm(`「${name}」を担当者リストから削除しますか？\n（予定データは残ります）`)) return;
+  try {
+    await API.deleteStaff(name);
+    showToast(`${name} を削除しました`, 'success');
+    await loadSchedule();
+  } catch (e) {
+    showToast('削除エラー', 'error');
+  }
+}
+
+// ===== 前月コピー =====
+async function copyPrevMonth() {
+  let prevYear = currentYear, prevMonth = currentMonth - 1;
+  if (prevMonth < 1) { prevMonth = 12; prevYear--; }
+
+  if (!confirm(`${prevYear}年${prevMonth}月の予定を今月にコピーしますか？`)) return;
+  try {
+    const prev = await API.getSchedule(prevYear, prevMonth);
+    let count = 0;
+    for (const s of prev.schedules) {
+      await API.createSchedule({
+        year: currentYear, month: currentMonth,
+        staff: s.staff, day: s.day, content: s.content, color: s.color
+      });
+      count++;
+    }
+    showToast(`${count}件コピーしました`, 'success');
+    await loadSchedule();
+  } catch (e) {
+    showToast('コピーエラー', 'error');
+  }
+}
+
+// ===== CSVエクスポート =====
+function exportCSV() {
+  if (!scheduleData) return;
+  const { schedules } = scheduleData;
+  const rows = [['年','月','日','担当者','内容']];
+  for (const s of schedules) {
+    rows.push([s.year, s.month, s.day, s.staff, `"${s.content.replace(/"/g,'""')}"`]);
+  }
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `工事予定表_${currentYear}年${currentMonth}月.csv`;
+  a.click();
+}
+
+// ===== 検索 =====
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  renderTable();
+});
+
+// ===== トースト =====
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ===== キーボードショートカット =====
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft' && !isModalOpen()) changeMonth(-1);
+  if (e.key === 'ArrowRight' && !isModalOpen()) changeMonth(1);
+});
+
+function isModalOpen() {
+  return !document.getElementById('scheduleModal').classList.contains('hidden');
+}
+
+// ===== モーダル外クリックで閉じる =====
+document.getElementById('scheduleModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('scheduleModal')) closeModal();
+});
+
+// ===== Enterキーで担当者追加 =====
+document.getElementById('newStaffInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addStaff();
+});
+
+// ===== ユーティリティ =====
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== 起動 =====
+init();
+</script>
+</body>
+</html>
