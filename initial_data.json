@@ -12383,6 +12383,478 @@
       "day": 28,
       "weekday": "金",
       "content": "技術部案件"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 1,
+      "staff": "村上",
+      "content": "みらいII",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 5,
+      "staff": "村上",
+      "content": "INO HORIZON/瑞穂\n停電対策/名古屋",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 4,
+      "staff": "野村",
+      "content": "SC484\n硬翼帆は9月下旬調整完了、軸馬力・波浪レーダ・EMS・D/L・IMUが調整可能になり次第 工事。",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 26,
+      "staff": "野村",
+      "content": "課長研修\n13:30-16:00\nオンライン",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 27,
+      "staff": "野村",
+      "content": "GT HERA(MOLDB)\n古野、BEMAC\nプロバイダ未確認\n中国ドックでネットワーク改修後、日本寄港時に搭載",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 1,
+      "staff": "井手",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 2,
+      "staff": "井手",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 5,
+      "staff": "井手",
+      "content": "以降台場出勤",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 15,
+      "staff": "石井",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 7,
+      "staff": "福島",
+      "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 16,
+      "staff": "福島",
+      "content": "昇格試験",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 1,
+      "staff": "櫻田",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 2,
+      "staff": "櫻田",
+      "content": "Tatou",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 9,
+      "staff": "櫻田",
+      "content": "Tatou",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 14,
+      "staff": "櫻田",
+      "content": "NKセミナー\n13:15～14:15",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 16,
+      "staff": "櫻田",
+      "content": "Tatou",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 23,
+      "staff": "櫻田",
+      "content": "Tatou",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 30,
+      "staff": "櫻田",
+      "content": "Tatou",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 9,
+      "staff": "川北",
+      "content": "昇格試験",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 13,
+      "staff": "川北",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 19,
+      "staff": "川北",
+      "content": "大島11134 傭船/MOL\nテラテック\n10/28竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 27,
+      "staff": "川北",
+      "content": "通院：検査",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 5,
+      "staff": "相原",
+      "content": "INO HORIZON/瑞穂\n停電対策/名古屋",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 9,
+      "staff": "相原",
+      "content": "昇格試験",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 2,
+      "staff": "松永",
+      "content": "午前在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 5,
+      "staff": "松永",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 2,
+      "staff": "定免",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 29,
+      "staff": "定免",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 22,
+      "staff": "MSR",
+      "content": "LARIMAR ACE (多度津 SF087)\n11月竣工予定\nBEMAC D/L　10/16までにに改造完了",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 7,
+      "staff": "TSSD",
+      "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 21,
+      "staff": "TOWATECHNO",
+      "content": "名村623／MOLDB・リベラ　 MQTT仕様\n試運転：10/13-15　10/30完工\nVSAT開通は完工1週間前\nテストデータ：10月中旬ごろ作成（寺）",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "staff": "TOWATECHNO",
+      "content": "NSY8309　RURI SKY\n11/6竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 1,
+      "staff": "技術部：山田",
+      "content": "出張不在（MHI横浜）",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 5,
+      "staff": "高橋",
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 24,
+      "staff": "野村",
+      "content": "SHI2663\n12月9日竣工→2027/1/15引き渡し",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 4,
+      "staff": "井手",
+      "content": "大島11187／seawise (NIOVIS) \n　テラテック\n11/18竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 2,
+      "staff": "川北",
+      "content": "通院",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 26,
+      "staff": "川北",
+      "content": "入院（手術）",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 11,
+      "staff": "松永",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 12,
+      "staff": "松永",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 13,
+      "staff": "松永",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 16,
+      "staff": "松永",
+      "content": "（年休）",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 5,
+      "staff": "定免",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 6,
+      "staff": "定免",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 9,
+      "staff": "定免",
+      "content": "在宅",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 11,
+      "day": 9,
+      "staff": "TOWA TECHNO",
+      "content": "名村624／MOLDB・リベラ　MQTT仕様\n試運転：11/2-4　11/17完工\nVSAT開通は完工1週間前",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 1,
+      "staff": "高橋",
+      "content": "HO2576　ENERGY BLOOM\n12/14竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 21,
+      "staff": "高橋",
+      "content": "10周年",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 22,
+      "staff": "高橋",
+      "content": "10周年",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 23,
+      "staff": "高橋",
+      "content": "10周年",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 24,
+      "staff": "高橋",
+      "content": "10周年",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 25,
+      "staff": "高橋",
+      "content": "10周年",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 1,
+      "staff": "井手",
+      "content": "大島11162　MOLDB（未受注）\nサイバー非対応、J-Engine",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 8,
+      "staff": "石井",
+      "content": "S1639\n海上試運転2026/12/16-20→竣工2027/1/20",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 1,
+      "staff": "川北",
+      "content": "入院（手術）",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 2,
+      "staff": "川北",
+      "content": "通院",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 25,
+      "staff": "松永",
+      "content": "午後休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 25,
+      "staff": "定免",
+      "content": "年休",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2026,
+      "month": 12,
+      "day": 1,
+      "staff": "TSSD",
+      "content": "HO2576\n12/14竣工",
+      "color": "#3B82F6"
     }
   ],
   "staff": [
@@ -12415,6 +12887,13 @@
     "野村",
     "金井",
     "電技(野村）",
-    "高橋"
+    "高橋",
+    "TOWA TECHNO",
+    "TOWATECHNO",
+    "TSSD",
+    "井手",
+    "定免",
+    "技術部：山田",
+    "相原"
   ]
 }
