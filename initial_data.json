@@ -12855,6 +12855,70 @@
       "staff": "TSSD",
       "content": "HO2576\n12/14竣工",
       "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 1,
+      "day": 8,
+      "staff": "高橋",
+      "content": "HHI3495\n1/20竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 1,
+      "day": 15,
+      "staff": "高橋",
+      "content": "HUDONG H1796A\n2027/2/17竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 1,
+      "day": 3,
+      "staff": "野村",
+      "content": "S3150\n2027/1竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 1,
+      "day": 22,
+      "staff": "野村",
+      "content": "FLORA PIONEER\n古野・JRCS・\n9月DOCKにてLAN配線\n10月　日本寄港時に搭載",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 1,
+      "day": 25,
+      "staff": "野村",
+      "content": "PRINCESS ROYAL\nドックは2年後。MOLDBがネットワーク方針を調整中。",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 1,
+      "day": 3,
+      "staff": "石井",
+      "content": "S3157\n2027/1竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 2,
+      "day": 8,
+      "staff": "高橋",
+      "content": "HUDONG H1796A\n2027/2/17竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "year": 2027,
+      "month": 2,
+      "day": 2,
+      "staff": "石井",
+      "content": "S1642\n海上試運転　2027/2/B",
+      "color": "#3B82F6"
     }
   ],
   "staff": [
