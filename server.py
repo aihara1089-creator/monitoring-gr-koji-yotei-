@@ -18,6 +18,75 @@ try:
 except ImportError:
     HAS_JPHOLIDAY = False
 
+try:
+    import holidays as _holidays_lib
+    HAS_HOLIDAYS = True
+except ImportError:
+    HAS_HOLIDAYS = False
+
+# 中国祝日名の日本語訳テーブル（部分マッチ）
+CN_NAME_JA = {
+    "元旦": "中国：元旦",
+    "春节": "中国：春節（旧正月）",
+    "农历除夕": "中国：大晦日（旧暦）",
+    "清明节": "中国：清明節",
+    "劳动节": "中国：労働節",
+    "端午节": "中国：端午節",
+    "中秋节": "中国：中秋節",
+    "国庆节": "中国：国慶節",
+    "休息日": "中国：振替休日",
+}
+
+# 韓国祝日名の日本語訳テーブル
+KR_NAME_JA = {
+    "신정연휴": "韓国：元旦",
+    "설날 전날": "韓国：ソルラル前日",
+    "설날": "韓国：ソルラル（旧正月）",
+    "설날 다음날": "韓国：ソルラル翌日",
+    "삼일절": "韓国：三一節",
+    "삼일절 대체 휴일": "韓国：三一節振替",
+    "노동절": "韓国：労働節",
+    "어린이날": "韓国：こどもの日",
+    "부처님오신날": "韓国：仏誕節",
+    "부처님오신날 대체 휴일": "韓国：仏誕節振替",
+    "현충일": "韓国：顕忠日",
+    "광복절": "韓国：光復節",
+    "광복절 대체 휴일": "韓国：光復節振替",
+    "추석 전날": "韓国：秋夕前日",
+    "추석": "韓국：秋夕（チュソク）",
+    "추석 다음날": "韓国：秋夕翌日",
+    "개천절": "韓国：開天節",
+    "개천절 대체 휴일": "韓国：開天節振替",
+    "한글날": "韓国：ハングルの日",
+    "기독탄신일": "韓国：クリスマス",
+    "지방선거일": "韓国：地方選挙日",
+    "대통령선거일": "韓国：大統領選挙日",
+    "국회의원선거일": "韓国：国会議員選挙日",
+}
+
+def _cn_holiday_name_ja(raw: str) -> str:
+    for key, ja in CN_NAME_JA.items():
+        if key in raw:
+            return ja
+    return f"中国：{raw}"
+
+def _kr_holiday_name_ja(raw: str) -> str:
+    return KR_NAME_JA.get(raw, f"韓国：{raw}")
+
+# 年ごとのキャッシュ
+_cn_cache: dict = {}
+_kr_cache: dict = {}
+
+def _get_cn_holidays(year: int):
+    if year not in _cn_cache:
+        _cn_cache[year] = _holidays_lib.China(years=year) if HAS_HOLIDAYS else {}
+    return _cn_cache[year]
+
+def _get_kr_holidays(year: int):
+    if year not in _kr_cache:
+        _kr_cache[year] = _holidays_lib.SouthKorea(years=year) if HAS_HOLIDAYS else {}
+    return _kr_cache[year]
+
 app = FastAPI(title="工事作業予定表API")
 
 app.add_middleware(
@@ -117,14 +186,30 @@ def get_schedule(year: int, month: int):
     for d in range(1, days_in_month + 1):
         dt = datetime(year, month, d)
         weekday_names = ["月", "火", "水", "木", "金", "土", "日"]
-        is_holiday = HAS_JPHOLIDAY and jpholiday.is_holiday(date(year, month, d))
-        holiday_name = (jpholiday.is_holiday_name(date(year, month, d)) if HAS_JPHOLIDAY else None) or ""
+        d_obj = date(year, month, d)
+        # 日本祝日
+        is_holiday = HAS_JPHOLIDAY and jpholiday.is_holiday(d_obj)
+        holiday_name = (jpholiday.is_holiday_name(d_obj) if HAS_JPHOLIDAY else None) or ""
+        # 中国祝日
+        cn_hols = _get_cn_holidays(year)
+        cn_raw = cn_hols.get(d_obj, "")
+        is_cn_holiday = bool(cn_raw)
+        cn_holiday_name = _cn_holiday_name_ja(cn_raw) if cn_raw else ""
+        # 韓国祝日
+        kr_hols = _get_kr_holidays(year)
+        kr_raw = kr_hols.get(d_obj, "")
+        is_kr_holiday = bool(kr_raw)
+        kr_holiday_name = _kr_holiday_name_ja(kr_raw) if kr_raw else ""
         cal_days.append({
             "day": d,
             "weekday": weekday_names[dt.weekday()],
             "is_weekend": dt.weekday() >= 5,
             "is_holiday": bool(is_holiday),
-            "holiday_name": holiday_name
+            "holiday_name": holiday_name,
+            "is_cn_holiday": is_cn_holiday,
+            "cn_holiday_name": cn_holiday_name,
+            "is_kr_holiday": is_kr_holiday,
+            "kr_holiday_name": kr_holiday_name,
         })
     
     return {

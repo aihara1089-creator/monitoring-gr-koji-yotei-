@@ -186,6 +186,18 @@
     th.today-col { background: #065f46 !important; }
     td.today-col { background: #ecfdf5 !important; }
 
+    /* ===== 中国祝日（橙系） ===== */
+    th.cn-hol { background: #c2410c !important; }        /* 濃いオレンジ赤 */
+    td.cn-hol-cell { background: #fff7ed !important; }   /* 薄いオレンジ */
+
+    /* ===== 韓国祝日（青緑系） ===== */
+    th.kr-hol { background: #0f766e !important; }        /* ティール */
+    td.kr-hol-cell { background: #f0fdfa !important; }   /* 薄いティール */
+
+    /* ===== ヘッダー内の国旗ラベル ===== */
+    .th-country { display: flex; gap: 2px; justify-content: center; padding: 0 1px 2px; flex-wrap: wrap; }
+    .th-flag { font-size: 9px; background: rgba(255,255,255,0.25); border-radius: 3px; padding: 0px 3px; line-height: 1.4; white-space: nowrap; }
+
     /* ===== リマインドバナー ===== */
     .remind-banner { background: linear-gradient(90deg, #fef3c7, #fffbeb); border-left: 4px solid #f59e0b; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; }
     .remind-banner .bell { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
@@ -263,6 +275,10 @@
     <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div> 重要</div>
     <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div> 試験</div>
     <div class="legend-item"><div class="legend-dot" style="background:#94a3b8;"></div> 休み</div>
+    <div style="width:1px; background:var(--border); height:14px; margin:0 4px;"></div>
+    <div class="legend-item" title="日本の土日・祝日"><div class="legend-dot" style="background:#9f1239;"></div> 🇯🇵 土日祝</div>
+    <div class="legend-item" title="中国の祝日・振替休日（ヘッダーに🇨🇳表示）"><div class="legend-dot" style="background:#c2410c;"></div> 🇨🇳 中国祝日</div>
+    <div class="legend-item" title="韓国の祝日・振替休日（ヘッダーに🇰🇷表示）"><div class="legend-dot" style="background:#0f766e;"></div> 🇰🇷 韓国祝日</div>
     <div style="margin-left:auto;">
       <span id="entryCount" style="font-size:11px;color:var(--text-muted);"></span>
     </div>
@@ -613,12 +629,36 @@ function renderTable() {
   html += '<thead><tr>';
   html += `<th class="staff-col">担当者</th>`;
   for (const d of days) {
-      const isRed = d.weekday === '土' || d.weekday === '日' || d.is_holiday;
-      const cls = isRed ? (d.is_holiday && d.weekday !== '土' && d.weekday !== '日' ? 'hol' : d.weekday === '土' ? 'sat' : 'sun') : '';
+      // 日本の土日祝
+      const isJpRed = d.weekday === '土' || d.weekday === '日' || d.is_holiday;
+      const jpCls = isJpRed ? (d.is_holiday && d.weekday !== '土' && d.weekday !== '日' ? 'hol' : d.weekday === '土' ? 'sat' : 'sun') : '';
+      // 中国・韓国祝日（日本の土日祝でない平日でも独立して色付け）
+      const cnCls = (!isJpRed && d.is_cn_holiday) ? 'cn-hol' : '';
+      const krCls = (!isJpRed && !d.is_cn_holiday && d.is_kr_holiday) ? 'kr-hol' : '';
+      // 中国・韓国両方ある日は中国優先
       const todayCls = d.day === todayDay ? 'today-col' : '';
+      const thCls = [jpCls || cnCls || krCls, todayCls].filter(Boolean).join(' ');
+
+      // 曜日ラベル
       const wdLabel = d.is_holiday ? '祝' : d.weekday;
-      const title = d.holiday_name ? ` title="${d.holiday_name}"` : '';
-      html += `<th class="th-day ${cls} ${todayCls}"${title}><span class="day-num">${d.day}</span><span class="day-wd">${wdLabel}</span></th>`;
+
+      // ツールチップ：日本・中国・韓国の祝日名を全部まとめる
+      const tips = [];
+      if (d.holiday_name) tips.push(d.holiday_name);
+      if (d.is_cn_holiday) tips.push(d.cn_holiday_name);
+      if (d.is_kr_holiday) tips.push(d.kr_holiday_name);
+      const titleAttr = tips.length ? ` title="${tips.join(' / ')}"` : '';
+
+      // 国旗バッジ（中韓祝日がある日に小さく表示）
+      let flagHtml = '';
+      if (d.is_cn_holiday || d.is_kr_holiday) {
+        flagHtml = '<div class="th-country">';
+        if (d.is_cn_holiday) flagHtml += `<span class="th-flag">🇨🇳</span>`;
+        if (d.is_kr_holiday) flagHtml += `<span class="th-flag">🇰🇷</span>`;
+        flagHtml += '</div>';
+      }
+
+      html += `<th class="th-day ${thCls}"${titleAttr}><span class="day-num">${d.day}</span><span class="day-wd">${wdLabel}</span>${flagHtml}</th>`;
   }
   html += '</tr></thead>';
 
@@ -647,11 +687,16 @@ function renderTable() {
     html += `<td class="staff-name" title="${staffName}">${staffName}</td>`;
 
     for (const d of days) {
-      const isRed2 = d.weekday === '土' || d.weekday === '日' || d.is_holiday;
+      const isJpRed2 = d.weekday === '土' || d.weekday === '日' || d.is_holiday;
       const isToday2 = d.day === todayDay;
+      // セル色優先順: 今日 > 日本土日祝（赤） > 中国祝日（橙） > 韓国祝日（緑）
+      let cellColorCls = '';
+      if (isJpRed2) cellColorCls = d.weekday === '土' ? 'sat-cell' : 'sun-cell';
+      else if (d.is_cn_holiday) cellColorCls = 'cn-hol-cell';
+      else if (d.is_kr_holiday) cellColorCls = 'kr-hol-cell';
       const cellCls = [
         'day-cell',
-        isRed2 ? (d.weekday === '土' ? 'sat-cell' : 'sun-cell') : '',
+        cellColorCls,
         isToday2 ? 'today-col' : ''
       ].filter(Boolean).join(' ');
 
