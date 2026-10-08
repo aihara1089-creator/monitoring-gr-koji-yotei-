@@ -216,7 +216,10 @@
       padding: 3px 8px; border-radius: 20px; cursor: pointer; user-select: none;
       border: 1.5px solid transparent; transition: all 0.15s;
     }
-    .filter-check-item input[type=checkbox] { display: none; }
+    /* チェックボックス自体は見た目を消すが、クリックイベントは生かす */
+    .filter-check-item input[type=checkbox] {
+      position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+    }
     /* ON 状態 */
     .filter-check-item.active-jp  { background:#fff1f2; border-color:#9f1239; color:#9f1239; }
     .filter-check-item.active-cn  { background:#fff7ed; border-color:#c2410c; color:#c2410c; }
@@ -364,23 +367,23 @@
     <span class="filter-label">表示切替:</span>
 
     <!-- 土日 -->
-    <label class="filter-check-item active-wkd" id="filterWkdLabel" onclick="toggleFilter('wkd')" title="土曜・日曜の列を表示/非表示">
-      <input type="checkbox" id="filterWkd" checked> 🗓 土日
+    <label class="filter-check-item active-wkd" id="filterWkdLabel" title="土曜・日曜の列を表示/非表示">
+      <input type="checkbox" id="filterWkd" checked onchange="toggleFilter('wkd',this)"> 🗓 土日
     </label>
 
     <!-- 日本祝日 -->
-    <label class="filter-check-item active-jp" id="filterJpLabel" onclick="toggleFilter('jp')" title="日本の祝日列を表示/非表示">
-      <input type="checkbox" id="filterJp" checked> 🇯🇵 祝日
+    <label class="filter-check-item active-jp" id="filterJpLabel" title="日本の祝日列を表示/非表示">
+      <input type="checkbox" id="filterJp" checked onchange="toggleFilter('jp',this)"> 🇯🇵 祝日
     </label>
 
     <!-- 中国祝日 -->
-    <label class="filter-check-item active-cn" id="filterCnLabel" onclick="toggleFilter('cn')" title="中国の祝日・振替休日の色明けを表示/非表示">
-      <input type="checkbox" id="filterCn" checked> 🇨🇳 中国祝日
+    <label class="filter-check-item active-cn" id="filterCnLabel" title="中国の祝日・振替休日の色明けを表示/非表示">
+      <input type="checkbox" id="filterCn" checked onchange="toggleFilter('cn',this)"> 🇨🇳 中国祝日
     </label>
 
     <!-- 韓国祝日 -->
-    <label class="filter-check-item active-kr" id="filterKrLabel" onclick="toggleFilter('kr')" title="韓国の祝日・振替休日の色明けを表示/非表示">
-      <input type="checkbox" id="filterKr" checked> 🇰🇷 韓国祝日
+    <label class="filter-check-item active-kr" id="filterKrLabel" title="韓国の祝日・振替休日の色明けを表示/非表示">
+      <input type="checkbox" id="filterKr" checked onchange="toggleFilter('kr',this)"> 🇰🇷 韓国祝日
     </label>
 
     <div style="margin-left:auto;">
@@ -602,17 +605,16 @@ const displayFilter = { wkd: true, jp: true, cn: true, kr: true };
 let dragState = null; // { id, staff, year, month, day }
 
 // ===== フィルター切替 =====
-function toggleFilter(key) {
-  displayFilter[key] = !displayFilter[key];
-  const label = document.getElementById(`filter${key.charAt(0).toUpperCase()+key.slice(1)}Label`);
-  const cb    = document.getElementById(`filter${key.charAt(0).toUpperCase()+key.slice(1)}`);
+// cb = チェックボックス要素（onchange から渡される）
+function toggleFilter(key, cb) {
+  displayFilter[key] = cb.checked;   // checkboxのchecked状態を正とする
+  const labelId = `filter${key.charAt(0).toUpperCase()+key.slice(1)}Label`;
+  const label   = document.getElementById(labelId);
   const activeClass = { wkd:'active-wkd', jp:'active-jp', cn:'active-cn', kr:'active-kr' }[key];
   if (displayFilter[key]) {
     label.classList.add(activeClass);
-    cb.checked = true;
   } else {
     label.classList.remove(activeClass);
-    cb.checked = false;
   }
   applyColumnFilter();
 }
