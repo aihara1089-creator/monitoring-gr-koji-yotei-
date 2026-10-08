@@ -817,18 +817,21 @@ function buildSpanInfo(schedules, days) {
 
       const lightColor = LIGHT.includes(entry.color || '#3b82f6');
 
+      // グループ全体の {id, day} リスト（D&D で全件まとめて移動するために使う）
+      const groupIds = group.map(g => ({ id: g.id, day: g.day }));
+
       if (group.length === 1) {
         // 単独
         const d = group[0].day;
         if (!spanInfo[staffName][d]) spanInfo[staffName][d] = [];
-        spanInfo[staffName][d].push({ id: group[0].id, pos: 'solo', color: entry.color || '#3b82f6', content: entry.content, lightColor });
+        spanInfo[staffName][d].push({ id: group[0].id, pos: 'solo', color: entry.color || '#3b82f6', content: entry.content, lightColor, groupIds });
       } else {
         // 連続グループ
         for (let gi = 0; gi < group.length; gi++) {
           const g = group[gi];
           const pos = gi === 0 ? 'start' : gi === group.length - 1 ? 'end' : 'mid';
           if (!spanInfo[staffName][g.day]) spanInfo[staffName][g.day] = [];
-          spanInfo[staffName][g.day].push({ id: g.id, pos, color: entry.color || '#3b82f6', content: entry.content, lightColor });
+          spanInfo[staffName][g.day].push({ id: g.id, pos, color: entry.color || '#3b82f6', content: entry.content, lightColor, groupIds });
         }
       }
     }
@@ -966,9 +969,12 @@ function renderTable() {
           const labelText = (sp.pos === 'start' || sp.pos === 'solo')
             ? `${remindDot}${escHtml(sp.content.substring(0, 14))}${sp.content.length > 14 ? '…' : ''}`
             : '';
+          // groupIds を JSON 文字列として data 属性に埋め込む（シングルクォートをエスケープ）
+          const groupIdsAttr = JSON.stringify(sp.groupIds).replace(/'/g, '&#39;');
           html += `<span class="span-bar bar-${sp.pos} ${lightCls} ${highlight}" `
                 + `draggable="true" `
-                + `data-id="${sp.id}" data-staff="${staffName}" data-year="${d.year||currentYear}" data-month="${d.month||currentMonth}" data-day="${d.day}" `
+                + `data-id="${sp.id}" data-staff="${staffName}" data-year="${currentYear}" data-month="${currentMonth}" data-day="${d.day}" `
+                + `data-group-ids='${groupIdsAttr}' `
                 + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
                 + `onclick="editEntry(event,'${sp.id}')" title="${title}" `
                 + `style="background:${sp.color};${textColor}">`
@@ -984,9 +990,12 @@ function renderTable() {
           const title = e.content.replace(/"/g, '&quot;');
           const hasRemind = remindMap && remindMap[e.id];
           const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
+          // 通常タグはグループ=自分1件だけ
+          const soloGroupIds = JSON.stringify([{ id: e.id, day: d.day }]).replace(/'/g, '&#39;');
           html += `<span class="entry-tag ${highlight}" `
                 + `draggable="true" `
                 + `data-id="${e.id}" data-staff="${staffName}" data-year="${currentYear}" data-month="${currentMonth}" data-day="${d.day}" `
+                + `data-group-ids='${soloGroupIds}' `
                 + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
                 + `onclick="editEntry(event,'${e.id}')" title="${title}" `
                 + `style="background:${bgColor};${textStyle}">`
@@ -1013,16 +1022,34 @@ function renderTable() {
 // ===================================================
 function onEntryDragStart(event) {
   const el = event.currentTarget;
+  const draggedDay = parseInt(el.dataset.day);
+
+  // data-group-ids からグループ全件を取得
+  let groupIds = [];
+  try {
+    groupIds = JSON.parse(el.dataset.groupIds || '[]');
+  } catch(e) {
+    groupIds = [{ id: el.dataset.id, day: draggedDay }];
+  }
+
+  // ドラッグした日 (draggedDay) がグループ先頭からの何日目か（オフセット）
+  const groupDays  = groupIds.map(g => g.day).sort((a,b) => a - b);
+  const startDay   = groupDays[0];
+  const dragOffset = draggedDay - startDay;   // ドラッグした要素が先頭から何日後か
+
   dragState = {
-    id:    el.dataset.id,
-    staff: el.dataset.staff,
-    year:  parseInt(el.dataset.year  || currentYear),
-    month: parseInt(el.dataset.month || currentMonth),
-    day:   parseInt(el.dataset.day),
+    id:         el.dataset.id,
+    staff:      el.dataset.staff,
+    year:       parseInt(el.dataset.year  || currentYear),
+    month:      parseInt(el.dataset.month || currentMonth),
+    day:        draggedDay,
+    groupIds,           // [{id, day}, ...]  グループ全件
+    dragOffset,         // ドロップ先の day からオフセット計算に使う
+    groupLen:   groupDays.length,
   };
+
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData('text/plain', dragState.id);
-  // 少し遅延してdraggingクラスを付与（Safari対策）
   setTimeout(() => el.classList.add('dragging'), 0);
 }
 
@@ -1057,20 +1084,44 @@ async function onCellDrop(event, toStaff, toDay) {
 
   if (!dragState) return;
 
-  const { id, staff: fromStaff, year, month, day: fromDay } = dragState;
+  const { staff: fromStaff, day: fromDay, groupIds, dragOffset, groupLen } = dragState;
   dragState = null;
 
-  // 同じセルへのドロップは無視
-  if (fromStaff === toStaff && fromDay === toDay && month === currentMonth && year === currentYear) return;
+  // ドロップ先のグループ先頭日 = toDay - dragOffset
+  const toStartDay = toDay - dragOffset;
+
+  // 同じ位置へのドロップは無視
+  if (fromStaff === toStaff && fromDay === toDay) return;
+
+  // グループ全件を日付オフセット付きで一括更新
+  // groupIds は [{id, day}, ...] で day 昇順
+  const sortedGroup = [...groupIds].sort((a, b) => a.day - b.day);
+
+  // 移動先の日付を計算（先頭からの offset = g.day - sortedGroup[0].day）
+  const updates = sortedGroup.map((g, i) => ({
+    id:    g.id,
+    day:   toStartDay + i,   // 先頭からi日後
+    staff: toStaff,
+    year:  currentYear,
+    month: currentMonth,
+  }));
+
+  // 日付の妥当性チェック（1〜月末）
+  const { days } = scheduleData;
+  const maxDay = days[days.length - 1].day;
+  if (updates.some(u => u.day < 1 || u.day > maxDay)) {
+    showToast('移動先が月をはみ出します', 'error');
+    return;
+  }
 
   try {
-    await API.updateSchedule(id, {
-      staff: toStaff,
-      year:  currentYear,
-      month: currentMonth,
-      day:   toDay,
-    });
-    showToast(`${fromStaff}（${month}/${fromDay}）→ ${toStaff}（${currentMonth}/${toDay})`, 'success');
+    await Promise.all(updates.map(u =>
+      API.updateSchedule(u.id, { staff: u.staff, year: u.year, month: u.month, day: u.day })
+    ));
+    const label = groupLen > 1
+      ? `${groupLen}日分を移動しました（${toStaff} ${currentMonth}/${updates[0].day}〜${currentMonth}/${updates[updates.length-1].day}）`
+      : `${toStaff}（${currentMonth}/${toDay}）に移動しました`;
+    showToast(label, 'success');
     await loadSchedule();
   } catch (e) {
     showToast('移動に失敗しました', 'error');
