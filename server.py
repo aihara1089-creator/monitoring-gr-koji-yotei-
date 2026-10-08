@@ -10,8 +10,13 @@ from typing import Optional, List
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 import calendar
+try:
+    import jpholiday
+    HAS_JPHOLIDAY = True
+except ImportError:
+    HAS_JPHOLIDAY = False
 
 app = FastAPI(title="工事作業予定表API")
 
@@ -97,10 +102,14 @@ def get_schedule(year: int, month: int):
     for d in range(1, days_in_month + 1):
         dt = datetime(year, month, d)
         weekday_names = ["月", "火", "水", "木", "金", "土", "日"]
+        is_holiday = HAS_JPHOLIDAY and jpholiday.is_holiday(date(year, month, d))
+        holiday_name = (jpholiday.is_holiday_name(date(year, month, d)) if HAS_JPHOLIDAY else None) or ""
         cal_days.append({
             "day": d,
             "weekday": weekday_names[dt.weekday()],
-            "is_weekend": dt.weekday() >= 5
+            "is_weekend": dt.weekday() >= 5,
+            "is_holiday": bool(is_holiday),
+            "holiday_name": holiday_name
         })
     
     return {
