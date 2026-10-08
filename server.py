@@ -10,6 +10,7 @@ from typing import Optional, List
 import json
 import os
 import uuid
+import asyncio
 from datetime import datetime, date
 import calendar
 try:
@@ -102,6 +103,9 @@ _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = "/data" if os.path.isdir("/data") else _BASE_DIR
 DATA_FILE = os.path.join(_DATA_DIR, "data.json")
 INITIAL_FILE = os.path.join(_BASE_DIR, "initial_data.json")
+
+# 書き込み排他制御用ロック（並列リクエストによるデータ競合を防ぐ）
+_DATA_LOCK = asyncio.Lock()
 
 # -------------------------------------------------------
 # データロード/セーブ
@@ -221,52 +225,55 @@ def get_schedule(year: int, month: int):
     }
 
 @app.post("/api/schedule")
-def create_schedule(item: ScheduleCreate):
-    data = load_data()
-    new_id = str(data.get("next_id", 1))
-    entry = {
-        "id": new_id,
-        "year": item.year,
-        "month": item.month,
-        "staff": item.staff,
-        "day": item.day,
-        "content": item.content,
-        "color": item.color or "#3B82F6"
-    }
-    data["schedules"].append(entry)
-    data["next_id"] = int(new_id) + 1
-    save_data(data)
+async def create_schedule(item: ScheduleCreate):
+    async with _DATA_LOCK:
+        data = load_data()
+        new_id = str(data.get("next_id", 1))
+        entry = {
+            "id": new_id,
+            "year": item.year,
+            "month": item.month,
+            "staff": item.staff,
+            "day": item.day,
+            "content": item.content,
+            "color": item.color or "#3B82F6"
+        }
+        data["schedules"].append(entry)
+        data["next_id"] = int(new_id) + 1
+        save_data(data)
     return entry
 
 @app.put("/api/schedule/{schedule_id}")
-def update_schedule(schedule_id: str, item: ScheduleUpdate):
-    data = load_data()
-    for s in data["schedules"]:
-        if s["id"] == schedule_id:
-            if item.content is not None:
-                s["content"] = item.content
-            if item.color is not None:
-                s["color"] = item.color
-            if item.staff is not None:
-                s["staff"] = item.staff
-            if item.day is not None:
-                s["day"] = item.day
-            if item.year is not None:
-                s["year"] = item.year
-            if item.month is not None:
-                s["month"] = item.month
-            save_data(data)
-            return s
+async def update_schedule(schedule_id: str, item: ScheduleUpdate):
+    async with _DATA_LOCK:
+        data = load_data()
+        for s in data["schedules"]:
+            if s["id"] == schedule_id:
+                if item.content is not None:
+                    s["content"] = item.content
+                if item.color is not None:
+                    s["color"] = item.color
+                if item.staff is not None:
+                    s["staff"] = item.staff
+                if item.day is not None:
+                    s["day"] = item.day
+                if item.year is not None:
+                    s["year"] = item.year
+                if item.month is not None:
+                    s["month"] = item.month
+                save_data(data)
+                return s
     raise HTTPException(status_code=404, detail="Not found")
 
 @app.delete("/api/schedule/{schedule_id}")
-def delete_schedule(schedule_id: str):
-    data = load_data()
-    original = len(data["schedules"])
-    data["schedules"] = [s for s in data["schedules"] if s["id"] != schedule_id]
-    if len(data["schedules"]) == original:
-        raise HTTPException(status_code=404, detail="Not found")
-    save_data(data)
+async def delete_schedule(schedule_id: str):
+    async with _DATA_LOCK:
+        data = load_data()
+        original = len(data["schedules"])
+        data["schedules"] = [s for s in data["schedules"] if s["id"] != schedule_id]
+        if len(data["schedules"]) == original:
+            raise HTTPException(status_code=404, detail="Not found")
+        save_data(data)
     return {"ok": True}
 
 # -------------------------------------------------------
@@ -278,28 +285,31 @@ def get_staff():
     return {"staff": data["staff"]}
 
 @app.post("/api/staff")
-def add_staff(item: StaffCreate):
-    data = load_data()
-    if item.name in data["staff"]:
-        raise HTTPException(status_code=400, detail="既に存在します")
-    data["staff"].append(item.name)
-    save_data(data)
+async def add_staff(item: StaffCreate):
+    async with _DATA_LOCK:
+        data = load_data()
+        if item.name in data["staff"]:
+            raise HTTPException(status_code=400, detail="既に存在します")
+        data["staff"].append(item.name)
+        save_data(data)
     return {"staff": data["staff"]}
 
 @app.delete("/api/staff/{name}")
-def delete_staff(name: str):
-    data = load_data()
-    if name not in data["staff"]:
-        raise HTTPException(status_code=404, detail="Not found")
-    data["staff"] = [s for s in data["staff"] if s != name]
-    save_data(data)
+async def delete_staff(name: str):
+    async with _DATA_LOCK:
+        data = load_data()
+        if name not in data["staff"]:
+            raise HTTPException(status_code=404, detail="Not found")
+        data["staff"] = [s for s in data["staff"] if s != name]
+        save_data(data)
     return {"staff": data["staff"]}
 
 @app.put("/api/staff/order")
-def reorder_staff(item: StaffOrder):
-    data = load_data()
-    data["staff"] = item.staff
-    save_data(data)
+async def reorder_staff(item: StaffOrder):
+    async with _DATA_LOCK:
+        data = load_data()
+        data["staff"] = item.staff
+        save_data(data)
     return {"staff": data["staff"]}
 
 # -------------------------------------------------------
@@ -333,46 +343,48 @@ def get_reminders():
     return {"reminders": result}
 
 @app.post("/api/reminders")
-def create_reminder(item: ReminderCreate):
-    data = load_data()
-    # スケジュール存在確認
-    sch = next((s for s in data["schedules"] if s["id"] == item.schedule_id), None)
-    if not sch:
-        raise HTTPException(status_code=404, detail="スケジュールが見つかりません")
-    new_id = str(data.get("reminder_next_id", 1))
-    reminder = {
-        "id": new_id,
-        "schedule_id": item.schedule_id,
-        "remind_days_before": item.remind_days_before,
-        "note": item.note or "",
-        "created_at": datetime.now().isoformat()
-    }
-    data.setdefault("reminders", []).append(reminder)
-    data["reminder_next_id"] = int(new_id) + 1
-    save_data(data)
+async def create_reminder(item: ReminderCreate):
+    async with _DATA_LOCK:
+        data = load_data()
+        sch = next((s for s in data["schedules"] if s["id"] == item.schedule_id), None)
+        if not sch:
+            raise HTTPException(status_code=404, detail="スケジュールが見つかりません")
+        new_id = str(data.get("reminder_next_id", 1))
+        reminder = {
+            "id": new_id,
+            "schedule_id": item.schedule_id,
+            "remind_days_before": item.remind_days_before,
+            "note": item.note or "",
+            "created_at": datetime.now().isoformat()
+        }
+        data.setdefault("reminders", []).append(reminder)
+        data["reminder_next_id"] = int(new_id) + 1
+        save_data(data)
     return reminder
 
 @app.put("/api/reminders/{reminder_id}")
-def update_reminder(reminder_id: str, item: ReminderUpdate):
-    data = load_data()
-    for r in data.get("reminders", []):
-        if r["id"] == reminder_id:
-            if item.remind_days_before is not None:
-                r["remind_days_before"] = item.remind_days_before
-            if item.note is not None:
-                r["note"] = item.note
-            save_data(data)
-            return r
+async def update_reminder(reminder_id: str, item: ReminderUpdate):
+    async with _DATA_LOCK:
+        data = load_data()
+        for r in data.get("reminders", []):
+            if r["id"] == reminder_id:
+                if item.remind_days_before is not None:
+                    r["remind_days_before"] = item.remind_days_before
+                if item.note is not None:
+                    r["note"] = item.note
+                save_data(data)
+                return r
     raise HTTPException(status_code=404, detail="Not found")
 
 @app.delete("/api/reminders/{reminder_id}")
-def delete_reminder(reminder_id: str):
-    data = load_data()
-    before = len(data.get("reminders", []))
-    data["reminders"] = [r for r in data.get("reminders", []) if r["id"] != reminder_id]
-    if len(data["reminders"]) == before:
-        raise HTTPException(status_code=404, detail="Not found")
-    save_data(data)
+async def delete_reminder(reminder_id: str):
+    async with _DATA_LOCK:
+        data = load_data()
+        before = len(data.get("reminders", []))
+        data["reminders"] = [r for r in data.get("reminders", []) if r["id"] != reminder_id]
+        if len(data["reminders"]) == before:
+            raise HTTPException(status_code=404, detail="Not found")
+        save_data(data)
     return {"ok": True}
 
 # -------------------------------------------------------

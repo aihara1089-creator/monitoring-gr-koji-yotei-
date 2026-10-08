@@ -83,7 +83,7 @@
     td.day-cell:hover { background: #eff6ff; }
     td.sat-cell, td.sun-cell, td.hol-cell { background: #fff1f2; }
 
-    /* セル内の予定タグ */
+    /* セル内の予定タグ（単独日） */
     .entry-tag { display: block; background: #3b82f6; color: #fff; border-radius: 4px; padding: 2px 4px; font-size: 10px; line-height: 1.3; margin-bottom: 2px; cursor: pointer; position: relative; word-break: break-all; }
     .entry-tag:hover { opacity: 0.85; }
     .entry-tag.rest { background: #94a3b8; }
@@ -101,6 +101,65 @@
     .entry-tag.color-light-yellow { background: #fef08a; color: #854d0e; }
     /* リマインドアイコン */
     .entry-tag .remind-dot { display:inline-block; width:6px; height:6px; background:#fff; border-radius:50%; margin-right:2px; vertical-align:middle; opacity:0.85; }
+
+    /* ===== 連続バー表示（span-bar） ===== */
+    /* バー共通：セルいっぱいに張り付く横長バー */
+    .span-bar {
+      display: block;
+      height: 22px;
+      line-height: 22px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+      /* セル左右のpaddingを打ち消してセルいっぱいに広げる */
+      margin-left: -2px;
+      margin-right: -2px;
+    }
+    .span-bar:hover { opacity: 0.85; }
+    .span-bar .remind-dot { display:inline-block; width:6px; height:6px; background:#fff; border-radius:50%; margin-right:2px; vertical-align:middle; opacity:0.85; }
+    /* 開始セル：左丸、右はまっすぐ（次のセルにつながる） */
+    .span-bar.bar-start {
+      border-radius: 11px 0 0 11px;
+      padding-left: 10px;
+      padding-right: 2px;
+      margin-right: 0;  /* 右端をぴったり */
+    }
+    /* 中間セル：両端まっすぐ（テキスト非表示、色帯のみ） */
+    .span-bar.bar-mid {
+      border-radius: 0;
+      padding: 0;
+      margin-left: 0;
+      margin-right: 0;
+      color: transparent; /* テキスト非表示 */
+    }
+    /* 終端セル：左まっすぐ、右丸 */
+    .span-bar.bar-end {
+      border-radius: 0 11px 11px 0;
+      padding-right: 6px;
+      margin-left: 0;
+      color: transparent; /* テキスト非表示 */
+    }
+    /* 単独日バー（soloは丸角タグと同じ見た目） */
+    .span-bar.bar-solo {
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: -2px;
+      margin-right: -2px;
+      color: #fff;
+    }
+    /* 薄い色のバーは文字色を暗く */
+    .span-bar.bar-light { color: #1e293b !important; }
+    .span-bar.bar-light .remind-dot { background: #1e293b; }
+    /* バーセルはクリック可能だがaddボタンは非表示 */
+    td.day-cell.has-bar { padding: 2px 0; }
+    td.day-cell.bar-cont { cursor: default; }  /* 中間・終端は+ボタン不要 */
+    td.day-cell.bar-cont .add-btn-cell { display: none !important; }
 
     .add-btn-cell { display: flex; align-items: center; justify-content: center; height: 100%; color: #cbd5e1; font-size: 16px; opacity: 0; }
     td.day-cell:hover .add-btn-cell { opacity: 1; color: var(--primary-light); }
@@ -608,6 +667,79 @@ function updateMonthLabel() {
 // リマインド設定済みスケジュールIDセット（表示用）
 let remindMap = {};  // schedule_id -> true
 
+// ===== スパン（連続バー）グループ計算 =====
+// 同一staff・content・colorの連続日エントリをグループ化する
+// 戻り値: spanInfo[staff][day] = { entries: [...], spans: [{id, pos:'start'|'mid'|'end'|'solo', color, content, groupKey},...] }
+function buildSpanInfo(schedules, days) {
+  // staff -> day -> entries
+  const entryMap = {};
+  for (const s of schedules) {
+    if (!entryMap[s.staff]) entryMap[s.staff] = {};
+    if (!entryMap[s.staff][s.day]) entryMap[s.staff][s.day] = [];
+    entryMap[s.staff][s.day].push(s);
+  }
+
+  // staff -> day -> spanItems[]
+  // spanItem: { id, pos:'start'|'mid'|'end'|'solo', color, content, lightColor }
+  const spanInfo = {};
+
+  const dayNums = days.map(d => d.day);
+
+  for (const staffName of Object.keys(entryMap)) {
+    spanInfo[staffName] = {};
+
+    // その担当者の全エントリを「content+color」でグループ化し連続性チェック
+    const allEntries = [];
+    for (const day of dayNums) {
+      for (const e of (entryMap[staffName][day] || [])) {
+        allEntries.push({ ...e, day: Number(e.day) });
+      }
+    }
+    // 処理済みIDセット
+    const processed = new Set();
+    const LIGHT = ['#bfdbfe','#bbf7d0','#fef08a'];
+
+    for (const entry of allEntries) {
+      if (processed.has(entry.id)) continue;
+      const key = entry.content + '|' + (entry.color || '#3b82f6');
+      // 同じkey・連続日のエントリを前後にたどって収集
+      const group = [entry];
+      processed.add(entry.id);
+      // 前後に連続日があるか探索（dayNums内の順序で）
+      const dayIdx = dayNums.indexOf(entry.day);
+      // 後方探索
+      for (let i = dayIdx + 1; i < dayNums.length; i++) {
+        const nextDay = dayNums[i];
+        if (nextDay !== dayNums[i-1] + 1) break; // 日付が飛んだら終了
+        const match = (entryMap[staffName][nextDay] || []).find(
+          e2 => !processed.has(e2.id) && (e2.content + '|' + (e2.color || '#3b82f6')) === key
+        );
+        if (!match) break;
+        group.push({ ...match, day: Number(match.day) });
+        processed.add(match.id);
+      }
+
+      const lightColor = LIGHT.includes(entry.color || '#3b82f6');
+
+      if (group.length === 1) {
+        // 単独
+        const d = group[0].day;
+        if (!spanInfo[staffName][d]) spanInfo[staffName][d] = [];
+        spanInfo[staffName][d].push({ id: group[0].id, pos: 'solo', color: entry.color || '#3b82f6', content: entry.content, lightColor });
+      } else {
+        // 連続グループ
+        for (let gi = 0; gi < group.length; gi++) {
+          const g = group[gi];
+          const pos = gi === 0 ? 'start' : gi === group.length - 1 ? 'end' : 'mid';
+          if (!spanInfo[staffName][g.day]) spanInfo[staffName][g.day] = [];
+          spanInfo[staffName][g.day].push({ id: g.id, pos, color: entry.color || '#3b82f6', content: entry.content, lightColor });
+        }
+      }
+    }
+  }
+  return { spanInfo, entryMap };
+}
+
 // ===== テーブル描画 =====
 function renderTable() {
   if (!scheduleData) return;
@@ -615,13 +747,8 @@ function renderTable() {
   const today = new Date();
   const todayDay = (today.getFullYear() === currentYear && today.getMonth()+1 === currentMonth) ? today.getDate() : -1;
 
-  // 予定をマップ化: staff -> day -> [entries]
-  const entryMap = {};
-  for (const s of schedules) {
-    if (!entryMap[s.staff]) entryMap[s.staff] = {};
-    if (!entryMap[s.staff][s.day]) entryMap[s.staff][s.day] = [];
-    entryMap[s.staff][s.day].push(s);
-  }
+  // スパン情報を事前計算
+  const { spanInfo, entryMap } = buildSpanInfo(schedules, days);
 
   let html = '<table>';
 
@@ -670,6 +797,7 @@ function renderTable() {
   for (const staffName of staffList) {
     const staffMatch = !query || staffName.toLowerCase().includes(query);
     const staffEntries = entryMap[staffName] || {};
+    const staffSpans  = spanInfo[staffName]  || {};
 
     // 検索時: その担当者に該当エントリがあれば表示
     let hasMatch = staffMatch;
@@ -694,20 +822,48 @@ function renderTable() {
       if (isJpRed2) cellColorCls = d.weekday === '土' ? 'sat-cell' : 'sun-cell';
       else if (d.is_cn_holiday) cellColorCls = 'cn-hol-cell';
       else if (d.is_kr_holiday) cellColorCls = 'kr-hol-cell';
+
+      const daySpans   = staffSpans[d.day]   || [];
+      const dayEntries = staffEntries[d.day]  || [];
+      const hasBars    = daySpans.length > 0;
+      // mid/endセルは＋ボタン不要
+      const isCont = hasBars && daySpans.every(s => s.pos === 'mid' || s.pos === 'end');
+
       const cellCls = [
         'day-cell',
         cellColorCls,
-        isToday2 ? 'today-col' : ''
+        isToday2 ? 'today-col' : '',
+        hasBars ? 'has-bar' : '',
+        isCont  ? 'bar-cont' : ''
       ].filter(Boolean).join(' ');
 
-      const dayEntries = staffEntries[d.day] || [];
-      html += `<td class="${cellCls}" onclick="cellClick('${staffName}', ${d.day}, event)" data-staff="${staffName}" data-day="${d.day}">`;
+      // mid/endセルはクリックを editEntry に委ねる（cellClickは不要）
+      const clickHandler = isCont ? '' : `onclick="cellClick('${staffName}', ${d.day}, event)"`;
+      html += `<td class="${cellCls}" ${clickHandler} data-staff="${staffName}" data-day="${d.day}">`;
 
-      if (dayEntries.length > 0) {
+      if (hasBars) {
+        // ===== バー表示 =====
+        for (const sp of daySpans) {
+          const highlight = query && sp.content.toLowerCase().includes(query) ? 'highlight' : '';
+          const lightCls  = sp.lightColor ? 'bar-light' : '';
+          const textColor = sp.lightColor ? 'color:#1e293b;' : '';
+          const title     = sp.content.replace(/"/g, '&quot;');
+          const hasRemind = remindMap && remindMap[sp.id];
+          const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
+          // テキストは start/solo のみ表示
+          const labelText = (sp.pos === 'start' || sp.pos === 'solo')
+            ? `${remindDot}${escHtml(sp.content.substring(0, 14))}${sp.content.length > 14 ? '…' : ''}`
+            : '';
+          html += `<span class="span-bar bar-${sp.pos} ${lightCls} ${highlight}" `
+                + `style="background:${sp.color};${textColor}" `
+                + `data-id="${sp.id}" onclick="editEntry(event,'${sp.id}')" title="${title}">`
+                + `${labelText}</span>`;
+        }
+      } else if (dayEntries.length > 0) {
+        // ===== 通常タグ（スパンなし・複数エントリ混在） =====
         for (const e of dayEntries) {
           const highlight = query && e.content.toLowerCase().includes(query) ? 'highlight' : '';
           const bgColor = e.color || '#3b82f6';
-          // 薄い色は文字色を暗くする
           const lightColors = ['#bfdbfe','#bbf7d0','#fef08a'];
           const textStyle = lightColors.includes(bgColor) ? 'color:#1e293b;' : '';
           const title = e.content.replace(/"/g, '&quot;');
