@@ -40,7 +40,11 @@ INITIAL_FILE = os.path.join(_BASE_DIR, "initial_data.json")
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            d = json.load(f)
+        if "reminders" not in d:
+            d["reminders"] = []
+            d["reminder_next_id"] = 1
+        return d
     # 初回: initial_data.json から読み込む
     if os.path.exists(INITIAL_FILE):
         with open(INITIAL_FILE, "r", encoding="utf-8") as f:
@@ -53,11 +57,13 @@ def load_data():
         data = {
             "schedules": schedules,
             "staff": raw.get("staff", []),
-            "next_id": len(schedules) + 1
+            "next_id": len(schedules) + 1,
+            "reminders": [],
+            "reminder_next_id": 1
         }
         save_data(data)
         return data
-    return {"schedules": [], "staff": [], "next_id": 1}
+    return {"schedules": [], "staff": [], "next_id": 1, "reminders": [], "reminder_next_id": 1}
 
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -87,6 +93,15 @@ class StaffCreate(BaseModel):
 
 class StaffOrder(BaseModel):
     staff: List[str]
+
+class ReminderCreate(BaseModel):
+    schedule_id: str          # 対象スケジュールID
+    remind_days_before: int   # 何日前に通知するか
+    note: Optional[str] = ""  # メモ
+
+class ReminderUpdate(BaseModel):
+    remind_days_before: Optional[int] = None
+    note: Optional[str] = None
 
 # -------------------------------------------------------
 # スケジュールAPI
@@ -201,6 +216,79 @@ def reorder_staff(item: StaffOrder):
     data["staff"] = item.staff
     save_data(data)
     return {"staff": data["staff"]}
+
+# -------------------------------------------------------
+# リマインドAPI
+# -------------------------------------------------------
+@app.get("/api/reminders")
+def get_reminders():
+    data = load_data()
+    reminders = data.get("reminders", [])
+    # 今日基準で「あと何日」を計算して付与
+    today = date.today()
+    result = []
+    for r in reminders:
+        # 対象スケジュールの日付を探す
+        sch = next((s for s in data["schedules"] if s["id"] == r["schedule_id"]), None)
+        if not sch:
+            continue  # スケジュール削除済みはスキップ
+        sch_date = date(sch["year"], sch["month"], sch["day"])
+        remind_date = sch_date - __import__('datetime').timedelta(days=r["remind_days_before"])
+        days_until_remind = (remind_date - today).days
+        days_until_event = (sch_date - today).days
+        result.append({
+            **r,
+            "schedule": sch,
+            "remind_date": remind_date.isoformat(),
+            "days_until_remind": days_until_remind,
+            "days_until_event": days_until_event,
+            "is_due": days_until_remind <= 0 <= days_until_event,  # 通知タイミング内
+            "is_past": days_until_event < 0,
+        })
+    return {"reminders": result}
+
+@app.post("/api/reminders")
+def create_reminder(item: ReminderCreate):
+    data = load_data()
+    # スケジュール存在確認
+    sch = next((s for s in data["schedules"] if s["id"] == item.schedule_id), None)
+    if not sch:
+        raise HTTPException(status_code=404, detail="スケジュールが見つかりません")
+    new_id = str(data.get("reminder_next_id", 1))
+    reminder = {
+        "id": new_id,
+        "schedule_id": item.schedule_id,
+        "remind_days_before": item.remind_days_before,
+        "note": item.note or "",
+        "created_at": datetime.now().isoformat()
+    }
+    data.setdefault("reminders", []).append(reminder)
+    data["reminder_next_id"] = int(new_id) + 1
+    save_data(data)
+    return reminder
+
+@app.put("/api/reminders/{reminder_id}")
+def update_reminder(reminder_id: str, item: ReminderUpdate):
+    data = load_data()
+    for r in data.get("reminders", []):
+        if r["id"] == reminder_id:
+            if item.remind_days_before is not None:
+                r["remind_days_before"] = item.remind_days_before
+            if item.note is not None:
+                r["note"] = item.note
+            save_data(data)
+            return r
+    raise HTTPException(status_code=404, detail="Not found")
+
+@app.delete("/api/reminders/{reminder_id}")
+def delete_reminder(reminder_id: str):
+    data = load_data()
+    before = len(data.get("reminders", []))
+    data["reminders"] = [r for r in data.get("reminders", []) if r["id"] != reminder_id]
+    if len(data["reminders"]) == before:
+        raise HTTPException(status_code=404, detail="Not found")
+    save_data(data)
+    return {"ok": True}
 
 # -------------------------------------------------------
 # 月一覧API (存在するデータの年月リスト)

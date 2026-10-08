@@ -95,6 +95,12 @@
     .entry-tag.color-teal { background: #14b8a6; }
     .entry-tag.color-pink { background: #ec4899; }
     .entry-tag.color-gray { background: #6b7280; }
+    /* 薄い色3色 */
+    .entry-tag.color-light-blue { background: #bfdbfe; color: #1e40af; }
+    .entry-tag.color-light-green { background: #bbf7d0; color: #166534; }
+    .entry-tag.color-light-yellow { background: #fef08a; color: #854d0e; }
+    /* リマインドアイコン */
+    .entry-tag .remind-dot { display:inline-block; width:6px; height:6px; background:#fff; border-radius:50%; margin-right:2px; vertical-align:middle; opacity:0.85; }
 
     .add-btn-cell { display: flex; align-items: center; justify-content: center; height: 100%; color: #cbd5e1; font-size: 16px; opacity: 0; }
     td.day-cell:hover .add-btn-cell { opacity: 1; color: var(--primary-light); }
@@ -180,6 +186,27 @@
     th.today-col { background: #065f46 !important; }
     td.today-col { background: #ecfdf5 !important; }
 
+    /* ===== リマインドバナー ===== */
+    .remind-banner { background: linear-gradient(90deg, #fef3c7, #fffbeb); border-left: 4px solid #f59e0b; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; }
+    .remind-banner .bell { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .remind-banner-title { font-weight: 700; font-size: 13px; color: #92400e; margin-bottom: 4px; }
+    .remind-banner-list { display: flex; flex-direction: column; gap: 3px; }
+    .remind-banner-item { font-size: 12px; color: #78350f; display: flex; align-items: center; gap: 6px; }
+    .remind-banner-item .badge { background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; white-space: nowrap; }
+    .remind-banner-item .badge.today { background: #dc2626; }
+    .remind-banner-item .badge.soon { background: #d97706; }
+
+    /* ===== リマインドモーダル ===== */
+    .remind-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; background: #fffbeb; }
+    .remind-list-item .ri-info { flex: 1; font-size: 12px; }
+    .remind-list-item .ri-days { font-weight: 700; color: #d97706; font-size: 13px; white-space: nowrap; }
+    .remind-list-item .ri-del { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; padding: 0 2px; opacity: 0.6; }
+    .remind-list-item .ri-del:hover { opacity: 1; }
+    .remind-add-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+    .remind-add-row select, .remind-add-row input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; }
+    .remind-add-row input[type=number] { width: 70px; }
+    .remind-add-row input[type=text] { flex: 1; min-width: 120px; }
+
     /* ===== 検索バー ===== */
     .search-bar { display: flex; gap: 8px; align-items: center; }
     .search-input { padding: 5px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; width: 180px; }
@@ -198,6 +225,7 @@
     <div class="search-bar">
       <input type="text" class="search-input" id="searchInput" placeholder="担当者・工事名検索">
     </div>
+    <button class="btn btn-ghost" id="remindBellBtn" onclick="openRemindListModal()" title="リマインド一覧">🔔 <span id="remindBadge" style="display:none; background:#ef4444; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; margin-left:2px;"></span></button>
     <button class="btn btn-ghost" onclick="openAddModal()">＋ 予定追加</button>
     <button class="btn btn-ghost" onclick="window.print()">印刷</button>
   </div>
@@ -238,6 +266,16 @@
     <div style="margin-left:auto;">
       <span id="entryCount" style="font-size:11px;color:var(--text-muted);"></span>
     </div>
+  </div>
+
+  <!-- リマインドバナー（期限到来分を表示） -->
+  <div id="remindBanner" style="display:none;" class="remind-banner">
+    <div class="bell">🔔</div>
+    <div style="flex:1;">
+      <div class="remind-banner-title">リマインド通知</div>
+      <div class="remind-banner-list" id="remindBannerList"></div>
+    </div>
+    <button onclick="document.getElementById('remindBanner').style.display='none'" style="background:none;border:none;cursor:pointer;color:#92400e;font-size:16px;opacity:0.6;padding:0 2px;" title="閉じる">×</button>
   </div>
 
   <div class="layout">
@@ -348,21 +386,76 @@
       <div class="form-group">
         <label>色</label>
         <div class="color-picker" id="colorPicker">
-          <div class="color-swatch selected" style="background:#3b82f6;" data-color="#3b82f6" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#10b981;" data-color="#10b981" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#ec4899;" data-color="#ec4899" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#14b8a6;" data-color="#14b8a6" onclick="selectColor(this)"></div>
-          <div class="color-swatch" style="background:#94a3b8;" data-color="#94a3b8" onclick="selectColor(this)"></div>
+          <div class="color-swatch selected" style="background:#3b82f6;" data-color="#3b82f6" onclick="selectColor(this)" title="青"></div>
+          <div class="color-swatch" style="background:#10b981;" data-color="#10b981" onclick="selectColor(this)" title="緑"></div>
+          <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selectColor(this)" title="紫"></div>
+          <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" onclick="selectColor(this)" title="赤"></div>
+          <div class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="selectColor(this)" title="オレンジ"></div>
+          <div class="color-swatch" style="background:#ec4899;" data-color="#ec4899" onclick="selectColor(this)" title="ピンク"></div>
+          <div class="color-swatch" style="background:#14b8a6;" data-color="#14b8a6" onclick="selectColor(this)" title="ティール"></div>
+          <div class="color-swatch" style="background:#94a3b8;" data-color="#94a3b8" onclick="selectColor(this)" title="グレー"></div>
+          <div style="width:100%; height:1px; background:var(--border); margin:2px 0;"></div>
+          <div class="color-swatch" style="background:#bfdbfe; border:1px solid #93c5fd;" data-color="#bfdbfe" onclick="selectColor(this)" title="薄青"></div>
+          <div class="color-swatch" style="background:#bbf7d0; border:1px solid #86efac;" data-color="#bbf7d0" onclick="selectColor(this)" title="薄緑"></div>
+          <div class="color-swatch" style="background:#fef08a; border:1px solid #fde047;" data-color="#fef08a" onclick="selectColor(this)" title="薄黄"></div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteEntry()" style="margin-right:auto; display:none;">削除</button>
+      <button class="btn btn-warning btn-sm" id="remindBtn" onclick="openRemindFromEdit()" style="display:none;" title="リマインドを設定">🔔 リマインド</button>
       <button class="btn btn-outline btn-sm" onclick="closeModal()">キャンセル</button>
       <button class="btn btn-primary btn-sm" onclick="saveEntry()" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== リマインド一覧モーダル ===== -->
+<div class="modal-overlay hidden" id="remindListModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#92400e,#d97706);">
+      <div class="modal-title">🔔 リマインド一覧</div>
+      <button class="modal-close" onclick="closeRemindListModal()">×</button>
+    </div>
+    <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+      <div id="remindListContent"><div class="loading">読み込み中...</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeRemindListModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== リマインド設定モーダル（スケジュール選択後に開く） ===== -->
+<div class="modal-overlay hidden" id="remindSetModal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#92400e,#d97706);">
+      <div class="modal-title">🔔 リマインドを設定</div>
+      <button class="modal-close" onclick="closeRemindSetModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="remindSetTarget" style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:13px;"></div>
+      <div class="form-group">
+        <label>何日前に通知するか</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="remindDaysBefore" min="0" max="30" value="1" style="width:80px;">
+          <span style="font-size:13px; color:var(--text-muted);">日前</span>
+          <div style="display:flex; gap:4px; margin-left:8px;">
+            <button class="btn btn-outline btn-sm" onclick="setRemindDays(0)">当日</button>
+            <button class="btn btn-outline btn-sm" onclick="setRemindDays(1)">前日</button>
+            <button class="btn btn-outline btn-sm" onclick="setRemindDays(3)">3日前</button>
+            <button class="btn btn-outline btn-sm" onclick="setRemindDays(7)">1週間前</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>メモ（任意）</label>
+        <input type="text" id="remindNote" placeholder="例: 資材準備を確認する">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeRemindSetModal()">キャンセル</button>
+      <button class="btn btn-warning btn-sm" onclick="saveRemind()">設定する</button>
     </div>
   </div>
 </div>
@@ -380,6 +473,7 @@ let selectedColor = '#3b82f6';
 let searchQuery = '';
 let allMonths = [];
 let refreshTimer = null;
+let remindingScheduleId = null;   // リマインド設定対象のスケジュールID
 
 // ===== API =====
 const API = {
@@ -424,6 +518,22 @@ const API = {
   async getMonths() {
     const r = await fetch('/api/months');
     return r.json();
+  },
+  async getReminders() {
+    const r = await fetch('/api/reminders');
+    return r.json();
+  },
+  async createReminder(data) {
+    const r = await fetch('/api/reminders', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  async deleteReminder(id) {
+    const r = await fetch(`/api/reminders/${id}`, { method: 'DELETE' });
+    return r.json();
   }
 };
 
@@ -441,6 +551,7 @@ async function init() {
     }
   } catch (e) {}
   await loadSchedule();
+  await checkReminders();
   setInterval(autoRefresh, 30000); // 30秒ごと自動更新
 }
 
@@ -477,6 +588,9 @@ function updateMonthLabel() {
   document.getElementById('jumpYear').value = currentYear;
   document.getElementById('jumpMonth').value = currentMonth;
 }
+
+// リマインド設定済みスケジュールIDセット（表示用）
+let remindMap = {};  // schedule_id -> true
 
 // ===== テーブル描画 =====
 function renderTable() {
@@ -548,8 +662,13 @@ function renderTable() {
         for (const e of dayEntries) {
           const highlight = query && e.content.toLowerCase().includes(query) ? 'highlight' : '';
           const bgColor = e.color || '#3b82f6';
+          // 薄い色は文字色を暗くする
+          const lightColors = ['#bfdbfe','#bbf7d0','#fef08a'];
+          const textStyle = lightColors.includes(bgColor) ? 'color:#1e293b;' : '';
           const title = e.content.replace(/"/g, '&quot;');
-          html += `<span class="entry-tag ${highlight}" style="background:${bgColor};" data-id="${e.id}" onclick="editEntry(event,'${e.id}')" title="${title}">${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
+          const hasRemind = remindMap && remindMap[e.id];
+          const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
+          html += `<span class="entry-tag ${highlight}" style="background:${bgColor};${textStyle}" data-id="${e.id}" onclick="editEntry(event,'${e.id}')" title="${title}">${remindDot}${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
         }
       } else {
         html += `<div class="add-btn-cell">＋</div>`;
@@ -681,6 +800,7 @@ function openAddModal(staffName, day) {
   editingId = null;
   document.getElementById('modalTitle').textContent = '予定を追加';
   document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('remindBtn').style.display = 'none';
   document.getElementById('rangeSection').style.display = 'block';
   // 期間チェックをリセット
   document.getElementById('useRange').checked = false;
@@ -716,6 +836,7 @@ function editEntry(event, id) {
   editingId = id;
   document.getElementById('modalTitle').textContent = '予定を編集';
   document.getElementById('deleteBtn').style.display = 'inline-flex';
+  document.getElementById('remindBtn').style.display = 'inline-flex';
   // 編集時は期間モードを非表示（単日のみ）
   document.getElementById('rangeSection').style.display = 'none';
   document.getElementById('saveBtn').textContent = '保存';
@@ -919,20 +1040,180 @@ function showToast(msg, type = 'success') {
   setTimeout(() => el.remove(), 3000);
 }
 
+// ===== リマインド機能 =====
+
+// 起動時・定期的にリマインドを確認してバナー表示
+async function checkReminders() {
+  try {
+    const res = await API.getReminders();
+    const reminders = res.reminders || [];
+
+    // リマインドマップを更新（タグへの●表示用）
+    remindMap = {};
+    for (const r of reminders) {
+      if (!r.is_past) remindMap[r.schedule_id] = true;
+    }
+
+    // 通知すべきリマインド（is_due = true: 通知期間内）
+    const due = reminders.filter(r => r.is_due);
+    const badge = document.getElementById('remindBadge');
+    if (due.length > 0) {
+      badge.textContent = due.length;
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    // バナー表示
+    const banner = document.getElementById('remindBanner');
+    const list = document.getElementById('remindBannerList');
+    if (due.length > 0) {
+      list.innerHTML = due.map(r => {
+        const s = r.schedule;
+        const daysLeft = r.days_until_event;
+        const badgeCls = daysLeft === 0 ? 'today' : daysLeft <= 3 ? 'soon' : '';
+        const label = daysLeft === 0 ? '本日' : daysLeft === 1 ? '明日' : `あと${daysLeft}日`;
+        const noteStr = r.note ? `　${escHtml(r.note)}` : '';
+        return `<div class="remind-banner-item">
+          <span class="badge ${badgeCls}">${label}</span>
+          <span>${escHtml(s.staff)}：${escHtml(s.content.substring(0,30))}${s.content.length>30?'…':''}　（${s.year}/${s.month}/${s.day}）${noteStr}</span>
+        </div>`;
+      }).join('');
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+
+    renderTable(); // ●ドット再描画
+  } catch(e) {}
+}
+
+// 編集モーダルのリマインドボタンから開く
+function openRemindFromEdit() {
+  if (!editingId) return;
+  const entry = scheduleData?.schedules.find(s => s.id === editingId);
+  if (!entry) return;
+  closeModal();
+  openRemindSetModal(entry);
+}
+
+// リマインド設定モーダルを開く
+function openRemindSetModal(entry) {
+  remindingScheduleId = entry.id;
+  document.getElementById('remindSetTarget').innerHTML =
+    `<strong>${escHtml(entry.staff)}</strong>　${entry.year}/${entry.month}/${entry.day}<br>
+     <span style="color:var(--text-muted);">${escHtml(entry.content.substring(0,50))}${entry.content.length>50?'…':''}</span>`;
+  document.getElementById('remindDaysBefore').value = 1;
+  document.getElementById('remindNote').value = '';
+  document.getElementById('remindSetModal').classList.remove('hidden');
+}
+
+function closeRemindSetModal() {
+  document.getElementById('remindSetModal').classList.add('hidden');
+  remindingScheduleId = null;
+}
+
+function setRemindDays(n) {
+  document.getElementById('remindDaysBefore').value = n;
+}
+
+async function saveRemind() {
+  if (!remindingScheduleId) return;
+  const days = parseInt(document.getElementById('remindDaysBefore').value);
+  const note = document.getElementById('remindNote').value.trim();
+  if (isNaN(days) || days < 0) { showToast('日数を正しく入力してください', 'error'); return; }
+  try {
+    await API.createReminder({ schedule_id: remindingScheduleId, remind_days_before: days, note });
+    showToast('リマインドを設定しました', 'success');
+    closeRemindSetModal();
+    await checkReminders();
+  } catch(e) {
+    showToast('設定エラー: ' + e.message, 'error');
+  }
+}
+
+// リマインド一覧モーダル
+async function openRemindListModal() {
+  document.getElementById('remindListModal').classList.remove('hidden');
+  await renderRemindList();
+}
+
+function closeRemindListModal() {
+  document.getElementById('remindListModal').classList.add('hidden');
+}
+
+async function renderRemindList() {
+  const el = document.getElementById('remindListContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const res = await API.getReminders();
+    const reminders = res.reminders || [];
+    if (reminders.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">リマインドは設定されていません</div>';
+      return;
+    }
+    // 期限順ソート
+    const sorted = [...reminders].sort((a,b) => a.days_until_event - b.days_until_event);
+    el.innerHTML = sorted.map(r => {
+      const s = r.schedule;
+      const dLeft = r.days_until_event;
+      const isPast = r.is_past;
+      const label = isPast ? `${Math.abs(dLeft)}日前に終了` : dLeft === 0 ? '本日！' : dLeft === 1 ? '明日' : `あと${dLeft}日`;
+      const labelColor = isPast ? '#94a3b8' : r.is_due ? '#dc2626' : '#d97706';
+      const noteHtml = r.note ? `<div style="color:var(--text-muted); font-size:11px; margin-top:2px;">📝 ${escHtml(r.note)}</div>` : '';
+      return `<div class="remind-list-item" style="${isPast ? 'opacity:0.5;' : ''}">
+        <div class="ri-info">
+          <div style="font-weight:600; font-size:12px;">${escHtml(s.staff)}　<span style="color:var(--text-muted); font-weight:400;">${s.year}/${s.month}/${s.day}</span></div>
+          <div style="font-size:12px; color:var(--text-muted);">${escHtml(s.content.substring(0,40))}${s.content.length>40?'…':''}</div>
+          <div style="font-size:11px; margin-top:2px; color:var(--text-muted);">通知：${r.remind_days_before}日前（${r.remind_date}）${noteHtml}</div>
+        </div>
+        <span class="ri-days" style="color:${labelColor};">${label}</span>
+        <button class="ri-del" onclick="deleteRemind('${r.id}')" title="削除">🗑</button>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ef4444;">読み込みエラー</div>';
+  }
+}
+
+async function deleteRemind(id) {
+  if (!confirm('このリマインドを削除しますか？')) return;
+  try {
+    await API.deleteReminder(id);
+    showToast('リマインドを削除しました', 'success');
+    await renderRemindList();
+    await checkReminders();
+  } catch(e) {
+    showToast('削除エラー', 'error');
+  }
+}
+
 // ===== キーボードショートカット =====
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Escape') {
+    closeModal();
+    closeRemindListModal();
+    closeRemindSetModal();
+  }
   if (e.key === 'ArrowLeft' && !isModalOpen()) changeMonth(-1);
   if (e.key === 'ArrowRight' && !isModalOpen()) changeMonth(1);
 });
 
 function isModalOpen() {
-  return !document.getElementById('scheduleModal').classList.contains('hidden');
+  return ['scheduleModal','remindListModal','remindSetModal'].some(
+    id => !document.getElementById(id).classList.contains('hidden')
+  );
 }
 
 // ===== モーダル外クリックで閉じる =====
 document.getElementById('scheduleModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('scheduleModal')) closeModal();
+});
+document.getElementById('remindListModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('remindListModal')) closeRemindListModal();
+});
+document.getElementById('remindSetModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('remindSetModal')) closeRemindSetModal();
 });
 
 // ===== Enterキーで担当者追加 =====
