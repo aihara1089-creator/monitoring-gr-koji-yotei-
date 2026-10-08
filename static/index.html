@@ -353,7 +353,7 @@
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
           <label style="margin:0; white-space:nowrap; font-weight:600; font-size:12px; color:var(--text-muted);">期間指定</label>
           <label style="margin:0; display:flex; align-items:center; gap:4px; font-weight:normal; font-size:12px; cursor:pointer;">
-            <input type="checkbox" id="useRange" onchange="toggleRangeMode()"> 「〜から〜まで」で入力する
+            <input type="checkbox" id="useRange" onchange="toggleRangeMode()"> <span id="useRangeLabel">「〜から〜まで」で入力する</span>
           </label>
         </div>
 
@@ -815,14 +815,15 @@ function toggleRangeMode() {
   const useRange = document.getElementById('useRange').checked;
   document.getElementById('singleDateSection').style.display = useRange ? 'none' : 'flex';
   document.getElementById('rangeDateSection').style.display = useRange ? 'block' : 'none';
-  document.getElementById('saveBtn').textContent = useRange ? '一括追加' : '保存';
+  document.getElementById('saveBtn').textContent = useRange ? '一括保存' : '保存';
   if (useRange) {
-    // 単日モードの値を開始日に引き継ぐ
+    // 単日モードの値を開始日・終了日に引き継ぐ
     const y = document.getElementById('formYear').value;
     const m = String(document.getElementById('formMonth').value).padStart(2,'0');
     const d = String(document.getElementById('formDay').value).padStart(2,'0');
-    document.getElementById('formDateStart').value = `${y}-${m}-${d}`;
-    document.getElementById('formDateEnd').value = `${y}-${m}-${d}`;
+    const dateStr = `${y}-${m}-${d}`;
+    document.getElementById('formDateStart').value = dateStr;
+    document.getElementById('formDateEnd').value = dateStr;
     updateRangePreview();
   }
 }
@@ -847,6 +848,8 @@ function openAddModal(staffName, day) {
   document.getElementById('deleteBtn').style.display = 'none';
   document.getElementById('remindBtn').style.display = 'none';
   document.getElementById('rangeSection').style.display = 'block';
+  // 追加時のチェックボックスラベル
+  document.getElementById('useRangeLabel').textContent = '「〜から〜まで」で入力する';
   // 期間チェックをリセット
   document.getElementById('useRange').checked = false;
   document.getElementById('singleDateSection').style.display = 'flex';
@@ -882,9 +885,16 @@ function editEntry(event, id) {
   document.getElementById('modalTitle').textContent = '予定を編集';
   document.getElementById('deleteBtn').style.display = 'inline-flex';
   document.getElementById('remindBtn').style.display = 'inline-flex';
-  // 編集時は期間モードを非表示（単日のみ）
-  document.getElementById('rangeSection').style.display = 'none';
+
+  // 編集時も期間指定セクションを表示（チェックOFFでリセット）
+  document.getElementById('rangeSection').style.display = 'block';
+  document.getElementById('useRange').checked = false;
+  document.getElementById('singleDateSection').style.display = 'flex';
+  document.getElementById('rangeDateSection').style.display = 'none';
   document.getElementById('saveBtn').textContent = '保存';
+  document.getElementById('rangePreview').textContent = '';
+  // 編集時のチェックボックスラベルを変更
+  document.getElementById('useRangeLabel').textContent = '「〜から〜まで」に変更する';
 
   document.getElementById('formYear').value = entry.year;
   document.getElementById('formMonth').value = entry.month;
@@ -897,12 +907,12 @@ function editEntry(event, id) {
   const staff = scheduleData?.staff || [];
   staffSel.innerHTML = staff.map(s => `<option value="${escHtml(s)}" ${s===entry.staff?'selected':''}>${escHtml(s)}</option>`).join('');
 
-  // 編集時は単日セクションを強制表示
-  document.getElementById('singleDateSection').style.display = 'flex';
-  document.getElementById('rangeDateSection').style.display = 'none';
-
   document.getElementById('scheduleModal').classList.remove('hidden');
   document.getElementById('formContent').focus();
+
+  // 期間日付変更を監視
+  document.getElementById('formDateStart').onchange = updateRangePreview;
+  document.getElementById('formDateEnd').onchange = updateRangePreview;
 }
 
 function closeModal() {
@@ -929,40 +939,48 @@ async function saveEntry() {
   if (!content) { showToast('内容を入力してください', 'error'); return; }
   if (!staff) { showToast('担当者を選択してください', 'error'); return; }
 
-  const useRange = document.getElementById('useRange').checked && !editingId;
+  const useRange = document.getElementById('useRange').checked;
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
 
   try {
-    if (editingId) {
-      // 編集: 単日のみ
-      const year = parseInt(document.getElementById('formYear').value);
+    if (editingId && !useRange) {
+      // ===== 既存を単日で編集 =====
+      const year  = parseInt(document.getElementById('formYear').value);
       const month = parseInt(document.getElementById('formMonth').value);
-      const day = parseInt(document.getElementById('formDay').value);
+      const day   = parseInt(document.getElementById('formDay').value);
       await API.updateSchedule(editingId, { staff, year, month, day, content, color: selectedColor });
       showToast('更新しました', 'success');
 
     } else if (useRange) {
-      // 期間一括追加
+      // ===== 期間一括（新規 or 既存どちらも） =====
       const startStr = document.getElementById('formDateStart').value;
-      const endStr = document.getElementById('formDateEnd').value;
+      const endStr   = document.getElementById('formDateEnd').value;
       if (!startStr || !endStr) { showToast('開始日・終了日を入力してください', 'error'); return; }
       const dates = expandDateRange(startStr, endStr);
       if (!dates) { showToast('終了日は開始日以降にしてください', 'error'); return; }
       if (dates.length > 90) { showToast('期間が長すぎます（最大90日）', 'error'); return; }
 
-      document.getElementById('saveBtn').disabled = true;
-      document.getElementById('saveBtn').textContent = '追加中...';
+      btn.textContent = '処理中...';
 
-      // 並列でまとめて送信
+      if (editingId) {
+        // 既存1件を削除してから期間分を追加
+        await API.deleteSchedule(editingId);
+      }
+
       await Promise.all(dates.map(({ year, month, day }) =>
         API.createSchedule({ staff, year, month, day, content, color: selectedColor })
       ));
-      showToast(`${dates.length}日分を追加しました`, 'success');
+
+      const label = editingId ? '期間に変更しました' : '追加しました';
+      showToast(`${label}（${dates.length}日分）`, 'success');
 
     } else {
-      // 単日追加
-      const year = parseInt(document.getElementById('formYear').value);
+      // ===== 単日新規追加 =====
+      const year  = parseInt(document.getElementById('formYear').value);
       const month = parseInt(document.getElementById('formMonth').value);
-      const day = parseInt(document.getElementById('formDay').value);
+      const day   = parseInt(document.getElementById('formDay').value);
       await API.createSchedule({ staff, year, month, day, content, color: selectedColor });
       showToast('追加しました', 'success');
     }
@@ -972,8 +990,8 @@ async function saveEntry() {
   } catch (e) {
     showToast('エラーが発生しました', 'error');
   } finally {
-    document.getElementById('saveBtn').disabled = false;
-    document.getElementById('saveBtn').textContent = useRange ? '一括追加' : '保存';
+    btn.disabled = false;
+    btn.textContent = useRange ? '一括保存' : '保存';
   }
 }
 
