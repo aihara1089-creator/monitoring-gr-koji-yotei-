@@ -204,10 +204,30 @@
     .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.1s; }
     .color-swatch:hover, .color-swatch.selected { border-color: var(--text); transform: scale(1.2); }
 
-    /* ===== 凡例 ===== */
+    /* ===== 凡例 & フィルターパネル ===== */
     .legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 10px 14px; background: var(--surface); border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 12px; }
     .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; }
     .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+    /* フィルターチェック */
+    .filter-sep { width: 1px; background: var(--border); height: 18px; margin: 0 4px; }
+    .filter-label { font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+    .filter-check-item {
+      display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+      padding: 3px 8px; border-radius: 20px; cursor: pointer; user-select: none;
+      border: 1.5px solid transparent; transition: all 0.15s;
+    }
+    .filter-check-item input[type=checkbox] { display: none; }
+    /* ON 状態 */
+    .filter-check-item.active-jp  { background:#fff1f2; border-color:#9f1239; color:#9f1239; }
+    .filter-check-item.active-cn  { background:#fff7ed; border-color:#c2410c; color:#c2410c; }
+    .filter-check-item.active-kr  { background:#f0fdfa; border-color:#0f766e; color:#0f766e; }
+    .filter-check-item.active-wkd { background:#eff6ff; border-color:#3b82f6; color:#1e40af; }
+    /* OFF 状態（チェックなし） */
+    .filter-check-item:not(.active-jp):not(.active-cn):not(.active-kr):not(.active-wkd) {
+      color: var(--text-muted); border-color: var(--border); background: #f8fafc;
+    }
+    /* 非表示列 */
+    .col-hidden { display: none !important; }
 
     /* ===== ローディング/空 ===== */
     .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
@@ -238,8 +258,10 @@
     }
 
     /* ===== ドラッグ&ドロップ ===== */
-    .dragging { opacity: 0.5; }
-    .drag-over { background: #dbeafe !important; }
+    .dragging { opacity: 0.35; transform: scale(0.96); cursor: grabbing; }
+    .drag-over { background: #dbeafe !important; outline: 2px dashed #3b82f6; outline-offset: -2px; }
+    .entry-tag[draggable="true"], .span-bar[draggable="true"] { cursor: grab; }
+    .entry-tag[draggable="true"]:active, .span-bar[draggable="true"]:active { cursor: grabbing; }
 
     /* ===== 今日強調 ===== */
     th.today-col { background: #065f46 !important; }
@@ -325,19 +347,42 @@
 
 <!-- ===== メイン ===== -->
 <div class="main">
-  <!-- 凡例 -->
+  <!-- 凡例 & フィルターパネル -->
   <div class="legend">
-    <span style="font-size:11px;font-weight:600;color:var(--text-muted);">凡例:</span>
+    <!-- 色凡例 -->
+    <span class="filter-label">色:</span>
     <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> 工事</div>
     <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div> 出張</div>
     <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div> 会議</div>
     <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div> 重要</div>
     <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div> 試験</div>
     <div class="legend-item"><div class="legend-dot" style="background:#94a3b8;"></div> 休み</div>
-    <div style="width:1px; background:var(--border); height:14px; margin:0 4px;"></div>
-    <div class="legend-item" title="日本の土日・祝日"><div class="legend-dot" style="background:#9f1239;"></div> 🇯🇵 土日祝</div>
-    <div class="legend-item" title="中国の祝日・振替休日（ヘッダーに🇨🇳表示）"><div class="legend-dot" style="background:#c2410c;"></div> 🇨🇳 中国祝日</div>
-    <div class="legend-item" title="韓国の祝日・振替休日（ヘッダーに🇰🇷表示）"><div class="legend-dot" style="background:#0f766e;"></div> 🇰🇷 韓国祝日</div>
+
+    <div class="filter-sep"></div>
+
+    <!-- 表示フィルター -->
+    <span class="filter-label">表示切替:</span>
+
+    <!-- 土日 -->
+    <label class="filter-check-item active-wkd" id="filterWkdLabel" onclick="toggleFilter('wkd')" title="土曜・日曜の列を表示/非表示">
+      <input type="checkbox" id="filterWkd" checked> 🗓 土日
+    </label>
+
+    <!-- 日本祝日 -->
+    <label class="filter-check-item active-jp" id="filterJpLabel" onclick="toggleFilter('jp')" title="日本の祝日列を表示/非表示">
+      <input type="checkbox" id="filterJp" checked> 🇯🇵 祝日
+    </label>
+
+    <!-- 中国祝日 -->
+    <label class="filter-check-item active-cn" id="filterCnLabel" onclick="toggleFilter('cn')" title="中国の祝日・振替休日の色明けを表示/非表示">
+      <input type="checkbox" id="filterCn" checked> 🇨🇳 中国祝日
+    </label>
+
+    <!-- 韓国祝日 -->
+    <label class="filter-check-item active-kr" id="filterKrLabel" onclick="toggleFilter('kr')" title="韓国の祝日・振替休日の色明けを表示/非表示">
+      <input type="checkbox" id="filterKr" checked> 🇰🇷 韓国祝日
+    </label>
+
     <div style="margin-left:auto;">
       <span id="entryCount" style="font-size:11px;color:var(--text-muted);"></span>
     </div>
@@ -549,6 +594,55 @@ let searchQuery = '';
 let allMonths = [];
 let refreshTimer = null;
 let remindingScheduleId = null;   // リマインド設定対象のスケジュールID
+
+// ===== 表示フィルター状態 =====
+const displayFilter = { wkd: true, jp: true, cn: true, kr: true };
+
+// ===== D&D 状態 =====
+let dragState = null; // { id, staff, year, month, day }
+
+// ===== フィルター切替 =====
+function toggleFilter(key) {
+  displayFilter[key] = !displayFilter[key];
+  const label = document.getElementById(`filter${key.charAt(0).toUpperCase()+key.slice(1)}Label`);
+  const cb    = document.getElementById(`filter${key.charAt(0).toUpperCase()+key.slice(1)}`);
+  const activeClass = { wkd:'active-wkd', jp:'active-jp', cn:'active-cn', kr:'active-kr' }[key];
+  if (displayFilter[key]) {
+    label.classList.add(activeClass);
+    cb.checked = true;
+  } else {
+    label.classList.remove(activeClass);
+    cb.checked = false;
+  }
+  applyColumnFilter();
+}
+
+// ===== テーブル列にフィルターを適用（DOMへ直接操作で再描画不要） =====
+function applyColumnFilter() {
+  const table = document.querySelector('#scheduleTable table');
+  if (!table) return;
+
+  // th / td に data-day-type 属性をつけてある → それで判断
+  const allThs = table.querySelectorAll('th[data-dtype]');
+  const allTds = table.querySelectorAll('td[data-dtype]');
+
+  function shouldHide(dtype) {
+    if (dtype === 'sat' || dtype === 'sun') return !displayFilter.wkd;
+    if (dtype === 'jp')  return !displayFilter.jp;
+    if (dtype === 'cn')  return !displayFilter.cn;
+    if (dtype === 'kr')  return !displayFilter.kr;
+    return false;
+  }
+
+  for (const el of [...allThs, ...allTds]) {
+    const dtype = el.getAttribute('data-dtype');
+    if (shouldHide(dtype)) {
+      el.classList.add('col-hidden');
+    } else {
+      el.classList.remove('col-hidden');
+    }
+  }
+}
 
 // ===== API =====
 const API = {
@@ -785,7 +879,15 @@ function renderTable() {
         flagHtml += '</div>';
       }
 
-      html += `<th class="th-day ${thCls}"${titleAttr}><span class="day-num">${d.day}</span><span class="day-wd">${wdLabel}</span>${flagHtml}</th>`;
+      // data-dtype: フィルター用（sat/sun/jp/cn/kr/normal）
+      let dtype = 'normal';
+      if (d.weekday === '土') dtype = 'sat';
+      else if (d.weekday === '日') dtype = 'sun';
+      else if (d.is_holiday) dtype = 'jp';
+      else if (d.is_cn_holiday) dtype = 'cn';
+      else if (d.is_kr_holiday) dtype = 'kr';
+
+      html += `<th class="th-day ${thCls}" data-day="${d.day}" data-dtype="${dtype}"${titleAttr}><span class="day-num">${d.day}</span><span class="day-wd">${wdLabel}</span>${flagHtml}</th>`;
   }
   html += '</tr></thead>';
 
@@ -826,8 +928,15 @@ function renderTable() {
       const daySpans   = staffSpans[d.day]   || [];
       const dayEntries = staffEntries[d.day]  || [];
       const hasBars    = daySpans.length > 0;
-      // mid/endセルは＋ボタン不要
       const isCont = hasBars && daySpans.every(s => s.pos === 'mid' || s.pos === 'end');
+
+      // data-dtype (フィルター用)
+      let tdDtype = 'normal';
+      if (d.weekday === '土') tdDtype = 'sat';
+      else if (d.weekday === '日') tdDtype = 'sun';
+      else if (d.is_holiday) tdDtype = 'jp';
+      else if (d.is_cn_holiday) tdDtype = 'cn';
+      else if (d.is_kr_holiday) tdDtype = 'kr';
 
       const cellCls = [
         'day-cell',
@@ -837,9 +946,11 @@ function renderTable() {
         isCont  ? 'bar-cont' : ''
       ].filter(Boolean).join(' ');
 
-      // mid/endセルはクリックを editEntry に委ねる（cellClickは不要）
       const clickHandler = isCont ? '' : `onclick="cellClick('${staffName}', ${d.day}, event)"`;
-      html += `<td class="${cellCls}" ${clickHandler} data-staff="${staffName}" data-day="${d.day}">`;
+      // D&D: セルを drop ターゲットにする
+      html += `<td class="${cellCls}" ${clickHandler}`
+            + ` data-staff="${staffName}" data-day="${d.day}" data-dtype="${tdDtype}"`
+            + ` ondragover="onCellDragOver(event)" ondragleave="onCellDragLeave(event)" ondrop="onCellDrop(event,'${staffName}',${d.day})">`;
 
       if (hasBars) {
         // ===== バー表示 =====
@@ -850,17 +961,19 @@ function renderTable() {
           const title     = sp.content.replace(/"/g, '&quot;');
           const hasRemind = remindMap && remindMap[sp.id];
           const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
-          // テキストは start/solo のみ表示
           const labelText = (sp.pos === 'start' || sp.pos === 'solo')
             ? `${remindDot}${escHtml(sp.content.substring(0, 14))}${sp.content.length > 14 ? '…' : ''}`
             : '';
           html += `<span class="span-bar bar-${sp.pos} ${lightCls} ${highlight}" `
-                + `style="background:${sp.color};${textColor}" `
-                + `data-id="${sp.id}" onclick="editEntry(event,'${sp.id}')" title="${title}">`
+                + `draggable="true" `
+                + `data-id="${sp.id}" data-staff="${staffName}" data-year="${d.year||currentYear}" data-month="${d.month||currentMonth}" data-day="${d.day}" `
+                + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
+                + `onclick="editEntry(event,'${sp.id}')" title="${title}" `
+                + `style="background:${sp.color};${textColor}">`
                 + `${labelText}</span>`;
         }
       } else if (dayEntries.length > 0) {
-        // ===== 通常タグ（スパンなし・複数エントリ混在） =====
+        // ===== 通常タグ =====
         for (const e of dayEntries) {
           const highlight = query && e.content.toLowerCase().includes(query) ? 'highlight' : '';
           const bgColor = e.color || '#3b82f6';
@@ -869,7 +982,13 @@ function renderTable() {
           const title = e.content.replace(/"/g, '&quot;');
           const hasRemind = remindMap && remindMap[e.id];
           const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
-          html += `<span class="entry-tag ${highlight}" style="background:${bgColor};${textStyle}" data-id="${e.id}" onclick="editEntry(event,'${e.id}')" title="${title}">${remindDot}${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
+          html += `<span class="entry-tag ${highlight}" `
+                + `draggable="true" `
+                + `data-id="${e.id}" data-staff="${staffName}" data-year="${currentYear}" data-month="${currentMonth}" data-day="${d.day}" `
+                + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
+                + `onclick="editEntry(event,'${e.id}')" title="${title}" `
+                + `style="background:${bgColor};${textStyle}">`
+                + `${remindDot}${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
         }
       } else {
         html += `<div class="add-btn-cell">＋</div>`;
@@ -882,6 +1001,78 @@ function renderTable() {
 
   document.getElementById('scheduleTable').innerHTML = html;
   document.getElementById('entryCount').textContent = `${schedules.length} 件の予定`;
+
+  // フィルター状態を再適用
+  applyColumnFilter();
+}
+
+// ===================================================
+// ===== ドラッグ＆ドロップ ハンドラー =====
+// ===================================================
+function onEntryDragStart(event) {
+  const el = event.currentTarget;
+  dragState = {
+    id:    el.dataset.id,
+    staff: el.dataset.staff,
+    year:  parseInt(el.dataset.year  || currentYear),
+    month: parseInt(el.dataset.month || currentMonth),
+    day:   parseInt(el.dataset.day),
+  };
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', dragState.id);
+  // 少し遅延してdraggingクラスを付与（Safari対策）
+  setTimeout(() => el.classList.add('dragging'), 0);
+}
+
+function onEntryDragEnd(event) {
+  event.currentTarget.classList.remove('dragging');
+  // drop-over ハイライトをすべてクリア
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  dragState = null;
+}
+
+function onCellDragOver(event) {
+  if (!dragState) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  // td 自体にハイライト（td が event.currentTarget）
+  const td = event.currentTarget;
+  if (!td.classList.contains('drag-over')) td.classList.add('drag-over');
+}
+
+function onCellDragLeave(event) {
+  const td = event.currentTarget;
+  // relatedTarget が td の子要素のときは消さない
+  if (!td.contains(event.relatedTarget)) {
+    td.classList.remove('drag-over');
+  }
+}
+
+async function onCellDrop(event, toStaff, toDay) {
+  event.preventDefault();
+  const td = event.currentTarget;
+  td.classList.remove('drag-over');
+
+  if (!dragState) return;
+
+  const { id, staff: fromStaff, year, month, day: fromDay } = dragState;
+  dragState = null;
+
+  // 同じセルへのドロップは無視
+  if (fromStaff === toStaff && fromDay === toDay && month === currentMonth && year === currentYear) return;
+
+  try {
+    await API.updateSchedule(id, {
+      staff: toStaff,
+      year:  currentYear,
+      month: currentMonth,
+      day:   toDay,
+    });
+    showToast(`${fromStaff}（${month}/${fromDay}）→ ${toStaff}（${currentMonth}/${toDay})`, 'success');
+    await loadSchedule();
+  } catch (e) {
+    showToast('移動に失敗しました', 'error');
+  }
 }
 
 // ===== 担当者パネル =====
