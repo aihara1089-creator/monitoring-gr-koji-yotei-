@@ -504,7 +504,7 @@
 
       <div class="form-group">
         <label>工事/予定内容</label>
-        <textarea id="formContent" rows="3" placeholder="船名・工事内容・場所など"></textarea>
+        <textarea id="formContent" rows="3" placeholder="船名・工事内容・場所など" oninput="onContentInput(event)"></textarea>
       </div>
       <div class="form-group">
         <label>色</label>
@@ -608,7 +608,26 @@ let remindingScheduleId = null;   // リマインド設定対象のスケジュ�
 const displayFilter = { wkd: true, jp: true, cn: true, kr: true };
 
 // ===== D&D 状態 =====
-let dragState = null; // { id, staff, year, month, day }
+let dragState = null;      // 予定セルD&D: { id, staff, year, month, day, groupIds, dragOffset, groupLen }
+let staffDragState = null; // 担当者並び替えD&D: { fromIdx, fromName, source }
+
+// ===== キーワード自動色付けマップ =====
+const AUTO_COLOR_KEYWORDS = [
+  { keywords: ['年休', '有給', '有休', 'ねんきゅう'], color: '#fca5a5', label: '年休' },
+  { keywords: ['在宅', 'テレワーク', 'リモート'],      color: '#fdba74', label: '在宅' },
+  { keywords: ['tatou', 'タトウ', 'たとう'],            color: '#86efac', label: 'Tatou' },
+];
+
+function getAutoColor(content) {
+  if (!content) return null;
+  const lower = content.toLowerCase();
+  for (const rule of AUTO_COLOR_KEYWORDS) {
+    if (rule.keywords.some(kw => lower.includes(kw.toLowerCase()))) {
+      return rule.color;
+    }
+  }
+  return null;
+}
 
 // ===== フィルター切替 =====
 // cb = チェックボックス要素（onchange から渡される）
@@ -932,16 +951,19 @@ function renderTable() {
     }
     if (!hasMatch) continue;
 
-    // 担当者行に D&D 属性を付与
+    // 担当者行: tr自体はdraggableにしない（セルD&Dと干渉するため）
+    // ⠿ ハンドルspanだけをdraggableにし、td.staff-nameをdrop受け口にする
     const staffIdx = staffList.indexOf(staffName);
-    html += `<tr class="staff-row" data-staff="${escHtml(staffName)}" data-idx="${staffIdx}"
-      draggable="true"
-      ondragstart="onRowDragStart(event,${staffIdx})"
+    html += `<tr class="staff-row" data-staff="${escHtml(staffName)}" data-idx="${staffIdx}">`;
+    html += `<td class="staff-name" title="${staffName}"
       ondragover="onRowDragOver(event,${staffIdx})"
       ondragleave="onRowDragLeave(event)"
-      ondrop="onRowDrop(event,${staffIdx})"
-      ondragend="onRowDragEnd(event)">`;
-    html += `<td class="staff-name" title="${staffName}"><span class="row-drag-handle" title="ドラッグで並び替え">⠿</span>${staffName}</td>`;
+      ondrop="onRowDrop(event,${staffIdx})">
+      <span class="row-drag-handle"
+        draggable="true"
+        title="ドラッグで並び替え"
+        ondragstart="onRowDragStart(event,${staffIdx})"
+        ondragend="onRowDragEnd(event)">⠿</span>${staffName}</td>`;
 
     for (const d of days) {
       const isJpRed2 = d.weekday === '土' || d.weekday === '日' || d.is_holiday;
@@ -1239,30 +1261,31 @@ function onStaffPanelDragEnd(event) {
 
 // ===== テーブル行 D&D (スケジュール表内) =====
 function onRowDragStart(event, fromIdx) {
-  // セルのエントリードラッグと区別する：staffDragStateを利用
+  event.stopPropagation();
   staffDragState = { fromIdx, fromName: scheduleData.staff[fromIdx], source: 'row' };
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData('text/plain', 'row:' + fromIdx);
-  // dragState（セルドラッグ）はリセットしておく
   dragState = null;
   setTimeout(() => {
-    event.currentTarget.classList.add('row-dragging');
+    const tr = document.querySelector(`tr.staff-row[data-idx="${fromIdx}"]`);
+    if (tr) tr.classList.add('row-dragging');
   }, 0);
 }
 
 function onRowDragOver(event, toIdx) {
-  // スケジュールドラッグ中は行ドラッグを無視
   if (!staffDragState || staffDragState.source !== 'row') return;
   event.preventDefault();
-  event.stopPropagation(); // onCellDragOverにバブルしない
+  event.stopPropagation();
   event.dataTransfer.dropEffect = 'move';
   document.querySelectorAll('tr.staff-row').forEach(r => r.classList.remove('row-drag-over'));
-  event.currentTarget.classList.add('row-drag-over');
+  const tr = document.querySelector(`tr.staff-row[data-idx="${toIdx}"]`);
+  if (tr) tr.classList.add('row-drag-over');
 }
 
 function onRowDragLeave(event) {
   if (event.currentTarget.contains(event.relatedTarget)) return;
-  event.currentTarget.classList.remove('row-drag-over');
+  const tr = event.currentTarget.closest('tr.staff-row');
+  if (tr) tr.classList.remove('row-drag-over');
 }
 
 async function onRowDrop(event, toIdx) {
@@ -1425,8 +1448,6 @@ function openAddModal(staffName, day) {
   // 期間日付の変更を監視
   document.getElementById('formDateStart').onchange = updateRangePreview;
   document.getElementById('formDateEnd').onchange = updateRangePreview;
-  // 追加モードは内容入力時に自動色候補
-  document.getElementById('formContent').oninput = onContentInput;
 }
 
 function editEntry(event, id) {
@@ -1467,8 +1488,6 @@ function editEntry(event, id) {
   // 期間日付変更を監視
   document.getElementById('formDateStart').onchange = updateRangePreview;
   document.getElementById('formDateEnd').onchange = updateRangePreview;
-  // 編集モードも内容変更時に自動色候補
-  document.getElementById('formContent').oninput = onContentInput;
 }
 
 function closeModal() {
