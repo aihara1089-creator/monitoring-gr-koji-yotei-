@@ -521,7 +521,13 @@
           <div class="color-swatch" style="background:#bfdbfe; border:1px solid #93c5fd;" data-color="#bfdbfe" onclick="selectColor(this)" title="薄青"></div>
           <div class="color-swatch" style="background:#bbf7d0; border:1px solid #86efac;" data-color="#bbf7d0" onclick="selectColor(this)" title="薄緑"></div>
           <div class="color-swatch" style="background:#fef08a; border:1px solid #fde047;" data-color="#fef08a" onclick="selectColor(this)" title="薄黄"></div>
+          <!-- 自動色付けキーワード用スウォッチ -->
+          <div style="width:100%; height:1px; background:var(--border); margin:2px 0;"></div>
+          <div class="color-swatch" style="background:#fca5a5; border:1px solid #f87171;" data-color="#fca5a5" onclick="selectColor(this)" title="薄赤（年休）"></div>
+          <div class="color-swatch" style="background:#fdba74; border:1px solid #fb923c;" data-color="#fdba74" onclick="selectColor(this)" title="薄オレンジ（在宅）"></div>
+          <div class="color-swatch" style="background:#86efac; border:1px solid #4ade80;" data-color="#86efac" onclick="selectColor(this)" title="薄緑（Tatou）"></div>
         </div>
+        <div id="autoColorHint" class="auto-color-hint" style="margin-top:4px;"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -686,6 +692,14 @@ const API = {
     const r = await fetch(`/api/staff/${encodeURIComponent(name)}`, { method: 'DELETE' });
     return r.json();
   },
+  async reorderStaff(staffList) {
+    const r = await fetch('/api/staff/order', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ staff: staffList })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
   async getMonths() {
     const r = await fetch('/api/months');
     return r.json();
@@ -793,7 +807,7 @@ function buildSpanInfo(schedules, days) {
     }
     // 処理済みIDセット
     const processed = new Set();
-    const LIGHT = ['#bfdbfe','#bbf7d0','#fef08a'];
+    const LIGHT = ['#bfdbfe','#bbf7d0','#fef08a','#fca5a5','#fdba74','#86efac'];
 
     for (const entry of allEntries) {
       if (processed.has(entry.id)) continue;
@@ -918,8 +932,16 @@ function renderTable() {
     }
     if (!hasMatch) continue;
 
-    html += '<tr>';
-    html += `<td class="staff-name" title="${staffName}">${staffName}</td>`;
+    // 担当者行に D&D 属性を付与
+    const staffIdx = staffList.indexOf(staffName);
+    html += `<tr class="staff-row" data-staff="${escHtml(staffName)}" data-idx="${staffIdx}"
+      draggable="true"
+      ondragstart="onRowDragStart(event,${staffIdx})"
+      ondragover="onRowDragOver(event,${staffIdx})"
+      ondragleave="onRowDragLeave(event)"
+      ondrop="onRowDrop(event,${staffIdx})"
+      ondragend="onRowDragEnd(event)">`;
+    html += `<td class="staff-name" title="${staffName}"><span class="row-drag-handle" title="ドラッグで並び替え">⠿</span>${staffName}</td>`;
 
     for (const d of days) {
       const isJpRed2 = d.weekday === '土' || d.weekday === '日' || d.is_holiday;
@@ -985,7 +1007,7 @@ function renderTable() {
         for (const e of dayEntries) {
           const highlight = query && e.content.toLowerCase().includes(query) ? 'highlight' : '';
           const bgColor = e.color || '#3b82f6';
-          const lightColors = ['#bfdbfe','#bbf7d0','#fef08a'];
+          const lightColors = ['#bfdbfe','#bbf7d0','#fef08a','#fca5a5','#fdba74','#86efac'];
           const textStyle = lightColors.includes(bgColor) ? 'color:#1e293b;' : '';
           const title = e.content.replace(/"/g, '&quot;');
           const hasRemind = remindMap && remindMap[e.id];
@@ -1021,6 +1043,7 @@ function renderTable() {
 // ===== ドラッグ＆ドロップ ハンドラー =====
 // ===================================================
 function onEntryDragStart(event) {
+  event.stopPropagation(); // tr.staff-row の行D&Dにバブルさせない
   const el = event.currentTarget;
   const draggedDay = parseInt(el.dataset.day);
 
@@ -1036,6 +1059,8 @@ function onEntryDragStart(event) {
   const groupDays  = groupIds.map(g => g.day).sort((a,b) => a - b);
   const startDay   = groupDays[0];
   const dragOffset = draggedDay - startDay;   // ドラッグした要素が先頭から何日後か
+
+  staffDragState = null; // 行D&Dと予定D&Dは排他
 
   dragState = {
     id:         el.dataset.id,
@@ -1061,6 +1086,8 @@ function onEntryDragEnd(event) {
 }
 
 function onCellDragOver(event) {
+  // 行D&D中はセルドロップを受け付けない
+  if (staffDragState && staffDragState.source === 'row') return;
   if (!dragState) return;
   event.preventDefault();
   event.dataTransfer.dropEffect = 'move';
@@ -1137,13 +1164,136 @@ function renderStaffPanel() {
   for (const [i, name] of staff.entries()) {
     const color = colors[i % colors.length];
     const initials = name.substring(0,2);
-    html += `<div class="staff-list-item">
+    const safeName = name.replace(/'/g, "\\'");
+    html += `<div class="staff-list-item" draggable="true" data-idx="${i}" data-name="${escHtml(name)}"
+      ondragstart="onStaffPanelDragStart(event,${i})"
+      ondragover="onStaffPanelDragOver(event,${i})"
+      ondragleave="onStaffPanelDragLeave(event)"
+      ondrop="onStaffPanelDrop(event,${i})"
+      ondragend="onStaffPanelDragEnd(event)">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
       <div class="staff-avatar" style="background:${color};">${initials}</div>
       <span class="staff-label">${escHtml(name)}</span>
-      <button class="del-btn" onclick="deleteStaff('${name.replace(/'/g,"\\'")}')">x</button>
+      <button class="del-btn" onclick="deleteStaff('${safeName}')" title="削除">x</button>
     </div>`;
   }
-  document.getElementById('staffList').innerHTML = html || '<div style="color:var(--text-muted);font-size:12px;">担当者なし</div>';
+  const el = document.getElementById('staffList');
+  el.innerHTML = html || '<div style="color:var(--text-muted);font-size:12px;">担当者なし</div>';
+}
+
+// ===== 担当者パネル D&D =====
+function onStaffPanelDragStart(event, fromIdx) {
+  staffDragState = { fromIdx, fromName: scheduleData.staff[fromIdx] };
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', String(fromIdx));
+  setTimeout(() => {
+    const items = document.querySelectorAll('#staffList .staff-list-item');
+    if (items[fromIdx]) items[fromIdx].classList.add('dragging-staff');
+  }, 0);
+}
+
+function onStaffPanelDragOver(event, toIdx) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  const items = document.querySelectorAll('#staffList .staff-list-item');
+  items.forEach(el => el.classList.remove('drag-over'));
+  if (items[toIdx]) items[toIdx].classList.add('drag-over');
+}
+
+function onStaffPanelDragLeave(event) {
+  // relatedTargetが内部への移動なら無視
+  if (event.currentTarget.contains(event.relatedTarget)) return;
+  event.currentTarget.classList.remove('drag-over');
+}
+
+async function onStaffPanelDrop(event, toIdx) {
+  event.preventDefault();
+  document.querySelectorAll('#staffList .staff-list-item').forEach(el => {
+    el.classList.remove('drag-over', 'dragging-staff');
+  });
+  if (!staffDragState) return;
+  const { fromIdx } = staffDragState;
+  staffDragState = null;
+  if (fromIdx === toIdx) return;
+
+  // リストを並び替え
+  const newStaff = [...(scheduleData.staff || [])];
+  const [moved] = newStaff.splice(fromIdx, 1);
+  newStaff.splice(toIdx, 0, moved);
+
+  try {
+    await API.reorderStaff(newStaff);
+    showToast(`「${moved}」を移動しました`, 'success');
+    await loadSchedule();
+  } catch(e) {
+    showToast('並び替えに失敗しました', 'error');
+  }
+}
+
+function onStaffPanelDragEnd(event) {
+  document.querySelectorAll('#staffList .staff-list-item').forEach(el => {
+    el.classList.remove('drag-over', 'dragging-staff');
+  });
+  staffDragState = null;
+}
+
+// ===== テーブル行 D&D (スケジュール表内) =====
+function onRowDragStart(event, fromIdx) {
+  // セルのエントリードラッグと区別する：staffDragStateを利用
+  staffDragState = { fromIdx, fromName: scheduleData.staff[fromIdx], source: 'row' };
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', 'row:' + fromIdx);
+  // dragState（セルドラッグ）はリセットしておく
+  dragState = null;
+  setTimeout(() => {
+    event.currentTarget.classList.add('row-dragging');
+  }, 0);
+}
+
+function onRowDragOver(event, toIdx) {
+  // スケジュールドラッグ中は行ドラッグを無視
+  if (!staffDragState || staffDragState.source !== 'row') return;
+  event.preventDefault();
+  event.stopPropagation(); // onCellDragOverにバブルしない
+  event.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('tr.staff-row').forEach(r => r.classList.remove('row-drag-over'));
+  event.currentTarget.classList.add('row-drag-over');
+}
+
+function onRowDragLeave(event) {
+  if (event.currentTarget.contains(event.relatedTarget)) return;
+  event.currentTarget.classList.remove('row-drag-over');
+}
+
+async function onRowDrop(event, toIdx) {
+  event.preventDefault();
+  event.stopPropagation();
+  document.querySelectorAll('tr.staff-row').forEach(r => {
+    r.classList.remove('row-drag-over', 'row-dragging');
+  });
+  if (!staffDragState || staffDragState.source !== 'row') return;
+  const { fromIdx, fromName } = staffDragState;
+  staffDragState = null;
+  if (fromIdx === toIdx) return;
+
+  const newStaff = [...(scheduleData.staff || [])];
+  const [moved] = newStaff.splice(fromIdx, 1);
+  newStaff.splice(toIdx, 0, moved);
+
+  try {
+    await API.reorderStaff(newStaff);
+    showToast(`「${fromName}」を移動しました`, 'success');
+    await loadSchedule();
+  } catch(e) {
+    showToast('並び替えに失敗しました', 'error');
+  }
+}
+
+function onRowDragEnd(event) {
+  document.querySelectorAll('tr.staff-row').forEach(r => {
+    r.classList.remove('row-drag-over', 'row-dragging');
+  });
+  staffDragState = null;
 }
 
 // ===== 集計パネル =====
@@ -1263,6 +1413,7 @@ function openAddModal(staffName, day) {
   document.getElementById('formContent').value = '';
   selectedColor = '#3b82f6';
   updateColorPicker();
+  updateAutoColorHint('');
 
   const staffSel = document.getElementById('formStaff');
   const staff = scheduleData?.staff || [];
@@ -1274,6 +1425,8 @@ function openAddModal(staffName, day) {
   // 期間日付の変更を監視
   document.getElementById('formDateStart').onchange = updateRangePreview;
   document.getElementById('formDateEnd').onchange = updateRangePreview;
+  // 追加モードは内容入力時に自動色候補
+  document.getElementById('formContent').oninput = onContentInput;
 }
 
 function editEntry(event, id) {
@@ -1302,6 +1455,7 @@ function editEntry(event, id) {
   document.getElementById('formContent').value = entry.content;
   selectedColor = entry.color || '#3b82f6';
   updateColorPicker();
+  updateAutoColorHint(entry.content);
 
   const staffSel = document.getElementById('formStaff');
   const staff = scheduleData?.staff || [];
@@ -1313,6 +1467,8 @@ function editEntry(event, id) {
   // 期間日付変更を監視
   document.getElementById('formDateStart').onchange = updateRangePreview;
   document.getElementById('formDateEnd').onchange = updateRangePreview;
+  // 編集モードも内容変更時に自動色候補
+  document.getElementById('formContent').oninput = onContentInput;
 }
 
 function closeModal() {
@@ -1419,6 +1575,35 @@ function updateColorPicker() {
   document.querySelectorAll('.color-swatch').forEach(s => {
     s.classList.toggle('selected', s.dataset.color === selectedColor);
   });
+}
+
+// ===== キーワード自動色付け =====
+// 内容欄を入力するたびに呼ばれる
+function onContentInput(event) {
+  const content = event.target.value;
+  const autoColor = getAutoColor(content);
+  if (autoColor) {
+    selectedColor = autoColor;
+    updateColorPicker();
+  }
+  updateAutoColorHint(content);
+}
+
+// 自動色ヒント（カラーピッカー下に表示）
+function updateAutoColorHint(content) {
+  const hint = document.getElementById('autoColorHint');
+  if (!hint) return;
+  const autoColor = getAutoColor(content);
+  if (!autoColor) { hint.textContent = ''; hint.className = 'auto-color-hint'; return; }
+  // どのルールにマッチしたか調べてラベルを表示
+  for (const rule of AUTO_COLOR_KEYWORDS) {
+    if (rule.keywords.some(kw => (content||'').toLowerCase().includes(kw.toLowerCase()))) {
+      const hintClass = { '年休':'hint-nenkyuu', '在宅':'hint-zaitaku', 'Tatou':'hint-tatou' }[rule.label] || '';
+      hint.textContent = `「${rule.label}」→ 自動色設定済み`;
+      hint.className = `auto-color-hint ${hintClass}`;
+      return;
+    }
+  }
 }
 
 // ===== 担当者管理 =====
