@@ -14561,6 +14561,15 @@
       "day": 7,
       "content": "テスト工事(期間)",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1637",
+      "year": 2026,
+      "month": 12,
+      "staff": "相原",
+      "day": 17,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -14583,7 +14592,7 @@
     "相原",
     "吉原"
   ],
-  "next_id": 1637,
+  "next_id": 1638,
   "reminders": [],
   "reminder_next_id": 1
 }
