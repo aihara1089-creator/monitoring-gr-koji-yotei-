@@ -49,7 +49,7 @@
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     /* ===== ナビゲーション (月選択) ===== */
-    .nav-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .nav-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 56px; z-index: 90; }
     .nav-month-nav { display: flex; align-items: center; gap: 8px; }
     .nav-month-label { font-size: 20px; font-weight: 700; color: var(--primary); min-width: 140px; text-align: center; }
     .nav-jump { display: flex; gap: 6px; align-items: center; margin-left: auto; }
@@ -63,7 +63,7 @@
     .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 20px; }
     .table-wrapper { overflow-x: auto; overflow-y: visible; }
     table { border-collapse: collapse; min-width: 100%; }
-    thead { position: sticky; top: 56px; z-index: 10; }
+    thead { position: sticky; top: 114px; z-index: 10; } /* JS で動的調整 */
 
     /* 曜日ヘッダー */
     th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; white-space: nowrap; }
@@ -309,6 +309,7 @@
     .search-input:focus { outline: none; border-color: var(--primary-light); }
     .highlight { background: #fef08a !important; }
   </style>
+  <style id="stickyTopStyle"></style>
 </head>
 <body>
 
@@ -742,6 +743,17 @@ const API = {
 };
 
 // ===== 初期化 =====
+// thead の sticky top をヘッダー＋ナビバーの実際の高さに合わせる
+function adjustStickyTop() {
+  const header = document.querySelector('.header');
+  const navBar = document.querySelector('.nav-bar');
+  const headerH = header ? header.getBoundingClientRect().height : 56;
+  const navBarH = navBar ? navBar.getBoundingClientRect().height : 58;
+  const top = Math.round(headerH + navBarH);
+  const style = document.getElementById('stickyTopStyle');
+  if (style) style.textContent = `thead { top: ${top}px !important; }`;
+}
+
 async function init() {
   try {
     const months = await API.getMonths();
@@ -756,6 +768,8 @@ async function init() {
   } catch (e) {}
   await loadSchedule();
   await checkReminders();
+  adjustStickyTop(); // ヘッダー高さを計測してtheadのtopを調整
+  window.addEventListener('resize', adjustStickyTop);
   setInterval(autoRefresh, 30000); // 30秒ごと自動更新
 }
 
