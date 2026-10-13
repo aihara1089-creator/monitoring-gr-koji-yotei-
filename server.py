@@ -135,6 +135,7 @@ def _gh_headers():
 
 def _gh_fetch() -> dict | None:
     """GitHub から data.json を取得。失敗時は None を返す。"""
+    global _gh_sha_cache  # ← 関数先頭で宣言
     if not GITHUB_TOKEN:
         return None
     try:
@@ -144,7 +145,6 @@ def _gh_fetch() -> dict | None:
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             meta = json.loads(resp.read())
-        global _gh_sha_cache
         _gh_sha_cache = meta.get("sha", "")
         raw = base64.b64decode(meta["content"]).decode("utf-8")
         return json.loads(raw)
@@ -154,6 +154,7 @@ def _gh_fetch() -> dict | None:
 
 def _gh_push(data: dict):
     """data を GitHub の data.json に push する。失敗しても例外を外に出さない。"""
+    global _gh_sha_cache  # ← 関数先頭で宣言（参照・代入どちらより前に）
     if not GITHUB_TOKEN:
         return
     try:
@@ -177,7 +178,6 @@ def _gh_push(data: dict):
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read())
         # 次回のために SHA を更新
-        global _gh_sha_cache
         _gh_sha_cache = result.get("content", {}).get("sha", _gh_sha_cache)
         print(f"[GitHub push] OK  sha={_gh_sha_cache[:8]}")
     except Exception as e:
