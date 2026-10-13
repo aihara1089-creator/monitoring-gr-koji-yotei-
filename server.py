@@ -11,6 +11,9 @@ import json
 import os
 import uuid
 import asyncio
+import base64
+import urllib.request
+import urllib.error
 from datetime import datetime, date
 import calendar
 try:
@@ -98,31 +101,122 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Renderの永続ディスク(/data)があればそちらを使う、なければローカル
+# -------------------------------------------------------
+# パス設定
+# -------------------------------------------------------
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = "/data" if os.path.isdir("/data") else _BASE_DIR
-DATA_FILE = os.path.join(_DATA_DIR, "data.json")
+# Render無料プランはディスク永続化なし → ローカルはキャッシュ用のみ
+DATA_FILE    = os.path.join(_BASE_DIR, "data.json")
 INITIAL_FILE = os.path.join(_BASE_DIR, "initial_data.json")
 
-# 書き込み排他制御用ロック（並列リクエストによるデータ競合を防ぐ）
+# -------------------------------------------------------
+# GitHub API による永続化設定
+# 環境変数 GITHUB_TOKEN / GITHUB_REPO / GITHUB_DATA_PATH を設定する
+# GITHUB_REPO  例: "aihara1089-creator/monitoring-gr-koji-yotei-"
+# GITHUB_DATA_PATH 例: "data.json"（リポジトリルートからのパス）
+# -------------------------------------------------------
+GITHUB_TOKEN     = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_REPO      = os.environ.get("GITHUB_REPO", "aihara1089-creator/monitoring-gr-koji-yotei-")
+GITHUB_DATA_PATH = os.environ.get("GITHUB_DATA_PATH", "data.json")
+GITHUB_BRANCH    = os.environ.get("GITHUB_BRANCH", "main")
+_GH_API_BASE     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_DATA_PATH}"
+
+# 書き込み排他制御用ロック
 _DATA_LOCK = asyncio.Lock()
+
+# GitHub上のファイルの現在のSHA（更新時に必要）
+_gh_sha_cache: str = ""
+
+def _gh_headers():
+    h = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    if GITHUB_TOKEN:
+        h["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return h
+
+def _gh_fetch() -> dict | None:
+    """GitHub から data.json を取得。失敗時は None を返す。"""
+    if not GITHUB_TOKEN:
+        return None
+    try:
+        req = urllib.request.Request(
+            f"{_GH_API_BASE}?ref={GITHUB_BRANCH}",
+            headers=_gh_headers()
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            meta = json.loads(resp.read())
+        global _gh_sha_cache
+        _gh_sha_cache = meta.get("sha", "")
+        raw = base64.b64decode(meta["content"]).decode("utf-8")
+        return json.loads(raw)
+    except Exception as e:
+        print(f"[GitHub fetch] failed: {e}")
+        return None
+
+def _gh_push(data: dict):
+    """data を GitHub の data.json に push する。失敗しても例外を外に出さない。"""
+    if not GITHUB_TOKEN:
+        return
+    try:
+        content_b64 = base64.b64encode(
+            json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+        ).decode("ascii")
+        payload = {
+            "message": "chore: auto-save data.json via API",
+            "content": content_b64,
+            "branch": GITHUB_BRANCH,
+        }
+        if _gh_sha_cache:
+            payload["sha"] = _gh_sha_cache
+        body = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            _GH_API_BASE,
+            data=body,
+            headers={**_gh_headers(), "Content-Type": "application/json"},
+            method="PUT"
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read())
+        # 次回のために SHA を更新
+        global _gh_sha_cache
+        _gh_sha_cache = result.get("content", {}).get("sha", _gh_sha_cache)
+        print(f"[GitHub push] OK  sha={_gh_sha_cache[:8]}")
+    except Exception as e:
+        print(f"[GitHub push] failed: {e}")
 
 # -------------------------------------------------------
 # データロード/セーブ
 # -------------------------------------------------------
-def load_data():
+def _ensure_fields(d: dict) -> dict:
+    """必須フィールドが欠けていれば補完する"""
+    if "reminders" not in d:
+        d["reminders"] = []
+        d["reminder_next_id"] = 1
+    return d
+
+def _init_local_data():
+    """
+    起動時に1回だけ呼ぶ。
+    優先順位: GitHub > ローカルキャッシュ > initial_data.json
+    結果をローカル data.json に書いてキャッシュとする。
+    """
+    # ① GitHub から最新を取得
+    gh = _gh_fetch()
+    if gh is not None:
+        _ensure_fields(gh)
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(gh, f, ensure_ascii=False, indent=2)
+        print(f"[startup] Loaded from GitHub  schedules={len(gh['schedules'])}  staff={len(gh['staff'])}")
+        return
+
+    # ② ローカルキャッシュが既にある
     if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            d = json.load(f)
-        if "reminders" not in d:
-            d["reminders"] = []
-            d["reminder_next_id"] = 1
-        return d
-    # 初回: initial_data.json から読み込む
+        print("[startup] Using local cache data.json (GitHub not configured or unreachable)")
+        return
+
+    # ③ 初回: initial_data.json からシード
     if os.path.exists(INITIAL_FILE):
         with open(INITIAL_FILE, "r", encoding="utf-8") as f:
             raw = json.load(f)
-        # IDを付与
         schedules = []
         for i, s in enumerate(raw.get("schedules", [])):
             s["id"] = str(i + 1)
@@ -132,15 +226,37 @@ def load_data():
             "staff": raw.get("staff", []),
             "next_id": len(schedules) + 1,
             "reminders": [],
-            "reminder_next_id": 1
+            "reminder_next_id": 1,
         }
-        save_data(data)
-        return data
-    return {"schedules": [], "staff": [], "next_id": 1, "reminders": [], "reminder_next_id": 1}
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"[startup] Seeded from initial_data.json  schedules={len(schedules)}")
+        return
 
-def save_data(data):
+    # ④ 完全に空のデータ
+    data = {"schedules": [], "staff": [], "next_id": 1, "reminders": [], "reminder_next_id": 1}
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    print("[startup] Started with empty data")
+
+# アプリ起動時に実行（インポート時）
+_init_local_data()
+
+def load_data() -> dict:
+    """ローカルキャッシュから読む（起動後はGitHubにアクセスしない）"""
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            d = json.load(f)
+        return _ensure_fields(d)
+    return {"schedules": [], "staff": [], "next_id": 1, "reminders": [], "reminder_next_id": 1}
+
+def save_data(data: dict):
+    """ローカルに書いた後、GitHub に非同期 push する"""
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    # GitHub にも非同期 push（レスポンスをブロックしない）
+    import threading
+    threading.Thread(target=_gh_push, args=(data,), daemon=True).start()
 
 # -------------------------------------------------------
 # モデル

@@ -3,4 +3,5 @@ __pycache__/
 *.pyo
 .env
 .DS_Store
-data.json
+# data.json はGitHub APIで管理するためgitignoreしない
+# (Renderが再起動するたびに復元できるようにGitHub上に保持)
