@@ -60,10 +60,11 @@
     .main { padding: 16px 20px; }
 
     /* ===== スケジュールテーブル ===== */
-    .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 20px; }
-    .table-wrapper { overflow-x: auto; overflow-y: visible; }
+    .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+    .table-wrapper { overflow-x: auto; }
     table { border-collapse: collapse; min-width: 100%; }
-    thead { position: sticky; top: 114px; z-index: 10; } /* JS で動的調整 */
+    /* thead sticky: JSでページスクロールに忟じて translateY で固定 */
+    thead { position: relative; z-index: 10; will-change: transform; }
 
     /* 曜日ヘッダー */
     th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; white-space: nowrap; }
@@ -743,15 +744,46 @@ const API = {
 };
 
 // ===== 初期化 =====
-// thead の sticky top をヘッダー＋ナビバーの実際の高さに合わせる
-function adjustStickyTop() {
+// ===== thead 固定スクロール =====
+// overflow-x:auto の中では position:sticky が効かないため、
+// scroll イベントで translateY を使って thead を手動固定する
+let _stickyOffset = 0; // header + nav-bar の合計高さ
+
+function getStickyOffset() {
   const header = document.querySelector('.header');
   const navBar = document.querySelector('.nav-bar');
-  const headerH = header ? header.getBoundingClientRect().height : 56;
-  const navBarH = navBar ? navBar.getBoundingClientRect().height : 58;
-  const top = Math.round(headerH + navBarH);
-  const style = document.getElementById('stickyTopStyle');
-  if (style) style.textContent = `thead { top: ${top}px !important; }`;
+  return (header ? header.getBoundingClientRect().height : 56)
+       + (navBar  ? navBar.getBoundingClientRect().height  : 58);
+}
+
+function updateTheadPosition() {
+  const thead = document.querySelector('thead');
+  if (!thead) return;
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (!tableWrapper) return;
+
+  const wrapperRect = tableWrapper.getBoundingClientRect();
+  const offset = _stickyOffset;
+
+  // テーブルがまだ上部固定ゾーンより下にある → 移動不要
+  if (wrapperRect.top >= offset) {
+    thead.style.transform = '';
+    return;
+  }
+  // テーブルが画面から消えかけている → 移動不要（テーブル下端より下には行かせない）
+  const theadH = thead.getBoundingClientRect().height;
+  if (wrapperRect.bottom <= offset + theadH) {
+    thead.style.transform = '';
+    return;
+  }
+  // 通常: スクロール量だけ下にずらして固定
+  const shift = offset - wrapperRect.top;
+  thead.style.transform = `translateY(${shift}px)`;
+}
+
+function adjustStickyTop() {
+  _stickyOffset = getStickyOffset();
+  updateTheadPosition();
 }
 
 async function init() {
@@ -768,7 +800,8 @@ async function init() {
   } catch (e) {}
   await loadSchedule();
   await checkReminders();
-  adjustStickyTop(); // ヘッダー高さを計測してtheadのtopを調整
+  adjustStickyTop(); // ヘッダー高さを計測
+  window.addEventListener('scroll', updateTheadPosition, { passive: true });
   window.addEventListener('resize', adjustStickyTop);
   setInterval(autoRefresh, 30000); // 30秒ごと自動更新
 }
@@ -1073,6 +1106,9 @@ function renderTable() {
 
   // フィルター状態を再適用
   applyColumnFilter();
+
+  // テーブル再描画後にtheadの位置を再計算
+  requestAnimationFrame(updateTheadPosition);
 }
 
 // ===================================================
