@@ -14570,6 +14570,15 @@
       "day": 17,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1638",
+      "year": 2026,
+      "month": 10,
+      "staff": "相原",
+      "day": 16,
+      "content": "NYK",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -14593,7 +14602,7 @@
     "TOWATECHNO",
     "MSR森"
   ],
-  "next_id": 1638,
+  "next_id": 1639,
   "reminders": [],
   "reminder_next_id": 1
 }
