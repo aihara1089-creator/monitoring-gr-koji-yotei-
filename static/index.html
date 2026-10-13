@@ -60,14 +60,14 @@
     .main { padding: 16px 20px; }
 
     /* ===== スケジュールテーブル ===== */
-    .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
-    .table-wrapper { overflow-x: auto; }
+    .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 20px; }
+    .table-wrapper { overflow-x: auto; overflow-y: visible; }
     table { border-collapse: collapse; min-width: 100%; }
-    thead { position: sticky; top: 0; z-index: 10; }
+    thead { position: sticky; top: 56px; z-index: 10; }
 
     /* 曜日ヘッダー */
     th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; white-space: nowrap; }
-    th.staff-col { background: #1e3a8a; min-width: 90px; width: 90px; font-size: 12px; padding: 8px 6px; position: sticky; left: 0; z-index: 20; }
+    th.staff-col { background: #1e3a8a; min-width: 90px; width: 90px; font-size: 12px; padding: 8px 6px; position: sticky; left: 0; z-index: 30; }
     .th-day { min-width: 44px; width: 44px; }
     .th-day .day-num { font-size: 13px; font-weight: 700; display: block; padding: 4px 2px 0; }
     .th-day .day-wd { font-size: 10px; opacity: 0.8; display: block; padding: 0 2px 4px; }
