@@ -428,10 +428,7 @@
       </div>
 
       <div class="panel-card">
-        <div class="panel-title">クイック操作</div>
         <div style="display:flex; flex-direction:column; gap:6px;">
-          <button class="btn btn-outline btn-sm" onclick="openAddModal()" style="justify-content:flex-start;">＋ 予定を追加</button>
-          <button class="btn btn-outline btn-sm" onclick="copyPrevMonth()" style="justify-content:flex-start;">前月からコピー</button>
           <button class="btn btn-outline btn-sm" onclick="exportCSV()" style="justify-content:flex-start;">CSVエクスポート</button>
         </div>
       </div>
@@ -1399,7 +1396,7 @@ function renderSummary() {
       onmouseenter="this.style.background='#eff6ff'"
       onmouseleave="this.style.background=''">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px;align-items:center;">
-        <span style="font-weight:600;color:var(--primary);">👤 ${escHtml(name)}</span>
+        <span style="font-weight:600;color:var(--primary);">${escHtml(name)}</span>
         <span style="font-weight:700;color:var(--primary-dark);background:#dbeafe;border-radius:10px;padding:1px 8px;font-size:11px;">${cnt}件</span>
       </div>
       <div style="background:#e2e8f0;border-radius:4px;height:5px;overflow:hidden;">
@@ -1421,7 +1418,7 @@ function openStaffDetailModal(staffName) {
     .sort((a, b) => a.day - b.day);
 
   document.getElementById('staffDetailTitle').textContent =
-    `👤 ${staffName}　${currentYear}年${currentMonth}月の予定`;
+    `${staffName}　${currentYear}年${currentMonth}月の予定`;
 
   let html = '';
   if (entries.length === 0) {
