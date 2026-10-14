@@ -791,12 +791,7 @@ async function init() {
     const months = await API.getMonths();
     allMonths = months.months || [];
     buildJumpDropdown();
-    // データがある最新月を初期表示にする
-    if (allMonths.length > 0) {
-      const latest = allMonths[allMonths.length - 1];
-      currentYear = latest.year;
-      currentMonth = latest.month;
-    }
+    // 初期表示は今月（currentYear/currentMonthはnew Date()で初期化済み）
   } catch (e) {}
   await loadSchedule();
   await checkReminders();
