@@ -14633,6 +14633,24 @@
       "day": 22,
       "content": "GT HERA/境港　FT搭載　VDR用FW、ドックでケーブル敷設済み",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1647",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 26,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1648",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 30,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -14656,7 +14674,7 @@
     "TSSD",
     "MSR森"
   ],
-  "next_id": 1647,
+  "next_id": 1649,
   "reminders": [],
   "reminder_next_id": 1
 }
