@@ -67,9 +67,9 @@
     thead { position: relative; z-index: 10; will-change: transform; }
 
     /* 曜日ヘッダー */
-    th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; overflow: hidden; }
-    th.staff-col { background: #1e3a8a; min-width: 90px; width: 90px; font-size: 12px; padding: 8px 6px; position: sticky; left: 0; z-index: 30; }
-    .th-day { min-width: 44px; width: 44px; }
+    th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; overflow: hidden; box-sizing: border-box; }
+    th.staff-col { background: #1e3a8a; width: 90px; font-size: 12px; padding: 8px 6px; position: sticky; left: 0; z-index: 30; overflow: hidden; }
+    .th-day { width: 44px; max-width: 44px; overflow: hidden; }
     .th-day .day-num { font-size: 13px; font-weight: 700; display: block; padding: 4px 2px 0; }
     .th-day .day-wd { font-size: 10px; opacity: 0.8; display: block; padding: 0 2px 4px; }
     th.sat, th.sun, th.hol { background: #9f1239; }
@@ -80,7 +80,7 @@
     tr:last-child { border-bottom: none; }
     td { padding: 4px; border: 1px solid var(--border); vertical-align: top; min-height: 40px; height: 44px; }
     td.staff-name { background: #f1f5f9; font-weight: 600; font-size: 12px; padding: 6px 8px; position: sticky; left: 0; z-index: 5; vertical-align: middle; border-right: 2px solid #cbd5e1; white-space: nowrap; min-width: 90px; width: 90px; }
-    td.day-cell { min-width: 44px; width: 44px; cursor: pointer; position: relative; padding: 2px; }
+    td.day-cell { width: 44px; max-width: 44px; cursor: pointer; position: relative; padding: 2px; overflow: hidden; box-sizing: border-box; }
     td.day-cell:hover { background: #eff6ff; }
     td.sat-cell, td.sun-cell, td.hol-cell { background: #fff1f2; }
 
@@ -321,8 +321,8 @@
     td.kr-hol-cell { background: #f0fdfa !important; }   /* 薄いティール */
 
     /* ===== ヘッダー内の国旗ラベル ===== */
-    .th-country { display: flex; gap: 2px; justify-content: center; padding: 0 1px 2px; flex-wrap: wrap; }
-    .th-flag { font-size: 9px; background: rgba(255,255,255,0.25); border-radius: 3px; padding: 0px 3px; line-height: 1.4; white-space: nowrap; }
+    .th-country { display: flex; gap: 1px; justify-content: center; padding: 0 1px 2px; flex-wrap: wrap; width: 100%; box-sizing: border-box; overflow: hidden; }
+    .th-flag { font-size: 8px; background: rgba(255,255,255,0.25); border-radius: 3px; padding: 0 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; max-width: 100%; }
 
     /* ===== リマインドバナー ===== */
     .remind-banner { background: linear-gradient(90deg, #fef3c7, #fffbeb); border-left: 4px solid #f59e0b; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; }
