@@ -121,30 +121,45 @@
       /* セル左右のpaddingを打ち消してセルいっぱいに広げる */
       margin-left: -2px;
       margin-right: -2px;
+      z-index: 1;
     }
     .span-bar:hover { opacity: 0.85; }
     .span-bar .remind-dot { display:inline-block; width:6px; height:6px; background:#fff; border-radius:50%; margin-right:2px; vertical-align:middle; opacity:0.85; }
-    /* 開始セル：左丸、右はまっすぐ（次のセルにつながる） */
+    /* 開始セル：左丸、右はまっすぐ */
     .span-bar.bar-start {
       border-radius: 11px 0 0 11px;
       padding-left: 10px;
       padding-right: 2px;
-      margin-right: 0;  /* 右端をぴったり */
+      margin-right: 0;
     }
-    /* 中間セル：両端まっすぐ（テキスト非表示、色帯のみ） */
+    /* 中間セル：両端まっすぐ、左端にテキストをsticky固定 */
     .span-bar.bar-mid {
       border-radius: 0;
-      padding: 0;
+      padding: 0 0 0 4px;
       margin-left: 0;
       margin-right: 0;
-      color: transparent; /* テキスト非表示 */
+      overflow: hidden;
     }
-    /* 終端セル：左まっすぐ、右丸 */
+    .span-bar.bar-mid .bar-label {
+      display: inline-block;
+      position: sticky;
+      left: 0;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    /* 終端セル：左まっすぐ、右丸、左端にテキストをsticky固定 */
     .span-bar.bar-end {
       border-radius: 0 11px 11px 0;
-      padding-right: 6px;
+      padding: 0 6px 0 4px;
       margin-left: 0;
-      color: transparent; /* テキスト非表示 */
+      overflow: hidden;
+    }
+    .span-bar.bar-end .bar-label {
+      display: inline-block;
+      position: sticky;
+      left: 0;
+      white-space: nowrap;
+      pointer-events: none;
     }
     /* 単独日バー（soloは丸角タグと同じ見た目） */
     .span-bar.bar-solo {
@@ -1099,8 +1114,10 @@ function renderTable() {
           const title     = sp.content.replace(/"/g, '&quot;');
           const hasRemind = remindMap && remindMap[sp.id];
           const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
-          const labelText = (sp.pos === 'start' || sp.pos === 'solo')
+          const labelText = sp.pos === 'solo'
             ? `${remindDot}${escHtml(sp.content.substring(0, 14))}${sp.content.length > 14 ? '…' : ''}`
+            : (sp.pos === 'start' || sp.pos === 'mid' || sp.pos === 'end')
+            ? `<span class="bar-label">${remindDot}${escHtml(sp.content)}</span>`
             : '';
           // groupIds を JSON 文字列として data 属性に埋め込む（シングルクォートをエスケープ）
           const groupIdsAttr = JSON.stringify(sp.groupIds).replace(/'/g, '&#39;');
