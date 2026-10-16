@@ -14957,6 +14957,24 @@
       "day": 4,
       "content": "勤務",
       "color": "#fef08a"
+    },
+    {
+      "id": "1726",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 9,
+      "content": "大島11187／seawise (NIOVIS) \n　テラテック\n11/18竣工",
+      "color": "#ef4444"
+    },
+    {
+      "id": "1727",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 10,
+      "content": "大島11187／seawise (NIOVIS) \n　テラテック\n11/18竣工",
+      "color": "#fef08a"
     }
   ],
   "staff": [
@@ -14980,7 +14998,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1726,
+  "next_id": 1728,
   "reminders": [],
   "reminder_next_id": 1
 }
