@@ -14930,6 +14930,15 @@
       "day": 20,
       "content": "勤務",
       "color": "#fef08a"
+    },
+    {
+      "id": "1721",
+      "year": 2026,
+      "month": 10,
+      "staff": "村上",
+      "day": 19,
+      "content": "勤務",
+      "color": "#fef08a"
     }
   ],
   "staff": [
@@ -14953,7 +14962,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1721,
+  "next_id": 1722,
   "reminders": [],
   "reminder_next_id": 1
 }
