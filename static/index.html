@@ -256,6 +256,18 @@
     .copy-banner-cancel:hover { background: rgba(255,255,255,0.35); }
     /* 貼り付けモード中のセルハイライト */
     .paste-ready td.day-cell:hover { background: #dbeafe !important; cursor: cell !important; outline: 2px dashed #3b82f6; outline-offset: -2px; }
+    /* ===== ホバーポップアップ ===== */
+    .entry-popup {
+      position: fixed; z-index: 600;
+      background: #1e293b; color: #fff;
+      padding: 6px 10px; border-radius: 6px;
+      font-size: 12px; line-height: 1.5;
+      max-width: 240px; word-break: break-all;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      pointer-events: none;
+      white-space: pre-wrap;
+    }
+    .entry-popup.hidden { display: none; }
     .toast.success { border-left: 3px solid #10b981; }
     .toast.error { border-left: 3px solid #ef4444; }
     @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -607,6 +619,9 @@
     </div>
   </div>
 </div>
+
+<!-- ===== ホバーポップアップ ===== -->
+<div class="entry-popup hidden" id="entryPopup"></div>
 
 <!-- ===== コンテキストメニュー ===== -->
 <div class="ctx-menu hidden" id="ctxMenu"></div>
@@ -1097,7 +1112,8 @@ function renderTable() {
                 + `data-content="${spContentAttr}" data-color="${sp.color}" `
                 + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
                 + `onclick="editEntry(event,'${sp.id}')" `
-                + `oncontextmenu="onEntryContextMenu(event,'${sp.id}')" title="${title}" `
+                + `oncontextmenu="onEntryContextMenu(event,'${sp.id}')" `
+                + `onmouseenter="showEntryPopup(this,this.dataset.content)" onmouseleave="hideEntryPopup()" `
                 + `style="background:${sp.color};${textColor}">`
                 + `${labelText}</span>`;
         }
@@ -1121,7 +1137,8 @@ function renderTable() {
                 + `data-content="${eContentAttr}" data-color="${bgColor}" `
                 + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
                 + `onclick="editEntry(event,'${e.id}')" `
-                + `oncontextmenu="onEntryContextMenu(event,'${e.id}')" title="${title}" `
+                + `oncontextmenu="onEntryContextMenu(event,'${e.id}')" `
+                + `onmouseenter="showEntryPopup(this,this.dataset.content)" onmouseleave="hideEntryPopup()" `
                 + `style="background:${bgColor};${textStyle}">`
                 + `${remindDot}${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
         }
@@ -1148,6 +1165,7 @@ function renderTable() {
 // ===== ドラッグ＆ドロップ ハンドラー =====
 // ===================================================
 function onEntryDragStart(event) {
+  hideEntryPopup(); // ドラッグ開始時にポップアップを隠す
   event.stopPropagation(); // tr.staff-row の行D&Dにバブルさせない
   const el = event.currentTarget;
   const draggedDay = parseInt(el.dataset.day);
@@ -1565,6 +1583,41 @@ function showCtxMenu(x, y, items) {
 
 function hideCtxMenu() {
   document.getElementById('ctxMenu').classList.add('hidden');
+}
+
+// ===== ホバーポップアップ =====
+let _popupTimer = null;
+const _popup = () => document.getElementById('entryPopup');
+
+function showEntryPopup(el, text) {
+  clearTimeout(_popupTimer);
+  _popupTimer = setTimeout(() => {
+    const p = _popup();
+    p.textContent = text;
+    p.classList.remove('hidden');
+    _movePopup(el);
+  }, 300); // 300ms 後に表示
+}
+
+function _movePopup(el) {
+  const p = _popup();
+  if (p.classList.contains('hidden')) return;
+  const r = el.getBoundingClientRect();
+  const pw = p.offsetWidth, ph = p.offsetHeight;
+  let top = r.bottom + 6;
+  let left = r.left;
+  // 画面下にはみ出すなら上に出す
+  if (top + ph > window.innerHeight) top = r.top - ph - 6;
+  // 画面右にはみ出すなら左にずらす
+  if (left + pw > window.innerWidth) left = window.innerWidth - pw - 8;
+  if (left < 4) left = 4;
+  p.style.top  = top + 'px';
+  p.style.left = left + 'px';
+}
+
+function hideEntryPopup() {
+  clearTimeout(_popupTimer);
+  _popup().classList.add('hidden');
 }
 
 // entry-tag の右クリック
