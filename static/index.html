@@ -1192,25 +1192,30 @@ function overlayBarLabels() {
   const scrollLeft  = tableWrapper.scrollLeft;
   const scrollTop   = tableWrapper.scrollTop;
 
-  // bar-start を起点に、同じ data-id の bar-end（または solo 以外最後のセル）を探す
+  // bar-start を起点に処理（グループ内の各セルは id が異なるため data-group-ids で紐付け）
   const startEls = document.querySelectorAll('.span-bar.bar-start');
 
   startEls.forEach(startEl => {
-    const id = startEl.dataset.id;
-    if (!id) return;
+    // data-group-ids から同グループの全 id を取得
+    let groupIds = [];
+    try { groupIds = JSON.parse(startEl.dataset.groupIds || '[]'); } catch(e) {}
+    if (groupIds.length === 0) return;
 
-    // 対応する bar-end を探す（同じ data-id）
-    const endEl = document.querySelector(`.span-bar.bar-end[data-id="${CSS.escape(id)}"]`);
-    // bar-end がない場合（2日連続でも bar-start だけかもしれない）は bar-start 単体を使う
-    const rightEl = endEl || startEl;
+    // グループ内で最大 day の id を持つ要素 = bar-end（または bar-start のみ）
+    const sortedGroup = [...groupIds].sort((a, b) => a.day - b.day);
+    const lastId = sortedGroup[sortedGroup.length - 1].id;
+
+    // bar-end を data-id で探す（同グループ最後の要素）
+    const endEl = document.querySelector(`.span-bar[data-id="${CSS.escape(lastId)}"]`);
+    const rightEl = (endEl && endEl !== startEl) ? endEl : startEl;
 
     const startRect = startEl.getBoundingClientRect();
     const rightRect = rightEl.getBoundingClientRect();
 
-    // .table-wrapper 基準の座標に変換
-    const left  = startRect.left  - wrapperRect.left + scrollLeft;
-    const top   = startRect.top   - wrapperRect.top  + scrollTop;
-    const width = rightRect.right - startRect.left;
+    // .table-wrapper 基準の座標に変換（scrollLeft/Top で絶対位置へ）
+    const left   = startRect.left  - wrapperRect.left + scrollLeft;
+    const top    = startRect.top   - wrapperRect.top  + scrollTop;
+    const width  = rightRect.right - startRect.left;   // viewport幅（スクロール無関係）
     const height = startRect.height;
 
     if (width <= 0) return;
@@ -1225,7 +1230,6 @@ function overlayBarLabels() {
     label.style.top    = top    + 'px';
     label.style.width  = width  + 'px';
     label.style.height = height + 'px';
-    label.style.maxWidth = width + 'px';
 
     if (hasRemind) {
       const dot = document.createElement('span');
