@@ -14984,6 +14984,15 @@
       "day": 9,
       "content": "昇格試験",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "1746",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 2,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -15007,7 +15016,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1746,
+  "next_id": 1747,
   "reminders": [],
   "reminder_next_id": 1
 }
