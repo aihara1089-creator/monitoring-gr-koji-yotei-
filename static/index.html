@@ -61,7 +61,7 @@
 
     /* ===== スケジュールテーブル ===== */
     .table-container { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
-    .table-wrapper { overflow-x: auto; }
+    .table-wrapper { overflow-x: auto; position: relative; }
     table { border-collapse: collapse; min-width: 100%; }
     /* thead sticky: JSでページスクロールに忟じて translateY で固定 */
     thead { position: relative; z-index: 10; will-change: transform; }
@@ -132,34 +132,18 @@
       padding-right: 2px;
       margin-right: 0;
     }
-    /* 中間セル：両端まっすぐ、左端にテキストをsticky固定 */
+    /* 中間セル：両端まっすぐ */
     .span-bar.bar-mid {
       border-radius: 0;
-      padding: 0 0 0 4px;
+      padding: 0;
       margin-left: 0;
       margin-right: 0;
-      overflow: hidden;
     }
-    .span-bar.bar-mid .bar-label {
-      display: inline-block;
-      position: sticky;
-      left: 0;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    /* 終端セル：左まっすぐ、右丸、左端にテキストをsticky固定 */
+    /* 終端セル：左まっすぐ、右丸 */
     .span-bar.bar-end {
       border-radius: 0 11px 11px 0;
-      padding: 0 6px 0 4px;
+      padding: 0;
       margin-left: 0;
-      overflow: hidden;
-    }
-    .span-bar.bar-end .bar-label {
-      display: inline-block;
-      position: sticky;
-      left: 0;
-      white-space: nowrap;
-      pointer-events: none;
     }
     /* 単独日バー（soloは丸角タグと同じ見た目） */
     .span-bar.bar-solo {
@@ -176,6 +160,21 @@
     td.day-cell.has-bar { padding: 2px 0; }
     td.day-cell.bar-cont { cursor: default; }  /* 中間・終端は+ボタン不要 */
     td.day-cell.bar-cont .add-btn-cell { display: none !important; }
+    /* ===== バー上オーバーレイラベル ===== */
+    .bar-overlay-label {
+      position: absolute;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 22px;
+      padding: 0 8px;
+      z-index: 5;
+      color: #fff;
+    }
+    .bar-overlay-label.bar-light { color: #1e293b; }
 
     .add-btn-cell { display: flex; align-items: center; justify-content: center; height: 100%; color: #cbd5e1; font-size: 16px; opacity: 0; }
     td.day-cell:hover .add-btn-cell { opacity: 1; color: var(--primary-light); }
@@ -854,7 +853,8 @@ async function init() {
   await checkReminders();
   adjustStickyTop(); // ヘッダー高さを計測
   window.addEventListener('scroll', updateTheadPosition, { passive: true });
-  window.addEventListener('resize', adjustStickyTop);
+  window.addEventListener('resize', () => { adjustStickyTop(); overlayBarLabels(); });
+  // table-wrapper の横スクロールではオーバーレイ再計算不要（absolute で同期）
   setInterval(autoRefresh, 30000); // 30秒ごと自動更新
 }
 
@@ -1116,8 +1116,6 @@ function renderTable() {
           const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
           const labelText = sp.pos === 'solo'
             ? `${remindDot}${escHtml(sp.content.substring(0, 14))}${sp.content.length > 14 ? '…' : ''}`
-            : (sp.pos === 'start' || sp.pos === 'mid' || sp.pos === 'end')
-            ? `<span class="bar-label">${remindDot}${escHtml(sp.content)}</span>`
             : '';
           // groupIds を JSON 文字列として data 属性に埋め込む（シングルクォートをエスケープ）
           const groupIdsAttr = JSON.stringify(sp.groupIds).replace(/'/g, '&#39;');
@@ -1174,8 +1172,72 @@ function renderTable() {
   // フィルター状態を再適用
   applyColumnFilter();
 
-  // テーブル再描画後にtheadの位置を再計算
-  requestAnimationFrame(updateTheadPosition);
+  // テーブル再描画後にtheadの位置を再計算・バーオーバーレイ配置
+  requestAnimationFrame(() => {
+    updateTheadPosition();
+    overlayBarLabels();
+  });
+}
+
+// ===================================================
+// ===== バー上オーバーレイラベル配置 =====
+// ===================================================
+function overlayBarLabels() {
+  // 既存オーバーレイをクリア
+  document.querySelectorAll('.bar-overlay-label').forEach(el => el.remove());
+
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (!tableWrapper) return;
+  const wrapperRect = tableWrapper.getBoundingClientRect();
+  const scrollLeft  = tableWrapper.scrollLeft;
+  const scrollTop   = tableWrapper.scrollTop;
+
+  // bar-start を起点に、同じ data-id の bar-end（または solo 以外最後のセル）を探す
+  const startEls = document.querySelectorAll('.span-bar.bar-start');
+
+  startEls.forEach(startEl => {
+    const id = startEl.dataset.id;
+    if (!id) return;
+
+    // 対応する bar-end を探す（同じ data-id）
+    const endEl = document.querySelector(`.span-bar.bar-end[data-id="${CSS.escape(id)}"]`);
+    // bar-end がない場合（2日連続でも bar-start だけかもしれない）は bar-start 単体を使う
+    const rightEl = endEl || startEl;
+
+    const startRect = startEl.getBoundingClientRect();
+    const rightRect = rightEl.getBoundingClientRect();
+
+    // .table-wrapper 基準の座標に変換
+    const left  = startRect.left  - wrapperRect.left + scrollLeft;
+    const top   = startRect.top   - wrapperRect.top  + scrollTop;
+    const width = rightRect.right - startRect.left;
+    const height = startRect.height;
+
+    if (width <= 0) return;
+
+    const isLight   = startEl.classList.contains('bar-light');
+    const content   = startEl.dataset.content || '';
+    const hasRemind = startEl.querySelector('.remind-dot') !== null;
+
+    const label = document.createElement('span');
+    label.className = 'bar-overlay-label' + (isLight ? ' bar-light' : '');
+    label.style.left   = left   + 'px';
+    label.style.top    = top    + 'px';
+    label.style.width  = width  + 'px';
+    label.style.height = height + 'px';
+    label.style.maxWidth = width + 'px';
+
+    if (hasRemind) {
+      const dot = document.createElement('span');
+      dot.className = 'remind-dot';
+      dot.title = 'リマインド設定済み';
+      if (isLight) dot.style.background = '#1e293b';
+      label.appendChild(dot);
+    }
+    label.appendChild(document.createTextNode(content));
+
+    tableWrapper.appendChild(label);
+  });
 }
 
 // ===================================================
