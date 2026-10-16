@@ -14082,7 +14082,7 @@
       "day": 9,
       "staff": "川北",
       "content": "昇格試験",
-      "color": "#3B82F6",
+      "color": "#fef08a",
       "id": "1567"
     },
     {
@@ -14813,6 +14813,42 @@
       "day": 14,
       "content": "MHI横浜出張",
       "color": "#fef08a"
+    },
+    {
+      "id": "1677",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 17,
+      "content": "MHI横浜出張",
+      "color": "#fef08a"
+    },
+    {
+      "id": "1678",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 13,
+      "content": "MHI横浜出張",
+      "color": "#fef08a"
+    },
+    {
+      "id": "1679",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 18,
+      "content": "MHI横浜出張",
+      "color": "#fef08a"
+    },
+    {
+      "id": "1680",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 15,
+      "content": "MHI横浜出張",
+      "color": "#fef08a"
     }
   ],
   "staff": [
@@ -14836,7 +14872,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1677,
+  "next_id": 1681,
   "reminders": [],
   "reminder_next_id": 1
 }
