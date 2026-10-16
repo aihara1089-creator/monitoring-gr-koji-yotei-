@@ -14678,6 +14678,15 @@
       "day": 29,
       "content": "在宅（岡山）",
       "color": "#fdba74"
+    },
+    {
+      "id": "1654",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 5,
+      "content": "出張不在（MHI横浜）",
+      "color": "#86efac"
     }
   ],
   "staff": [
@@ -14701,7 +14710,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1654,
+  "next_id": 1655,
   "reminders": [],
   "reminder_next_id": 1
 }
