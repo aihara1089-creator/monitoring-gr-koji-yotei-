@@ -14876,6 +14876,24 @@
       "day": 13,
       "content": "MHI横浜出張",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "1713",
+      "year": 2026,
+      "month": 10,
+      "staff": "福島",
+      "day": 8,
+      "content": "HUDONG H1795A　AL FANAR",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1714",
+      "year": 2026,
+      "month": 10,
+      "staff": "福島",
+      "day": 7,
+      "content": "HUDONG H1795A　AL FANAR",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -14899,7 +14917,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1713,
+  "next_id": 1715,
   "reminders": [],
   "reminder_next_id": 1
 }
