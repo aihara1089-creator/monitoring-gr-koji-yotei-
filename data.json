@@ -14098,7 +14098,7 @@
       "year": 2026,
       "month": 10,
       "day": 19,
-      "staff": "川北",
+      "staff": "石井",
       "content": "大島11134 傭船/MOL\nテラテック\n10/28竣工",
       "color": "#3B82F6",
       "id": "1569"
@@ -14813,6 +14813,42 @@
       "day": 15,
       "content": "MHI横浜出張",
       "color": "#fef08a"
+    },
+    {
+      "id": "1681",
+      "year": 2026,
+      "month": 10,
+      "staff": "TSSD",
+      "day": 10,
+      "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "1682",
+      "year": 2026,
+      "month": 10,
+      "staff": "TSSD",
+      "day": 9,
+      "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "1683",
+      "year": 2026,
+      "month": 10,
+      "staff": "TSSD",
+      "day": 8,
+      "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "1684",
+      "year": 2026,
+      "month": 10,
+      "staff": "TSSD",
+      "day": 7,
+      "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
+      "color": "#3B82F6"
     }
   ],
   "staff": [
@@ -14836,7 +14872,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1681,
+  "next_id": 1685,
   "reminders": [],
   "reminder_next_id": 1
 }
