@@ -14642,6 +14642,42 @@
       "day": 30,
       "content": "在宅（岡山）",
       "color": "#fdba74"
+    },
+    {
+      "id": "1649",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 26,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1650",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 27,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1651",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 28,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1652",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 29,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -14665,7 +14701,7 @@
     "TSSD",
     "MSR森"
   ],
-  "next_id": 1649,
+  "next_id": 1654,
   "reminders": [],
   "reminder_next_id": 1
 }
