@@ -67,7 +67,7 @@
     thead { position: relative; z-index: 10; will-change: transform; }
 
     /* 曜日ヘッダー */
-    th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; white-space: nowrap; }
+    th { background: #1e3a8a; color: #fff; padding: 0; font-weight: 600; font-size: 11px; border: 1px solid rgba(255,255,255,0.15); text-align: center; overflow: hidden; }
     th.staff-col { background: #1e3a8a; min-width: 90px; width: 90px; font-size: 12px; padding: 8px 6px; position: sticky; left: 0; z-index: 30; }
     .th-day { min-width: 44px; width: 44px; }
     .th-day .day-num { font-size: 13px; font-weight: 700; display: block; padding: 4px 2px 0; }
@@ -987,6 +987,14 @@ function renderTable() {
   const { spanInfo, entryMap } = buildSpanInfo(schedules, days);
 
   let html = '<table>';
+
+  // colgroup で列幅を完全固定（table-layout:fixed と組み合わせて確実に統一）
+  html += '<colgroup>';
+  html += '<col style="width:90px;min-width:90px;max-width:90px">';
+  for (let i = 0; i < days.length; i++) {
+    html += '<col style="width:44px;min-width:44px;max-width:44px">';
+  }
+  html += '</colgroup>';
 
   // ヘッダー行
   html += '<thead><tr>';
