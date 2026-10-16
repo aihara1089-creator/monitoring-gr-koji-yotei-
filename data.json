@@ -14867,6 +14867,24 @@
       "day": 22,
       "content": "多度津F087",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1689",
+      "year": 2026,
+      "month": 10,
+      "staff": "高橋",
+      "day": 23,
+      "content": "多度津F087",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1690",
+      "year": 2026,
+      "month": 10,
+      "staff": "高橋",
+      "day": 26,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -14890,7 +14908,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1689,
+  "next_id": 1691,
   "reminders": [],
   "reminder_next_id": 1
 }
