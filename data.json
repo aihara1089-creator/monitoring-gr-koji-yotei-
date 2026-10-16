@@ -14244,7 +14244,7 @@
       "day": 16,
       "staff": "松永",
       "content": "（年休）",
-      "color": "#3B82F6",
+      "color": "#fca5a5",
       "id": "1590"
     },
     {
@@ -14894,6 +14894,33 @@
       "day": 5,
       "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル",
       "color": "#3B82F6"
+    },
+    {
+      "id": "1694",
+      "year": 2026,
+      "month": 11,
+      "staff": "松永",
+      "day": 13,
+      "content": "年休",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1695",
+      "year": 2026,
+      "month": 11,
+      "staff": "松永",
+      "day": 11,
+      "content": "年休",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1696",
+      "year": 2026,
+      "month": 11,
+      "staff": "松永",
+      "day": 12,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -14917,7 +14944,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1694,
+  "next_id": 1697,
   "reminders": [],
   "reminder_next_id": 1
 }
