@@ -624,6 +624,7 @@
 <!-- ===== コピーバナー ===== -->
 <div class="copy-banner hidden" id="copyBanner">
   <span class="copy-banner-text" id="copyBannerText"></span>
+  <span style="font-size:11px;opacity:0.7;">貼り付けたいセルをクリック / Escでキャンセル</span>
   <button class="copy-banner-cancel" onclick="clearCopy()">キャンセル</button>
 </div>
 
@@ -1621,8 +1622,10 @@ function _ctxPasteNext(id) {
 async function _pasteToCell(staffName, year, month, day) {
   if (!_copiedEntry) return;
   markUserAction();
+  const saved = _copiedEntry; // clearCopy前に退避
+  clearCopy(); // 貼り付け後はコピーモードを即解除
   try {
-    await API.createSchedule({ staff: staffName, year, month, day, content: _copiedEntry.content, color: _copiedEntry.color });
+    await API.createSchedule({ staff: staffName, year, month, day, content: saved.content, color: saved.color });
     showToast(`貼り付けました (${staffName} ${month}/${day})`, 'success');
     await loadSchedule();
   } catch(e) {
