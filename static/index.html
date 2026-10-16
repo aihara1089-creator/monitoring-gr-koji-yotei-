@@ -241,6 +241,20 @@
     /* ===== トースト ===== */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
     .toast { background: #1e293b; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px; }
+    /* コンテキストメニュー */
+    .ctx-menu { position: fixed; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 500; min-width: 160px; padding: 4px 0; animation: slideUp 0.12s ease; }
+    .ctx-menu-item { padding: 8px 16px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text); white-space: nowrap; }
+    .ctx-menu-item:hover { background: #eff6ff; color: var(--primary); }
+    .ctx-menu-item.danger:hover { background: #fff1f2; color: #ef4444; }
+    .ctx-menu-sep { height: 1px; background: var(--border); margin: 4px 0; }
+    /* コピーバナー */
+    .copy-banner { position: fixed; bottom: 0; left: 0; right: 0; background: #1e40af; color: #fff; padding: 10px 20px; display: flex; align-items: center; gap: 12px; z-index: 400; font-size: 13px; box-shadow: 0 -2px 12px rgba(0,0,0,0.2); }
+    .copy-banner.hidden { display: none; }
+    .copy-banner-text { flex: 1; }
+    .copy-banner-cancel { background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px; }
+    .copy-banner-cancel:hover { background: rgba(255,255,255,0.35); }
+    /* 貼り付けモード中のセルハイライト */
+    .paste-ready td.day-cell:hover { background: #dbeafe !important; cursor: cell !important; outline: 2px dashed #3b82f6; outline-offset: -2px; }
     .toast.success { border-left: 3px solid #10b981; }
     .toast.error { border-left: 3px solid #ef4444; }
     @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -602,6 +616,16 @@
       <button class="btn btn-outline btn-sm" onclick="closeStaffDetailModal()">閉じる</button>
     </div>
   </div>
+</div>
+
+<!-- ===== コンテキストメニュー ===== -->
+<div class="ctx-menu hidden" id="ctxMenu"></div>
+
+<!-- ===== コピーバナー ===== -->
+<div class="copy-banner hidden" id="copyBanner">
+  <span>📋</span>
+  <span class="copy-banner-text" id="copyBannerText"></span>
+  <button class="copy-banner-cancel" onclick="clearCopy()">✕ キャンセル</button>
 </div>
 
 <!-- ===== トースト ===== -->
@@ -1075,12 +1099,15 @@ function renderTable() {
             : '';
           // groupIds を JSON 文字列として data 属性に埋め込む（シングルクォートをエスケープ）
           const groupIdsAttr = JSON.stringify(sp.groupIds).replace(/'/g, '&#39;');
+          const spContentAttr = sp.content.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           html += `<span class="span-bar bar-${sp.pos} ${lightCls} ${highlight}" `
                 + `draggable="true" `
                 + `data-id="${sp.id}" data-staff="${staffName}" data-year="${currentYear}" data-month="${currentMonth}" data-day="${d.day}" `
                 + `data-group-ids='${groupIdsAttr}' `
+                + `data-content="${spContentAttr}" data-color="${sp.color}" `
                 + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
-                + `onclick="editEntry(event,'${sp.id}')" title="${title}" `
+                + `onclick="editEntry(event,'${sp.id}')" `
+                + `oncontextmenu="onEntryContextMenu(event,'${sp.id}')" title="${title}" `
                 + `style="background:${sp.color};${textColor}">`
                 + `${labelText}</span>`;
         }
@@ -1096,12 +1123,15 @@ function renderTable() {
           const remindDot = hasRemind ? '<span class="remind-dot" title="リマインド設定済み"></span>' : '';
           // 通常タグはグループ=自分1件だけ
           const soloGroupIds = JSON.stringify([{ id: e.id, day: d.day }]).replace(/'/g, '&#39;');
+          const eContentAttr = e.content.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           html += `<span class="entry-tag ${highlight}" `
                 + `draggable="true" `
                 + `data-id="${e.id}" data-staff="${staffName}" data-year="${currentYear}" data-month="${currentMonth}" data-day="${d.day}" `
                 + `data-group-ids='${soloGroupIds}' `
+                + `data-content="${eContentAttr}" data-color="${bgColor}" `
                 + `ondragstart="onEntryDragStart(event)" ondragend="onEntryDragEnd(event)" `
-                + `onclick="editEntry(event,'${e.id}')" title="${title}" `
+                + `onclick="editEntry(event,'${e.id}')" `
+                + `oncontextmenu="onEntryContextMenu(event,'${e.id}')" title="${title}" `
                 + `style="background:${bgColor};${textStyle}">`
                 + `${remindDot}${escHtml(e.content.substring(0,20))}${e.content.length>20?'…':''}</span>`;
         }
@@ -1497,10 +1527,109 @@ function jumpToMonth() {
 }
 
 // ===== セルクリック =====
+// ===== コピー＆ペースト =====
+let _copiedEntry = null; // { content, color }
+
+function setCopyEntry(entry) {
+  _copiedEntry = { content: entry.content, color: entry.color || '#3b82f6' };
+  document.getElementById('copyBannerText').textContent =
+    `「${entry.content.substring(0, 30)}${entry.content.length > 30 ? '…' : ''}」をコピー中 — セルをクリックして貼り付け`;
+  document.getElementById('copyBanner').classList.remove('hidden');
+  document.getElementById('scheduleTable').classList.add('paste-ready');
+  hideCtxMenu();
+}
+
+function clearCopy() {
+  _copiedEntry = null;
+  document.getElementById('copyBanner').classList.add('hidden');
+  document.getElementById('scheduleTable').classList.remove('paste-ready');
+}
+
+// コンテキストメニューを表示
+function showCtxMenu(x, y, items) {
+  const menu = document.getElementById('ctxMenu');
+  menu.innerHTML = items.map(item => {
+    if (item === 'sep') return '<div class="ctx-menu-sep"></div>';
+    return `<div class="ctx-menu-item ${item.cls||''}" onclick="${item.action}">${item.icon||''} ${item.label}</div>`;
+  }).join('');
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+  menu.classList.remove('hidden');
+  // 画面端補正
+  requestAnimationFrame(() => {
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth)  menu.style.left = (x - rect.width) + 'px';
+    if (rect.bottom > window.innerHeight) menu.style.top = (y - rect.height) + 'px';
+  });
+}
+
+function hideCtxMenu() {
+  document.getElementById('ctxMenu').classList.add('hidden');
+}
+
+// entry-tag の右クリック
+function onEntryContextMenu(event, entryId) {
+  event.preventDefault();
+  event.stopPropagation();
+  const el = event.currentTarget;
+  const entry = {
+    id:      el.dataset.id,
+    staff:   el.dataset.staff,
+    year:    parseInt(el.dataset.year),
+    month:   parseInt(el.dataset.month),
+    day:     parseInt(el.dataset.day),
+    content: el.dataset.content,
+    color:   el.dataset.color,
+  };
+  const items = [
+    { icon: '📋', label: 'コピー',     action: `_ctxCopy()` },
+    'sep',
+    { icon: '✏️',  label: '編集',      action: `editEntry(null,'${entryId}')` },
+    { icon: '🗑',  label: '削除',      action: `_ctxDelete('${entryId}')`, cls: 'danger' },
+  ];
+  // クリップボードに何かある場合は「ここに貼り付け」も
+  if (_copiedEntry) {
+    items.splice(1, 0, { icon: '📌', label: 'この下に貼り付け', action: `_ctxPasteNext('${entryId}')` });
+  }
+  window._ctxEntry = entry;
+  showCtxMenu(event.clientX, event.clientY, items);
+}
+
+function _ctxCopy() { if (window._ctxEntry) setCopyEntry(window._ctxEntry); }
+function _ctxDelete(id) { hideCtxMenu(); editEntry(null, id); setTimeout(deleteEntry, 100); }
+function _ctxPasteNext(id) {
+  hideCtxMenu();
+  if (!_copiedEntry || !window._ctxEntry) return;
+  const e = window._ctxEntry;
+  _pasteToCell(e.staff, e.year, e.month, e.day);
+}
+
+// セルへの貼り付け
+async function _pasteToCell(staffName, year, month, day) {
+  if (!_copiedEntry) return;
+  markUserAction();
+  try {
+    await API.createSchedule({ staff: staffName, year, month, day, content: _copiedEntry.content, color: _copiedEntry.color });
+    showToast(`貼り付けました（${staffName} ${month}/${day}）`, 'success');
+    await loadSchedule();
+  } catch(e) {
+    showToast('貼り付けに失敗しました', 'error');
+  }
+}
+
+// セルクリック時：コピーモードなら貼り付け、そうでなければ追加モーダル
 function cellClick(staffName, day, event) {
-  if (event.target.classList.contains('entry-tag')) return;
+  if (event.target.classList.contains('entry-tag') || event.target.classList.contains('span-bar')) return;
+  if (_copiedEntry) {
+    _pasteToCell(staffName, currentYear, currentMonth, day);
+    return;
+  }
   openAddModal(staffName, day);
 }
+
+// どこかクリックでコンテキストメニューを閉じる
+document.addEventListener('click', () => hideCtxMenu());
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideCtxMenu(); clearCopy(); } });
 
 // ===== 期間モード切替 =====
 function toggleRangeMode() {
