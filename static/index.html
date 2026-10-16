@@ -1604,6 +1604,7 @@ function _ctxEdit(id) {
 }
 function _ctxDelete(id) {
   hideCtxMenu();
+  clearCopy(); // 削除時はコピーモードも解除
   if (!confirm('この予定を削除しますか？')) return;
   markUserAction();
   API.deleteSchedule(id).then(() => {
@@ -1644,7 +1645,17 @@ function cellClick(staffName, day, event) {
 }
 
 // どこかクリックでコンテキストメニューを閉じる
-document.addEventListener('click', () => hideCtxMenu());
+// バナー・メニュー・スケジュールタグ以外のクリックでコピーモードも解除
+document.addEventListener('click', (e) => {
+  hideCtxMenu();
+  if (!e.target.closest('#copyBanner') &&
+      !e.target.closest('#ctxMenu') &&
+      !e.target.classList.contains('entry-tag') &&
+      !e.target.classList.contains('span-bar') &&
+      !e.target.classList.contains('day-cell')) {
+    clearCopy();
+  }
+});
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideCtxMenu(); clearCopy(); } });
 
 // ===== 期間モード切替 =====
