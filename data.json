@@ -14984,15 +14984,6 @@
       "day": 10,
       "content": "昇格試験",
       "color": "#bfdbfe"
-    },
-    {
-      "id": "1737",
-      "year": 2026,
-      "month": 10,
-      "staff": "相原",
-      "day": 14,
-      "content": "昇格試験",
-      "color": "#bfdbfe"
     }
   ],
   "staff": [
@@ -15016,7 +15007,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1738,
+  "next_id": 1737,
   "reminders": [],
   "reminder_next_id": 1
 }
