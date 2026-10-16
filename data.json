@@ -14893,6 +14893,24 @@
       "staff": "福島",
       "day": 7,
       "content": "HUDONG H1795A　AL FANAR",
+      "color": "#ef4444"
+    },
+    {
+      "id": "1715",
+      "year": 2026,
+      "month": 10,
+      "staff": "福島",
+      "day": 9,
+      "content": "HUDONG H1795A　AL FANAR",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1716",
+      "year": 2026,
+      "month": 10,
+      "staff": "福島",
+      "day": 10,
+      "content": "HUDONG H1795A　AL FANAR",
       "color": "#3b82f6"
     }
   ],
@@ -14917,7 +14935,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1715,
+  "next_id": 1717,
   "reminders": [],
   "reminder_next_id": 1
 }
