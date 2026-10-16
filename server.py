@@ -14,6 +14,7 @@ import asyncio
 import base64
 import urllib.request
 import urllib.error
+import threading
 from datetime import datetime, date
 import calendar
 try:
@@ -121,8 +122,11 @@ GITHUB_DATA_PATH = os.environ.get("GITHUB_DATA_PATH", "data.json")
 GITHUB_BRANCH    = os.environ.get("GITHUB_BRANCH", "main")
 _GH_API_BASE     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_DATA_PATH}"
 
-# 書き込み排他制御用ロック
+# 書き込み排他制御用ロック（API間の競合防止）
 _DATA_LOCK = asyncio.Lock()
+
+# GitHub push用スレッドロック（複数スレッドの同時push防止）
+_GH_PUSH_LOCK = threading.Lock()
 
 # GitHub上のファイルの現在のSHA（更新時に必要）
 _gh_sha_cache: str = ""
@@ -153,35 +157,50 @@ def _gh_fetch() -> dict | None:
         return None
 
 def _gh_push(data: dict):
-    """data を GitHub の data.json に push する。失敗しても例外を外に出さない。"""
-    global _gh_sha_cache  # ← 関数先頭で宣言（参照・代入どちらより前に）
+    """data を GitHub の data.json に push する。スレッドロックで直列化。失敗時はSHA再取得してリトライ。"""
+    global _gh_sha_cache
     if not GITHUB_TOKEN:
         return
-    try:
-        content_b64 = base64.b64encode(
-            json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
-        ).decode("ascii")
-        payload = {
-            "message": "chore: auto-save data.json via API",
-            "content": content_b64,
-            "branch": GITHUB_BRANCH,
-        }
-        if _gh_sha_cache:
-            payload["sha"] = _gh_sha_cache
-        body = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            _GH_API_BASE,
-            data=body,
-            headers={**_gh_headers(), "Content-Type": "application/json"},
-            method="PUT"
-        )
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            result = json.loads(resp.read())
-        # 次回のために SHA を更新
-        _gh_sha_cache = result.get("content", {}).get("sha", _gh_sha_cache)
-        print(f"[GitHub push] OK  sha={_gh_sha_cache[:8]}")
-    except Exception as e:
-        print(f"[GitHub push] failed: {e}")
+    with _GH_PUSH_LOCK:  # 同時push防止：1スレッドずつ直列実行
+        for attempt in range(2):  # 最大2回試行（1回目失敗→SHA再取得→2回目）
+            try:
+                content_b64 = base64.b64encode(
+                    json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+                ).decode("ascii")
+                payload = {
+                    "message": "chore: auto-save data.json via API",
+                    "content": content_b64,
+                    "branch": GITHUB_BRANCH,
+                }
+                if _gh_sha_cache:
+                    payload["sha"] = _gh_sha_cache
+                body = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(
+                    _GH_API_BASE,
+                    data=body,
+                    headers={**_gh_headers(), "Content-Type": "application/json"},
+                    method="PUT"
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    result = json.loads(resp.read())
+                _gh_sha_cache = result.get("content", {}).get("sha", _gh_sha_cache)
+                print(f"[GitHub push] OK  sha={_gh_sha_cache[:8]}")
+                return  # 成功
+            except urllib.error.HTTPError as e:
+                body_err = e.read().decode("utf-8", errors="replace")
+                print(f"[GitHub push] attempt={attempt+1} HTTP {e.code}: {body_err[:200]}")
+                if e.code == 409 and attempt == 0:
+                    # SHA競合 → 最新SHAを再取得してリトライ
+                    print("[GitHub push] SHA conflict → re-fetching SHA")
+                    fresh = _gh_fetch()
+                    if fresh is not None:
+                        # ローカルファイルは変えず、SHAだけ更新（_gh_fetchがSHAを更新する）
+                        print(f"[GitHub push] SHA refreshed: {_gh_sha_cache[:8]}")
+                    continue
+                break
+            except Exception as e:
+                print(f"[GitHub push] failed: {e}")
+                break
 
 # -------------------------------------------------------
 # データロード/セーブ
@@ -254,8 +273,7 @@ def save_data(data: dict):
     """ローカルに書いた後、GitHub に非同期 push する"""
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    # GitHub にも非同期 push（レスポンスをブロックしない）
-    import threading
+    # GitHub にも非同期 push（_GH_PUSH_LOCK で直列化されるのでレスポンスはブロックしない）
     threading.Thread(target=_gh_push, args=(data,), daemon=True).start()
 
 # -------------------------------------------------------
