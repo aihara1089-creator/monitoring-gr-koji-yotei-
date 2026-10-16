@@ -14858,6 +14858,15 @@
       "day": 30,
       "content": "NSY8309　RURI SKY\n11/6竣工",
       "color": "#3B82F6"
+    },
+    {
+      "id": "1688",
+      "year": 2026,
+      "month": 10,
+      "staff": "高橋",
+      "day": 22,
+      "content": "多度津F087",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -14881,7 +14890,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1688,
+  "next_id": 1689,
   "reminders": [],
   "reminder_next_id": 1
 }
