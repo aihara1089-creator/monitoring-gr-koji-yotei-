@@ -14948,6 +14948,15 @@
       "day": 28,
       "content": "勤務",
       "color": "#fef08a"
+    },
+    {
+      "id": "1723",
+      "year": 2026,
+      "month": 11,
+      "staff": "野村",
+      "day": 4,
+      "content": "11/1～８\nKYBELE HORIZON\n停電対応・訪船調査\n大分港",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -14971,7 +14980,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1723,
+  "next_id": 1724,
   "reminders": [],
   "reminder_next_id": 1
 }
