@@ -14154,7 +14154,7 @@
       "day": 29,
       "staff": "定免",
       "content": "在宅",
-      "color": "#3B82F6",
+      "color": "#fca5a5",
       "id": "1576"
     },
     {
@@ -14831,6 +14831,33 @@
       "day": 7,
       "content": "HUDONG H1795A　AL FANAR\n10/16　引き渡し",
       "color": "#3B82F6"
+    },
+    {
+      "id": "1685",
+      "year": 2026,
+      "month": 10,
+      "staff": "TOWATECHNO",
+      "day": 28,
+      "content": "NSY8309　RURI SKY\n11/6竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "1686",
+      "year": 2026,
+      "month": 10,
+      "staff": "TOWATECHNO",
+      "day": 29,
+      "content": "NSY8309　RURI SKY\n11/6竣工",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "1687",
+      "year": 2026,
+      "month": 10,
+      "staff": "TOWATECHNO",
+      "day": 30,
+      "content": "NSY8309　RURI SKY\n11/6竣工",
+      "color": "#3B82F6"
     }
   ],
   "staff": [
@@ -14854,7 +14881,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1685,
+  "next_id": 1688,
   "reminders": [],
   "reminder_next_id": 1
 }
