@@ -14590,15 +14590,6 @@
       "color": "#fca5a5"
     },
     {
-      "id": "1659",
-      "year": 2026,
-      "month": 10,
-      "staff": "野村",
-      "day": 10,
-      "content": "SC484\n硬翼帆は9月下旬調整完了、軸馬力・波浪レーダ・EMS・D/L・IMUが調整可能になり次第 工事。",
-      "color": "#3b82f6"
-    },
-    {
       "id": "1660",
       "year": 2026,
       "month": 10,
@@ -14912,6 +14903,15 @@
       "day": 5,
       "content": "出張不在（MHI横浜）",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "1704",
+      "year": 2026,
+      "month": 10,
+      "staff": "野村",
+      "day": 11,
+      "content": "SC484\n硬翼帆は9月下旬調整完了、軸馬力・波浪レーダ・EMS・D/L・IMUが調整可能になり次第 工事。",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -14935,7 +14935,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1704,
+  "next_id": 1705,
   "reminders": [],
   "reminder_next_id": 1
 }
