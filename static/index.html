@@ -814,7 +814,12 @@ async function init() {
   setInterval(autoRefresh, 30000); // 30秒ごと自動更新
 }
 
+let _lastUserActionTs = 0; // 最後にユーザー操作した時刻（ms）
+function markUserAction() { _lastUserActionTs = Date.now(); }
+
 async function autoRefresh() {
+  // ユーザー操作から5秒以内はautoRefreshをスキップ（操作直後の上書き防止）
+  if (Date.now() - _lastUserActionTs < 5000) return;
   try {
     const data = await API.getSchedule(currentYear, currentMonth);
     scheduleData = data;
@@ -1222,6 +1227,7 @@ async function onCellDrop(event, toStaff, toDay) {
   }
 
   try {
+    markUserAction();
     await Promise.all(updates.map(u =>
       API.updateSchedule(u.id, { staff: u.staff, year: u.year, month: u.month, day: u.day })
     ));
@@ -1301,6 +1307,7 @@ async function onStaffPanelDrop(event, toIdx) {
   const [moved] = newStaff.splice(fromIdx, 1);
   newStaff.splice(toIdx, 0, moved);
 
+  markUserAction();
   try {
     await API.reorderStaff(newStaff);
     showToast(`「${moved}」を移動しました`, 'success');
@@ -1361,6 +1368,7 @@ async function onRowDrop(event, toIdx) {
   const [moved] = newStaff.splice(fromIdx, 1);
   newStaff.splice(toIdx, 0, moved);
 
+  markUserAction();
   try {
     await API.reorderStaff(newStaff);
     showToast(`「${fromName}」を移動しました`, 'success');
@@ -1629,6 +1637,7 @@ async function saveEntry() {
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
+  markUserAction();
 
   try {
     if (editingId && !useRange) {
@@ -1684,6 +1693,7 @@ async function saveEntry() {
 async function deleteEntry() {
   if (!editingId) return;
   if (!confirm('この予定を削除しますか？')) return;
+  markUserAction();
   try {
     await API.deleteSchedule(editingId);
     showToast('削除しました', 'success');
@@ -1741,6 +1751,7 @@ async function addStaff() {
   const input = document.getElementById('newStaffInput');
   const name = input.value.trim();
   if (!name) return;
+  markUserAction();
   try {
     await API.addStaff(name);
     input.value = '';
@@ -1753,6 +1764,7 @@ async function addStaff() {
 
 async function deleteStaff(name) {
   if (!confirm(`「${name}」を担当者リストから削除しますか？\n（予定データは残ります）`)) return;
+  markUserAction();
   try {
     await API.deleteStaff(name);
     showToast(`${name} を削除しました`, 'success');
