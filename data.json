@@ -14795,6 +14795,24 @@
       "day": 5,
       "content": "出張不在（MHI横浜）",
       "color": "#fef08a"
+    },
+    {
+      "id": "1675",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 16,
+      "content": "MHI横浜出張",
+      "color": "#fef08a"
+    },
+    {
+      "id": "1676",
+      "year": 2026,
+      "month": 10,
+      "staff": "技術部：山田",
+      "day": 14,
+      "content": "MHI横浜出張",
+      "color": "#fef08a"
     }
   ],
   "staff": [
@@ -14818,7 +14836,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1675,
+  "next_id": 1677,
   "reminders": [],
   "reminder_next_id": 1
 }
