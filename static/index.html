@@ -1547,21 +1547,31 @@ function clearCopy() {
 }
 
 // コンテキストメニューを表示
+let _ctxMenuItems = []; // クロージャ用に保持
 function showCtxMenu(x, y, items) {
   const menu = document.getElementById('ctxMenu');
-  menu.innerHTML = items.map(item => {
+  _ctxMenuItems = items;
+  menu.innerHTML = items.map((item, i) => {
     if (item === 'sep') return '<div class="ctx-menu-sep"></div>';
-    return `<div class="ctx-menu-item ${item.cls||''}" onclick="${item.action}">${item.label}</div>`;
+    return `<div class="ctx-menu-item ${item.cls||''}" data-idx="${i}">${item.label}</div>`;
   }).join('');
+  // onclick はイベントリスナーで付与（インライン属性を避けてバブリング問題を回避）
+  menu.querySelectorAll('.ctx-menu-item[data-idx]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation(); // document click に伝播させない
+      hideCtxMenu();
+      const idx = parseInt(el.dataset.idx);
+      const item = _ctxMenuItems[idx];
+      if (item && item.fn) item.fn();
+    });
+  });
   menu.style.left = x + 'px';
   menu.style.top  = y + 'px';
   menu.classList.remove('hidden');
-  // 画面端補正
-  requestAnimationFrame(() => {
-    const rect = menu.getBoundingClientRect();
-    if (rect.right > window.innerWidth)  menu.style.left = (x - rect.width) + 'px';
-    if (rect.bottom > window.innerHeight) menu.style.top = (y - rect.height) + 'px';
-  });
+  // 画面端補正（表示後に位置調整）
+  const rect = menu.getBoundingClientRect();
+  if (rect.right > window.innerWidth)  menu.style.left = (x - rect.width) + 'px';
+  if (rect.bottom > window.innerHeight) menu.style.top = (y - rect.height) + 'px';
 }
 
 function hideCtxMenu() {
@@ -1583,14 +1593,14 @@ function onEntryContextMenu(event, entryId) {
     color:   el.dataset.color,
   };
   const items = [
-    { label: 'コピー',         action: `_ctxCopy()` },
+    { label: 'コピー',  fn: () => _ctxCopy() },
     'sep',
-    { label: '編集',            action: `_ctxEdit('${entryId}')` },
-    { label: '削除',            action: `_ctxDelete('${entryId}')`, cls: 'danger' },
+    { label: '編集',    fn: () => _ctxEdit(entryId) },
+    { label: '削除',    fn: () => _ctxDelete(entryId), cls: 'danger' },
   ];
-  // クリップボードに何かある場合は「ここに貼り付け」も
+  // クリップボードに何かある場合は「この日に貼り付け」も
   if (_copiedEntry) {
-    items.splice(1, 0, { label: 'この下に貼り付け', action: `_ctxPasteNext('${entryId}')` });
+    items.splice(1, 0, { label: 'この日に貼り付け', fn: () => _ctxPasteNext(entryId) });
   }
   window._ctxEntry = entry;
   showCtxMenu(event.clientX, event.clientY, items);
@@ -1598,14 +1608,11 @@ function onEntryContextMenu(event, entryId) {
 
 function _ctxCopy() { if (window._ctxEntry) setCopyEntry(window._ctxEntry); }
 function _ctxEdit(id) {
-  hideCtxMenu();
-  // editEntry は event.stopPropagation() を呼ぶため、ダミーイベントを渡す
   const fakeEv = { stopPropagation: () => {} };
   editEntry(fakeEv, id);
 }
 function _ctxDelete(id) {
-  hideCtxMenu();
-  clearCopy(); // 削除時はコピーモードも解除
+  clearCopy();
   if (!confirm('この予定を削除しますか？')) return;
   markUserAction();
   API.deleteSchedule(id).then(() => {
@@ -1614,7 +1621,6 @@ function _ctxDelete(id) {
   }).catch(() => showToast('削除エラー', 'error'));
 }
 function _ctxPasteNext(id) {
-  hideCtxMenu();
   if (!_copiedEntry || !window._ctxEntry) return;
   const e = window._ctxEntry;
   _pasteToCell(e.staff, e.year, e.month, e.day);
