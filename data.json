@@ -15341,43 +15341,7 @@
       "year": 2026,
       "month": 12,
       "staff": "村上",
-      "day": 1,
-      "content": "勤務",
-      "color": "#fef08a"
-    },
-    {
-      "id": "1798",
-      "year": 2026,
-      "month": 12,
-      "staff": "村上",
-      "day": 2,
-      "content": "勤務",
-      "color": "#fef08a"
-    },
-    {
-      "id": "1799",
-      "year": 2026,
-      "month": 12,
-      "staff": "村上",
-      "day": 7,
-      "content": "勤務",
-      "color": "#fef08a"
-    },
-    {
-      "id": "1800",
-      "year": 2026,
-      "month": 12,
-      "staff": "村上",
-      "day": 8,
-      "content": "勤務",
-      "color": "#fef08a"
-    },
-    {
-      "id": "1801",
-      "year": 2026,
-      "month": 12,
-      "staff": "村上",
-      "day": 9,
+      "day": 14,
       "content": "勤務",
       "color": "#fef08a"
     }
@@ -15403,7 +15367,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1802,
+  "next_id": 1798,
   "reminders": [
     {
       "id": "1",
