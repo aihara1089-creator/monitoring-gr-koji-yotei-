@@ -15200,6 +15200,15 @@
       "day": 24,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1775",
+      "year": 2026,
+      "month": 10,
+      "staff": "福島",
+      "day": 21,
+      "content": "アズビル",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15223,7 +15232,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1775,
+  "next_id": 1776,
   "reminders": [
     {
       "id": "1",
