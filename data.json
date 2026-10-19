@@ -15335,6 +15335,15 @@
       "day": 4,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1792",
+      "year": 2026,
+      "month": 11,
+      "staff": "定免",
+      "day": 5,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -15358,7 +15367,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1792,
+  "next_id": 1793,
   "reminders": [
     {
       "id": "1",
