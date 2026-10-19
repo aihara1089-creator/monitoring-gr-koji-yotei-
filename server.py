@@ -157,15 +157,27 @@ def _gh_fetch() -> dict | None:
         return None
 
 def _gh_push(data: dict):
-    """data を GitHub の data.json に push する。スレッドロックで直列化。失敗時はSHA再取得してリトライ。"""
+    """
+    ローカルの最新データを GitHub の data.json に push する。
+    スレッドロックで直列化し、ロック取得時点のローカルファイルを使う。
+    複数リクエストが連続した場合でも、常に最新データがpushされる。
+    """
     global _gh_sha_cache
     if not GITHUB_TOKEN:
         return
     with _GH_PUSH_LOCK:  # 同時push防止：1スレッドずつ直列実行
+        # ★ ロック取得後に改めてローカルファイルの最新を読み直す
+        # （ロック待ち中に別スレッドがより新しいデータをローカル保存している可能性があるため）
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                latest_data = json.load(f)
+        except Exception:
+            latest_data = data  # 読み込み失敗時は引数のデータを使う
+
         for attempt in range(2):  # 最大2回試行（1回目失敗→SHA再取得→2回目）
             try:
                 content_b64 = base64.b64encode(
-                    json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+                    json.dumps(latest_data, ensure_ascii=False, indent=2).encode("utf-8")
                 ).decode("ascii")
                 payload = {
                     "message": "chore: auto-save data.json via API",
@@ -192,10 +204,8 @@ def _gh_push(data: dict):
                 if e.code == 409 and attempt == 0:
                     # SHA競合 → 最新SHAを再取得してリトライ
                     print("[GitHub push] SHA conflict → re-fetching SHA")
-                    fresh = _gh_fetch()
-                    if fresh is not None:
-                        # ローカルファイルは変えず、SHAだけ更新（_gh_fetchがSHAを更新する）
-                        print(f"[GitHub push] SHA refreshed: {_gh_sha_cache[:8]}")
+                    _gh_fetch()  # SHAキャッシュを更新（戻り値は使わない）
+                    print(f"[GitHub push] SHA refreshed: {_gh_sha_cache[:8]}")
                     continue
                 break
             except Exception as e:
