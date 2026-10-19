@@ -15317,6 +15317,15 @@
       "day": 25,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1795",
+      "year": 2026,
+      "month": 12,
+      "staff": "松永",
+      "day": 28,
+      "content": "午前休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15340,7 +15349,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1795,
+  "next_id": 1796,
   "reminders": [
     {
       "id": "1",
