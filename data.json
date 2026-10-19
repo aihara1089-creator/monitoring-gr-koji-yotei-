@@ -15353,6 +15353,15 @@
       "day": 15,
       "content": "勤務",
       "color": "#fef08a"
+    },
+    {
+      "id": "1799",
+      "year": 2026,
+      "month": 12,
+      "staff": "相原",
+      "day": 28,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -15376,7 +15385,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1799,
+  "next_id": 1800,
   "reminders": [
     {
       "id": "1",
