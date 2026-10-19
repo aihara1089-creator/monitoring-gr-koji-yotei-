@@ -15047,6 +15047,15 @@
       "day": 11,
       "content": "勤務",
       "color": "#fef08a"
+    },
+    {
+      "id": "1757",
+      "year": 2026,
+      "month": 11,
+      "staff": "村上",
+      "day": 16,
+      "content": "勤務",
+      "color": "#fef08a"
     }
   ],
   "staff": [
@@ -15070,7 +15079,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1757,
+  "next_id": 1758,
   "reminders": [],
   "reminder_next_id": 1
 }
