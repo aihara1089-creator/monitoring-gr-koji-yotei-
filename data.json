@@ -15335,6 +15335,15 @@
       "day": 5,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "1793",
+      "year": 2026,
+      "month": 11,
+      "staff": "吉原",
+      "day": 9,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15358,7 +15367,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1793,
+  "next_id": 1794,
   "reminders": [
     {
       "id": "1",
