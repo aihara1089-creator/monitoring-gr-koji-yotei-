@@ -15173,6 +15173,15 @@
       "day": 27,
       "content": "HO2576　ENERGY BLOOM",
       "color": "#ef4444"
+    },
+    {
+      "id": "1771",
+      "year": 2026,
+      "month": 11,
+      "staff": "高橋",
+      "day": 25,
+      "content": "HO2576　ENERGY BLOOM",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -15196,7 +15205,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1771,
+  "next_id": 1772,
   "reminders": [],
   "reminder_next_id": 1
 }
