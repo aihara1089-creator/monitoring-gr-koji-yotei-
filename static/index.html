@@ -1628,6 +1628,7 @@ function jumpToMonth() {
 // ===== セルクリック =====
 // ===== コピー＆ペースト =====
 let _copiedEntry = null; // { content, color }
+let _pasteLock = false;  // 貼り付け処理中の二重実行防止
 
 function setCopyEntry(entry) {
   _copiedEntry = { content: entry.content, color: entry.color || '#3b82f6' };
@@ -1762,6 +1763,8 @@ function _ctxPasteNext(id) {
 // セルへの貼り付け
 async function _pasteToCell(staffName, year, month, day) {
   if (!_copiedEntry) return;
+  if (_pasteLock) return; // 二重ペースト防止
+  _pasteLock = true;
   markUserAction();
   const saved = _copiedEntry; // clearCopy前に退避
   clearCopy(); // 貼り付け後はコピーモードを即解除
@@ -1771,6 +1774,8 @@ async function _pasteToCell(staffName, year, month, day) {
     await loadSchedule();
   } catch(e) {
     showToast('貼り付けに失敗しました', 'error');
+  } finally {
+    _pasteLock = false;
   }
 }
 
