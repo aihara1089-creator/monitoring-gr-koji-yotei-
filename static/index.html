@@ -862,8 +862,8 @@ let _lastUserActionTs = 0; // 最後にユーザー操作した時刻（ms）
 function markUserAction() { _lastUserActionTs = Date.now(); }
 
 async function autoRefresh() {
-  // ユーザー操作から5秒以内はautoRefreshをスキップ（操作直後の上書き防止）
-  if (Date.now() - _lastUserActionTs < 5000) return;
+  // ユーザー操作から15秒以内はautoRefreshをスキップ（操作直後の上書き防止）
+  if (Date.now() - _lastUserActionTs < 15000) return;
   try {
     const data = await API.getSchedule(currentYear, currentMonth);
     scheduleData = data;
@@ -1960,9 +1960,10 @@ async function saveEntry() {
         await API.deleteSchedule(editingId);
       }
 
-      await Promise.all(dates.map(({ year, month, day }) =>
-        API.createSchedule({ staff, year, month, day, content, color: selectedColor })
-      ));
+      // 直列で追加（並列だとサーバー側のGitHub pushが競合してデータが欠落するため）
+      for (const { year, month, day } of dates) {
+        await API.createSchedule({ staff, year, month, day, content, color: selectedColor });
+      }
 
       const label = editingId ? '期間に変更しました' : '追加しました';
       showToast(`${label}（${dates.length}日分）`, 'success');
