@@ -174,7 +174,7 @@ def _gh_push(data: dict):
         except Exception:
             latest_data = data  # 読み込み失敗時は引数のデータを使う
 
-        for attempt in range(2):  # 最大2回試行（1回目失敗→SHA再取得→2回目）
+        for attempt in range(3):  # 最大3回試行（SHA競合・ネットワークエラー対策）
             try:
                 content_b64 = base64.b64encode(
                     json.dumps(latest_data, ensure_ascii=False, indent=2).encode("utf-8")
@@ -193,7 +193,7 @@ def _gh_push(data: dict):
                     headers={**_gh_headers(), "Content-Type": "application/json"},
                     method="PUT"
                 )
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=20) as resp:
                     result = json.loads(resp.read())
                 _gh_sha_cache = result.get("content", {}).get("sha", _gh_sha_cache)
                 print(f"[GitHub push] OK  sha={_gh_sha_cache[:8]}")
@@ -201,15 +201,19 @@ def _gh_push(data: dict):
             except urllib.error.HTTPError as e:
                 body_err = e.read().decode("utf-8", errors="replace")
                 print(f"[GitHub push] attempt={attempt+1} HTTP {e.code}: {body_err[:200]}")
-                if e.code == 409 and attempt == 0:
+                if e.code in (409, 422) and attempt < 2:
                     # SHA競合 → 最新SHAを再取得してリトライ
                     print("[GitHub push] SHA conflict → re-fetching SHA")
-                    _gh_fetch()  # SHAキャッシュを更新（戻り値は使わない）
+                    _gh_fetch()  # SHAキャッシュを更新
                     print(f"[GitHub push] SHA refreshed: {_gh_sha_cache[:8]}")
                     continue
                 break
             except Exception as e:
-                print(f"[GitHub push] failed: {e}")
+                print(f"[GitHub push] attempt={attempt+1} failed: {e}")
+                if attempt < 2:
+                    import time
+                    time.sleep(1)  # 1秒待ってリトライ
+                    continue
                 break
 
 # -------------------------------------------------------
@@ -280,11 +284,15 @@ def load_data() -> dict:
     return {"schedules": [], "staff": [], "next_id": 1, "reminders": [], "reminder_next_id": 1}
 
 def save_data(data: dict):
-    """ローカルに書いた後、GitHub に非同期 push する"""
+    """ローカルに書いた後、GitHub に push する。
+    daemon=False でプロセス終了前に必ずスレッドが完了するようにし、
+    データ消失（Renderスリープ前にpushが終わらない問題）を防ぐ。
+    """
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    # GitHub にも非同期 push（_GH_PUSH_LOCK で直列化されるのでレスポンスはブロックしない）
-    threading.Thread(target=_gh_push, args=(data,), daemon=True).start()
+    # daemon=False: プロセス終了時にスレッド完了を待つ（Renderスリープ対策）
+    t = threading.Thread(target=_gh_push, args=(data,), daemon=False)
+    t.start()
 
 # -------------------------------------------------------
 # モデル
