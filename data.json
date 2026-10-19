@@ -15362,6 +15362,15 @@
       "day": 28,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "1800",
+      "year": 2026,
+      "month": 12,
+      "staff": "相原",
+      "day": 29,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -15385,7 +15394,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1800,
+  "next_id": 1801,
   "reminders": [
     {
       "id": "1",
