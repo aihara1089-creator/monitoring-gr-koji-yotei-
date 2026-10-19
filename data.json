@@ -14214,6 +14214,15 @@
     {
       "year": 2026,
       "month": 12,
+      "day": 1,
+      "staff": "高橋",
+      "content": "HO2576　ENERGY BLOOM\n12/14竣工",
+      "color": "#3B82F6",
+      "id": "1595"
+    },
+    {
+      "year": 2026,
+      "month": 12,
       "day": 21,
       "staff": "高橋",
       "content": "10周年",
@@ -15335,6 +15344,15 @@
       "day": 25,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1795",
+      "year": 2027,
+      "month": 1,
+      "staff": "石井",
+      "day": 12,
+      "content": "S1639\n海上試運転2026/12/16-20→竣工2027/1/20",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15358,7 +15376,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1795,
+  "next_id": 1796,
   "reminders": [
     {
       "id": "1",
