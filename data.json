@@ -15263,6 +15263,24 @@
       "day": 19,
       "content": "大島11134 傭船/MOL\nテラテック\n10/28竣工",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1783",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 20,
+      "content": "みらい２訪船",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "1784",
+      "year": 2026,
+      "month": 10,
+      "staff": "井手",
+      "day": 21,
+      "content": "みらい２訪船",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -15286,7 +15304,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1783,
+  "next_id": 1785,
   "reminders": [
     {
       "id": "1",
