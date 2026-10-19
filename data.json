@@ -15182,6 +15182,15 @@
       "day": 25,
       "content": "HO2576　ENERGY BLOOM",
       "color": "#ef4444"
+    },
+    {
+      "id": "1772",
+      "year": 2026,
+      "month": 11,
+      "staff": "野村",
+      "day": 27,
+      "content": "SHI2663\n12月9日竣工→2027/1/15引き渡し",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -15205,7 +15214,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1772,
+  "next_id": 1773,
   "reminders": [],
   "reminder_next_id": 1
 }
