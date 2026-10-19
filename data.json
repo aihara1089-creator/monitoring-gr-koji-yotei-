@@ -15272,6 +15272,15 @@
       "day": 21,
       "content": "みらい２訪船",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1785",
+      "year": 2026,
+      "month": 10,
+      "staff": "村上",
+      "day": 20,
+      "content": "みらい２訪船",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -15295,7 +15304,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1785,
+  "next_id": 1786,
   "reminders": [
     {
       "id": "1",
