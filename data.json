@@ -15290,6 +15290,15 @@
       "day": 21,
       "content": "みらい２訪船",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1787",
+      "year": 2026,
+      "month": 11,
+      "staff": "川北",
+      "day": 27,
+      "content": "入院（手術）",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15313,7 +15322,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1787,
+  "next_id": 1788,
   "reminders": [
     {
       "id": "1",
