@@ -15326,6 +15326,15 @@
       "day": 28,
       "content": "午前休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1796",
+      "year": 2026,
+      "month": 12,
+      "staff": "櫻田",
+      "day": 11,
+      "content": "NKセミナー",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15349,7 +15358,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1796,
+  "next_id": 1797,
   "reminders": [
     {
       "id": "1",
