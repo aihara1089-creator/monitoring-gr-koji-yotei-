@@ -15371,6 +15371,15 @@
       "day": 29,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "1801",
+      "year": 2026,
+      "month": 10,
+      "staff": "川北",
+      "day": 21,
+      "content": "アズビル",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15394,7 +15403,7 @@
     "TSSD",
     "竣工日"
   ],
-  "next_id": 1801,
+  "next_id": 1802,
   "reminders": [
     {
       "id": "1",
