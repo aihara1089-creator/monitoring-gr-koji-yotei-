@@ -15416,6 +15416,15 @@
       "day": 23,
       "content": "ウエルストーン",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1808",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 21,
+      "content": "CRYSTAL PIONEER",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15439,7 +15448,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1808,
+  "next_id": 1809,
   "reminders": [
     {
       "id": "1",
