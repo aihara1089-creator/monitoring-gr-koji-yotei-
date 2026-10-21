@@ -15596,6 +15596,15 @@
       "day": 28,
       "content": "CRYSTAL PIONEER",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1843",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 26,
+      "content": "SUZUKASAN",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -15619,7 +15628,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1843,
+  "next_id": 1844,
   "reminders": [
     {
       "id": "1",
