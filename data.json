@@ -15632,6 +15632,24 @@
       "day": 8,
       "content": "OPAL ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1850",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 9,
+      "content": "OPAL ACE",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1851",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 10,
+      "content": "OPAL ACE",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15655,7 +15673,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1850,
+  "next_id": 1852,
   "reminders": [
     {
       "id": "1",
