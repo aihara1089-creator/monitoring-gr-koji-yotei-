@@ -15551,6 +15551,24 @@
       "day": 26,
       "content": "SUZUKASAN",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1829",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 27,
+      "content": "SUZUKASAN",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1830",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 28,
+      "content": "SUZUKASAN",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15574,7 +15592,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1829,
+  "next_id": 1831,
   "reminders": [
     {
       "id": "1",
