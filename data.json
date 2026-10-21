@@ -15398,6 +15398,15 @@
       "day": 28,
       "content": "tatou/所掌打ち合わせ・研開報告",
       "color": "#86efac"
+    },
+    {
+      "id": "1805",
+      "year": 2026,
+      "month": 10,
+      "staff": "松永",
+      "day": 28,
+      "content": "tatou/所掌打ち合わせ・研開報告",
+      "color": "#86efac"
     }
   ],
   "staff": [
@@ -15421,7 +15430,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1805,
+  "next_id": 1806,
   "reminders": [
     {
       "id": "1",
