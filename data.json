@@ -15425,6 +15425,24 @@
       "day": 21,
       "content": "CRYSTAL PIONEER",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1809",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 22,
+      "content": "CRYSTAL PIONEER",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1810",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 23,
+      "content": "CRYSTAL PIONEER",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15448,7 +15466,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1809,
+  "next_id": 1811,
   "reminders": [
     {
       "id": "1",
