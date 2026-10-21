@@ -15623,6 +15623,15 @@
       "day": 23,
       "content": "CRYSTAL PIONEER",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1849",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 8,
+      "content": "OPAL ACE",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15646,7 +15655,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1849,
+  "next_id": 1850,
   "reminders": [
     {
       "id": "1",
