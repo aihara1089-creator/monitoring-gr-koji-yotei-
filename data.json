@@ -15542,6 +15542,15 @@
       "day": 28,
       "content": "FIRMAMENT ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1828",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 26,
+      "content": "SUZUKASAN",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15565,7 +15574,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1828,
+  "next_id": 1829,
   "reminders": [
     {
       "id": "1",
