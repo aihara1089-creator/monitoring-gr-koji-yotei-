@@ -15389,6 +15389,15 @@
       "day": 22,
       "content": "みらい２訪船",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1804",
+      "year": 2026,
+      "month": 10,
+      "staff": "野村",
+      "day": 28,
+      "content": "tatou/所掌打ち合わせ・研開報告",
+      "color": "#86efac"
     }
   ],
   "staff": [
@@ -15412,7 +15421,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1804,
+  "next_id": 1805,
   "reminders": [
     {
       "id": "1",
