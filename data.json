@@ -15424,7 +15424,7 @@
       "staff": "常石標準搭載",
       "day": 26,
       "content": "CRYSTAL PIONEER",
-      "color": "#3b82f6"
+      "color": "#8b5cf6"
     },
     {
       "id": "1809",
@@ -15514,6 +15514,15 @@
       "staff": "サイバーセキュリティー",
       "day": 27,
       "content": "CENTAURUS DREAM",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1827",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 28,
+      "content": "FIRMAMENT ACE",
       "color": "#3b82f6"
     },
     {
