@@ -15569,6 +15569,15 @@
       "day": 18,
       "content": "CAPILANO SUN",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1831",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 1,
+      "content": "WARRAMBOO",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15592,7 +15601,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1831,
+  "next_id": 1832,
   "reminders": [
     {
       "id": "1",
