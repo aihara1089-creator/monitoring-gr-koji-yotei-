@@ -15587,6 +15587,33 @@
       "day": 3,
       "content": "WARRAMBOO",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1834",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 26,
+      "content": "FIRMAMENT ACE",
+      "color": "#10b981"
+    },
+    {
+      "id": "1835",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 27,
+      "content": "FIRMAMENT ACE",
+      "color": "#10b981"
+    },
+    {
+      "id": "1836",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 28,
+      "content": "FIRMAMENT ACE",
+      "color": "#10b981"
     }
   ],
   "staff": [
@@ -15610,7 +15637,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1834,
+  "next_id": 1837,
   "reminders": [
     {
       "id": "1",
