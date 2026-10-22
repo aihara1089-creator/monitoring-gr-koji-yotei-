@@ -161,12 +161,6 @@
     td.day-cell.bar-cont { cursor: default; }  /* 中間・終端は+ボタン不要 */
     td.day-cell.bar-cont .add-btn-cell { display: none !important; }
     /* ===== バー上オーバーレイラベル ===== */
-    /* スロット位置合わせ用スペーサー（null スロット） */
-    .span-bar-spacer {
-      display: block;
-      height: 22px;
-      margin-bottom: 2px;
-      pointer-events: none;
     }
     .bar-overlay-label {
       position: absolute;
@@ -962,42 +956,22 @@ function buildSpanInfo(schedules, days) {
       groups.push({ group, lightColor, groupIds, color: entry.color || '#3b82f6', content: entry.content });
     }
 
-    // ② スロット番号を維持しながら spanInfo に配置
-    //    各日の spanInfo[day] を全スロット分確保し、
-    //    そのスロットに属さない日は null（スペーサー）を入れる
-    //    → 隣接セル間でバーの垂直位置が揃う
-    const numSlots = groups.length;
-    // 各日の配列をスロット数分 null で初期化
-    for (const day of dayNums) {
-      if ((entryMap[staffName][day] || []).length > 0 ||
-          groups.some(g => g.group.some(m => m.day === day))) {
-        spanInfo[staffName][day] = new Array(numSlots).fill(null);
-      }
-    }
-
-    groups.forEach((g, slot) => {
+    // ② 各グループを spanInfo に配置（単純に push するだけ。スペーサー不要）
+    groups.forEach(g => {
       const { group, lightColor, groupIds, color, content } = g;
       if (group.length === 1) {
         const d = group[0].day;
-        if (!spanInfo[staffName][d]) spanInfo[staffName][d] = new Array(numSlots).fill(null);
-        spanInfo[staffName][d][slot] = { id: group[0].id, pos: 'solo', color, content, lightColor, groupIds };
+        if (!spanInfo[staffName][d]) spanInfo[staffName][d] = [];
+        spanInfo[staffName][d].push({ id: group[0].id, pos: 'solo', color, content, lightColor, groupIds });
       } else {
         for (let gi = 0; gi < group.length; gi++) {
           const mem = group[gi];
           const pos = gi === 0 ? 'start' : gi === group.length - 1 ? 'end' : 'mid';
-          if (!spanInfo[staffName][mem.day]) spanInfo[staffName][mem.day] = new Array(numSlots).fill(null);
-          spanInfo[staffName][mem.day][slot] = { id: mem.id, pos, color, content, lightColor, groupIds };
+          if (!spanInfo[staffName][mem.day]) spanInfo[staffName][mem.day] = [];
+          spanInfo[staffName][mem.day].push({ id: mem.id, pos, color, content, lightColor, groupIds });
         }
       }
     });
-
-    // ③ 各日の末尾 null をトリム（中間・先頭の null はスペーサーとして必要）
-    for (const day of Object.keys(spanInfo[staffName])) {
-      const arr = spanInfo[staffName][day];
-      let last = arr.length - 1;
-      while (last >= 0 && arr[last] === null) last--;
-      spanInfo[staffName][day] = arr.slice(0, last + 1);
-    }
   }
   return { spanInfo, entryMap };
 }
@@ -1114,10 +1088,8 @@ function renderTable() {
 
       const daySpans   = staffSpans[d.day]   || [];
       const dayEntries = staffEntries[d.day]  || [];
-      // null スペーサーを除いた実バー一覧
-      const realSpans  = daySpans.filter(s => s !== null);
-      const hasBars    = realSpans.length > 0;
-      const isCont = hasBars && realSpans.every(s => s.pos === 'mid' || s.pos === 'end');
+      const hasBars    = daySpans.length > 0;
+      const isCont = hasBars && daySpans.every(s => s.pos === 'mid' || s.pos === 'end');
 
       // data-dtype (フィルター用)
       let tdDtype = 'normal';
@@ -1143,13 +1115,7 @@ function renderTable() {
 
       if (hasBars) {
         // ===== バー表示 =====
-        // daySpans は null スペーサーを含むスロット配列。
-        // null スロットは高さ22pxの透明スペーサーを出力して垂直位置を揃える。
         for (const sp of daySpans) {
-          if (sp === null) {
-            html += '<span class="span-bar-spacer"></span>';
-            continue;
-          }
           const highlight = query && sp.content.toLowerCase().includes(query) ? 'highlight' : '';
           const lightCls  = sp.lightColor ? 'bar-light' : '';
           const textColor = sp.lightColor ? 'color:#1e293b;' : '';
