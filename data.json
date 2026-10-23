@@ -15659,6 +15659,15 @@
       "day": 28,
       "content": "TATOU",
       "color": "#86efac"
+    },
+    {
+      "id": "1853",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 2,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -15682,7 +15691,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1853,
+  "next_id": 1854,
   "reminders": [
     {
       "id": "1",
