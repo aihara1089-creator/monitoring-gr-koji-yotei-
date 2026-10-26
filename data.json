@@ -15677,6 +15677,15 @@
       "day": 13,
       "content": "在宅",
       "color": "#ef4444"
+    },
+    {
+      "id": "1855",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 26,
+      "content": "AM 病院",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -15700,7 +15709,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1855,
+  "next_id": 1856,
   "reminders": [
     {
       "id": "1",
