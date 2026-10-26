@@ -15668,6 +15668,15 @@
       "day": 2,
       "content": "在宅（岡山）",
       "color": "#fdba74"
+    },
+    {
+      "id": "1854",
+      "year": 2026,
+      "month": 11,
+      "staff": "川北",
+      "day": 13,
+      "content": "在宅",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -15691,7 +15700,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1854,
+  "next_id": 1855,
   "reminders": [
     {
       "id": "1",
