@@ -15812,6 +15812,24 @@
       "day": 29,
       "content": "クリスマス休暇",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1873",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 30,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1874",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 31,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15835,7 +15853,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1873,
+  "next_id": 1875,
   "reminders": [
     {
       "id": "1",
