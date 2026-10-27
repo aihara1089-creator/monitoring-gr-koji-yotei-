@@ -15722,6 +15722,69 @@
       "day": 24,
       "content": "クリスマス休暇",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1860",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 25,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1861",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 26,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1862",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 27,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1863",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 28,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1864",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 29,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1865",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 30,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1866",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 31,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15745,7 +15808,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1860,
+  "next_id": 1867,
   "reminders": [
     {
       "id": "1",
