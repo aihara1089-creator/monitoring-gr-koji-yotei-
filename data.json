@@ -15713,6 +15713,15 @@
       "day": 27,
       "content": "AM：MSR",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1859",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 24,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15736,7 +15745,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1859,
+  "next_id": 1860,
   "reminders": [
     {
       "id": "1",
