@@ -15715,6 +15715,24 @@
       "color": "#8b5cf6"
     },
     {
+      "id": "1862",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 27,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1863",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 28,
+      "content": "クリスマス休暇",
+      "color": "#3b82f6"
+    },
+    {
       "id": "1867",
       "year": 2026,
       "month": 12,
@@ -15785,6 +15803,15 @@
       "day": 31,
       "content": "クリスマス休暇",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1875",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 22,
+      "content": "LC-A",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15808,7 +15835,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1875,
+  "next_id": 1876,
   "reminders": [
     {
       "id": "1",
