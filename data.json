@@ -15758,6 +15758,60 @@
       "day": 31,
       "content": "クリスマス休暇",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1867",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 24,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1868",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 25,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1869",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 26,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1870",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 27,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1871",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 28,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1872",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 29,
+      "content": "クリスマス休暇",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15781,7 +15835,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1867,
+  "next_id": 1873,
   "reminders": [
     {
       "id": "1",
