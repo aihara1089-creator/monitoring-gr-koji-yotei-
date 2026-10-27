@@ -15812,6 +15812,15 @@
       "day": 22,
       "content": "LC-A",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1876",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 23,
+      "content": "LC-A",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15835,7 +15844,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1876,
+  "next_id": 1877,
   "reminders": [
     {
       "id": "1",
