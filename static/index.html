@@ -396,7 +396,7 @@
       <input type="text" class="search-input" id="searchInput" placeholder="担当者・工事名検索">
     </div>
     <button class="btn btn-ghost" id="remindBellBtn" onclick="openRemindListModal()" title="リマインド一覧">🔔 <span id="remindBadge" style="display:none; background:#ef4444; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; margin-left:2px;"></span></button>
-    <button class="btn btn-ghost" onclick="openVesselModal()" title="新造船の竣工予定">🚢 竣工予定</button>
+    <button class="btn btn-ghost" onclick="openVesselModal()" title="新造船の竣工予定">竣工予定</button>
     <button class="btn btn-ghost" onclick="openAddModal()">＋ 予定追加</button>
     <button class="btn btn-ghost" onclick="window.print()">印刷</button>
   </div>
@@ -481,7 +481,7 @@
     <!-- サイドパネル -->
     <div class="side-panel">
       <div class="panel-card">
-        <div class="panel-title">🚢 新造船 竣工予定</div>
+        <div class="panel-title">新造船 竣工予定</div>
         <div id="vesselSideList" style="font-size:12px; color:var(--text-muted);">読み込み中...</div>
         <button class="btn btn-outline btn-sm" onclick="openVesselModal()" style="margin-top:8px; width:100%; justify-content:center;">一覧を開く / Excel取込</button>
       </div>
@@ -610,7 +610,7 @@
 <div class="modal-overlay hidden" id="vesselModal">
   <div class="modal" style="max-width:980px;">
     <div class="modal-header" style="background:linear-gradient(135deg,#0f766e,#0d9488);">
-      <div class="modal-title">🚢 新造船 竣工予定（MOL 新造船工程表）</div>
+      <div class="modal-title">新造船 竣工予定（MOL・常石）</div>
       <button class="modal-close" onclick="closeVesselModal()">×</button>
     </div>
     <div class="modal-body" style="padding:14px 20px;">
@@ -620,9 +620,14 @@
           <option value="all">すべて</option>
           <option value="tbd">日付未定（TBD等）</option>
         </select>
-        <input type="text" id="vesselSearch" placeholder="船名・造船所・船種で検索" oninput="setVesselQuery(this.value)" style="flex:1; min-width:160px;">
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('vesselFile').click()">📥 Excelを取り込む</button>
-        <input type="file" id="vesselFile" accept=".xlsx" style="display:none;" onchange="uploadVesselFile(this)">
+        <select id="vesselSource" onchange="setVesselSource(this.value)">
+          <option value="all">MOL＋常石</option>
+          <option value="mol">MOLのみ</option>
+          <option value="tsuneishi">常石のみ</option>
+        </select>
+        <input type="text" id="vesselSearch" placeholder="船名・船番・工事番号・造船所で検索" oninput="setVesselQuery(this.value)" style="flex:1; min-width:160px;">
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('vesselFile').click()">📥 Excelを取り込む（MOL／常石）</button>
+        <input type="file" id="vesselFile" accept=".xlsx,.xlsm" style="display:none;" onchange="uploadVesselFile(this)">
       </div>
       <div id="vesselListContent" style="max-height:55vh; overflow:auto; border:1px solid var(--border); border-radius:8px;"></div>
       <div class="vs-meta" id="vesselMeta"></div>
@@ -2427,8 +2432,9 @@ function escHtml(str) {
 }
 
 // ===== 新造船 竣工予定 =====
-let vesselData = { vessels: [], meta: {} };
+let vesselData = { vessels: [], sources: {} };
 let vesselFilter = 'upcoming';
+let vesselSource = 'all';
 let vesselQuery = '';
 const VS_WD = ['日','月','火','水','木','金','土'];
 
@@ -2445,20 +2451,23 @@ function vsBadge(iso) {
   const cls = n <= 7 ? 'soon' : n <= 30 ? 'near' : '';
   return `<span class="vs-badge ${cls}">あと${n}日</span>`;
 }
+function vsStamp(d) { return Object.values((d && d.sources) || {}).map(m => m.imported_at || '').join('|'); }
+function vsSrcLabel(v) { return v.source === 'tsuneishi' ? '常石' : 'MOL'; }
+function vsSideName(v) { return v.source === 'tsuneishi' && v.hull_no && v.name ? `${v.name}（${v.hull_no}）` : vsName(v); }
 function vsSortByDate(a, b) { return a.delivery_date < b.delivery_date ? -1 : a.delivery_date > b.delivery_date ? 1 : 0; }
 
 async function loadVessels() {
   try {
     const r = await fetch('/api/vessels', { cache: 'no-store' });
     if (r.status === 401 || r.status === 503) {
-      vesselData = { vessels: [], meta: {}, loaded: true, locked: r.status === 401 ? 'login' : 'unset' };
+      vesselData = { vessels: [], sources: {}, loaded: true, locked: r.status === 401 ? 'login' : 'unset' };
       renderVesselSide();
       if (!document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
       return;
     }
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const next = await r.json();
-    const changed = (next.meta || {}).imported_at !== (vesselData.meta || {}).imported_at || !vesselData.loaded || vesselData.locked;
+    const changed = vsStamp(next) !== vsStamp(vesselData) || !vesselData.loaded || vesselData.locked;
     vesselData = { ...next, loaded: true };
     renderVesselSide();
     if (changed && !document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
@@ -2481,18 +2490,19 @@ function renderVesselSide() {
     return;
   }
   if (!all.length) {
-    el.innerHTML = 'まだ取り込まれていません。<br>MOLの新造船工程表(Excel)を取り込むと、竣工日が表示されます。';
+    el.innerHTML = 'まだ取り込まれていません。<br>MOLの新造船工程表や常石のスケジュール表(Excel)を取り込むと、竣工日が表示されます。';
     return;
   }
   const up = all.filter(v => v.delivery_date && vsDaysLeft(v.delivery_date) >= 0).sort(vsSortByDate).slice(0, 6);
   let html = up.length ? up.map(v => `
-    <div class="vs-item" onclick="openVesselModal()" title="${escHtml(vsName(v))}\n${escHtml(v.yard)} / ${escHtml(v.type)}">
+    <div class="vs-item" onclick="openVesselModal()" title="${escHtml(vsName(v))}\n${escHtml(v.yard)}${v.type ? ' / ' + escHtml(v.type) : ''}">
       <span class="vs-date">${vsFmtShort(v.delivery_date)}</span>
-      <span class="vs-name">${escHtml(vsName(v))}</span>
+      <span class="vs-name">${escHtml(vsSideName(v))}</span>
       ${vsBadge(v.delivery_date)}
     </div>`).join('') : '<div>これからの竣工予定はありません</div>';
-  const m = vesselData.meta || {};
-  if (m.table_name) html += `<div class="vs-meta">取込元: ${escHtml(m.table_name)}</div>`;
+  const srcs = vesselData.sources || {};
+  const lines = ['mol', 'tsuneishi'].filter(k => srcs[k]).map(k => `${k === 'mol' ? 'MOL' : '常石'}: ${escHtml(srcs[k].table_name || srcs[k].sheet || '')}`);
+  if (lines.length) html += `<div class="vs-meta">取込元 ${lines.join(' / ')}</div>`;
   el.innerHTML = html;
 }
 
@@ -2522,7 +2532,7 @@ async function vesselLogin(ev) {
     const r = await fetch('/api/vessels/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : 'ログインに失敗しました');
-    vesselData = { vessels: [], meta: {}, loaded: false };
+    vesselData = { vessels: [], sources: {}, loaded: false };
     await loadVessels();
     renderVesselModal();
   } catch (e) {
@@ -2534,7 +2544,7 @@ async function vesselLogin(ev) {
 
 async function vesselLogout() {
   await fetch('/api/vessels/logout', { method: 'POST' }).catch(() => {});
-  vesselData = { vessels: [], meta: {}, loaded: false };
+  vesselData = { vessels: [], sources: {}, loaded: false };
   await loadVessels();
   renderVesselModal();
 }
@@ -2548,7 +2558,8 @@ function renderVesselModal() {
     return;
   }
   const q = vesselQuery.trim().toLowerCase();
-  let list = all.filter(v => !q || [v.name, v.hull_no, v.yard, v.type, v.ownership].join(' ').toLowerCase().includes(q));
+  let list = all.filter(v => (vesselSource === 'all' || v.source === vesselSource)
+    && (!q || [v.name, v.hull_no, v.work_no, v.yard, v.type, v.ownership].join(' ').toLowerCase().includes(q)));
   const todayIso = (() => { const t = vsToday(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })();
   if (vesselFilter === 'upcoming') list = list.filter(v => v.delivery_date && v.delivery_date >= todayIso);
   else if (vesselFilter === 'tbd') list = list.filter(v => !v.delivery_date);
@@ -2566,14 +2577,14 @@ function renderVesselModal() {
       <td style="white-space:nowrap;">${v.delivery_date ? vsBadge(v.delivery_date) : ''}</td>
       <td><b>${escHtml(vsName(v))}</b>${note}</td>
       <td>${escHtml(v.type)}</td>
-      <td>${escHtml(v.yard)}<div class="vs-sub">${escHtml(v.hull_no)}</div></td>
+      <td>${escHtml(v.yard)}<div class="vs-sub">${escHtml(v.hull_no)}${v.work_no ? ' / ' + escHtml(v.work_no) : ''}</div></td>
       <td>${escHtml(v.complete || '')}</td>
       <td>${escHtml(v.sea_trial || '')}</td>
     </tr>`;
   };
 
   if (!all.length) {
-    box.innerHTML = '<div class="loading" style="padding:30px;">まだ取り込まれていません。<br>右上の「Excelを取り込む」から、MOLの新造船工程表(.xlsx)を選んでください。</div>';
+    box.innerHTML = '<div class="loading" style="padding:30px;">まだ取り込まれていません。<br>「Excelを取り込む」から、MOLの新造船工程表(.xlsx)や常石のスケジュール表(.xlsm)を選んでください。</div>';
   } else if (!list.length) {
     box.innerHTML = '<div class="loading" style="padding:30px;">該当する船がありません</div>';
   } else {
@@ -2587,14 +2598,18 @@ function renderVesselModal() {
       body += `<tr class="vs-month"><td colspan="7">日付未定（TBD等）</td></tr>` + undated.map(rowHtml).join('');
     }
     box.innerHTML = `<table class="vs-table"><thead><tr>
-      <th>竣工予定</th><th>残り</th><th>船名</th><th>船種</th><th>造船所 / 番号</th><th>完工予定</th><th>海上公試</th>
+      <th>竣工予定</th><th>残り</th><th>船名</th><th>船種</th><th>造船所 / 船番 / 工事番号</th><th>完工予定</th><th>海上公試</th>
     </tr></thead><tbody>${body}</tbody></table>`;
   }
 
-  const m = vesselData.meta || {};
-  const when = m.imported_at ? new Date(m.imported_at).toLocaleString('ja-JP') : '';
-  document.getElementById('vesselMeta').innerHTML = (m.source_file
-    ? `表示 ${list.length} / 全${all.length}隻　取込元: ${escHtml(m.table_name || m.sheet || '')}（${escHtml(m.source_file)}）　取込日時: ${escHtml(when)}　`
+  const srcs = vesselData.sources || {};
+  const info = ['mol', 'tsuneishi'].filter(k => srcs[k]).map(k => {
+    const m = srcs[k];
+    const when = m.imported_at ? new Date(m.imported_at).toLocaleString('ja-JP') : '';
+    return `${k === 'mol' ? 'MOL' : '常石'}: ${escHtml(m.table_name || m.sheet || '')}（${escHtml(m.source_file || '')}）取込 ${escHtml(when)}`;
+  });
+  document.getElementById('vesselMeta').innerHTML = (info.length
+    ? `表示 ${list.length} / 全${all.length}隻<br>${info.join('<br>')}<br>`
     : '') + '<a href="#" onclick="vesselLogout();return false;" style="color:var(--text-muted);">🔓 ロック</a>';
 }
 
@@ -2606,15 +2621,16 @@ function openVesselModal() {
 function closeVesselModal() { document.getElementById('vesselModal').classList.add('hidden'); }
 function setVesselFilter(v) { vesselFilter = v; renderVesselModal(); }
 function setVesselQuery(v) { vesselQuery = v; renderVesselModal(); }
+function setVesselSource(v) { vesselSource = v; renderVesselModal(); }
 
 async function uploadVesselFile(input) {
   const f = input.files && input.files[0];
   input.value = '';
   if (!f) return;
   if (vesselData.locked) { showToast('先にパスワードを入力してください', 'error'); return; }
-  if (!/\.xlsx$/i.test(f.name)) { showToast('.xlsx のファイルを選んでください', 'error'); return; }
+  if (!/\.(xlsx|xlsm)$/i.test(f.name)) { showToast('.xlsx / .xlsm のファイルを選んでください', 'error'); return; }
   if ((vesselData.vessels || []).length &&
-      !confirm(`現在の一覧（${(vesselData.meta || {}).table_name || '取込済み'}）を、\n「${f.name}」の内容で置き換えます。よろしいですか？\n（前回と竣工日が変わった船には「変更」が付きます）`)) return;
+      !confirm(`「${f.name}」を取り込みます。\nMOLの表ならMOLの一覧、常石の表なら常石の一覧だけが置き換わります（もう一方はそのまま）。\n前回と竣工日が変わった船には「変更」が付きます。よろしいですか？`)) return;
   const box = document.getElementById('vesselListContent');
   box.innerHTML = '<div class="loading" style="padding:30px;"><div class="spinner"></div><div>取り込み中...</div></div>';
   try {
@@ -2628,7 +2644,7 @@ async function uploadVesselFile(input) {
     document.getElementById('vesselFilter').value = 'upcoming';
     await loadVessels();
     renderVesselModal();
-    showToast(`${j.count}隻を取り込みました（竣工日あり${j.dated}／未定${j.tbd}／変更${j.changed}／新規${j.new}）`, 'success');
+    showToast(`${j.label || ''}${j.count}隻を取り込みました（竣工日あり${j.dated}／未定${j.tbd}／変更${j.changed}／新規${j.new}）`, 'success');
   } catch (e) {
     renderVesselModal();
     showToast(e.message || '取り込みに失敗しました', 'error');
