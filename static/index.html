@@ -962,11 +962,22 @@ function buildSpanInfo(schedules, days) {
       groups.push({ group, lightColor, groupIds, color: entry.color || '#3b82f6', content: entry.content });
     }
 
-    // ② スロット番号を維持しながら spanInfo に配置
-    //    各日の spanInfo[day] を全スロット分確保し、
-    //    そのスロットに属さない日は null（スペーサー）を入れる
-    //    → 隣接セル間でバーの垂直位置が揃う
-    const numSlots = groups.length;
+    // ② スロット割り当て：期間が重なるバーだけ別の段にし、
+    //    重ならないバーは同じ段（上から詰めて）を再利用する
+    //    → 重複していない日付のバーは上に詰まり、行が不必要に高くならない
+    groups.forEach(g => {
+      const days = g.group.map(m => m.day);
+      g.startDay = Math.min(...days);
+      g.endDay = Math.max(...days);
+    });
+    const assigned = []; // 割り当て済みグループ
+    for (const g of groups) {
+      let s = 0;
+      while (assigned.some(a => a.slot === s && a.startDay <= g.endDay && g.startDay <= a.endDay)) s++;
+      g.slot = s;
+      assigned.push(g);
+    }
+    const numSlots = groups.reduce((m, g) => Math.max(m, g.slot + 1), 0);
     // 各日の配列をスロット数分 null で初期化
     for (const day of dayNums) {
       if ((entryMap[staffName][day] || []).length > 0 ||
@@ -975,7 +986,8 @@ function buildSpanInfo(schedules, days) {
       }
     }
 
-    groups.forEach((g, slot) => {
+    groups.forEach(g => {
+      const slot = g.slot;
       const { group, lightColor, groupIds, color, content } = g;
       if (group.length === 1) {
         const d = group[0].day;
