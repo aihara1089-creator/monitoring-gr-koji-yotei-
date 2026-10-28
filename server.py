@@ -7,8 +7,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
+import hashlib
+import hmac
 import io
 import json
+import time
 import os
 import re
 import uuid
@@ -226,8 +229,10 @@ def _ensure_fields(d: dict) -> dict:
     if "reminders" not in d:
         d["reminders"] = []
         d["reminder_next_id"] = 1
-    d.setdefault("vessels", [])        # 新造船の竣工予定（MOL新造船工程表の取込結果）
-    d.setdefault("vessels_meta", {})
+    # 新造船データ（機密）は公開リポジトリの data.json には入れない。
+    # 非公開リポジトリ + パスワード保護の別ストアで管理する（下の「新造船」節を参照）。
+    d.pop("vessels", None)
+    d.pop("vessels_meta", None)
     return d
 
 def _init_local_data():
@@ -662,13 +667,160 @@ def _parse_vessel_workbook(content: bytes):
         detail="「VESSEL_NAME」「PLANNED_DATE_OF_BUILD_DATE」の見出しが見つかりません。MOLの新造船工程表か確認してください",
     )
 
+# -------------------------------------------------------
+# 新造船データの保存先（機密）と閲覧パスワード
+#   保存先: 非公開リポジトリ VESSEL_GH_REPO の vessels.json（GITHUB_TOKEN で読み書き）
+#           GITHUB_TOKEN が無い環境(ローカル)では vessels.json をローカル保存（gitignore済み）
+#   閲覧  : 環境変数 VESSEL_PASSWORD（チーム共通パスワード）。未設定なら全拒否(fail closed)
+# -------------------------------------------------------
+VESSEL_PASSWORD  = os.environ.get("VESSEL_PASSWORD", "")
+VESSEL_GH_REPO   = os.environ.get("VESSEL_GH_REPO", "aihara1089-creator/monitoring-gr-koji-yotei-private")
+VESSEL_GH_PATH   = os.environ.get("VESSEL_GH_PATH", "vessels.json")
+VESSEL_GH_BRANCH = os.environ.get("VESSEL_GH_BRANCH", "main")
+_VS_API          = f"https://api.github.com/repos/{VESSEL_GH_REPO}/contents/{VESSEL_GH_PATH}"
+_VS_FILE         = os.path.join(_BASE_DIR, "vessels.json")
+_VS_COOKIE       = "vessel_auth"
+_VS_TTL          = 30 * 24 * 3600
+_VS_LOCK         = threading.Lock()
+_vs_sha          = ""
+_vs_cache        = None   # {"vessels": [...], "meta": {...}}
+_vs_fail         = {}     # ip -> [失敗時刻...]  （総当たり対策）
+
+def _vs_empty():
+    return {"vessels": [], "meta": {}}
+
+def _vs_load() -> dict:
+    """メモリ → GitHub(非公開) → ローカルファイル の順で取得"""
+    global _vs_cache, _vs_sha
+    if _vs_cache is not None:
+        return _vs_cache
+    data = None
+    if GITHUB_TOKEN:
+        try:
+            req = urllib.request.Request(f"{_VS_API}?ref={VESSEL_GH_BRANCH}", headers=_gh_headers())
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                meta = json.loads(resp.read())
+            _vs_sha = meta.get("sha", "")
+            data = json.loads(base64.b64decode(meta["content"]).decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                print(f"[vessels fetch] HTTP {e.code}")
+        except Exception as e:
+            print(f"[vessels fetch] failed: {e}")
+    if data is None and os.path.exists(_VS_FILE):
+        try:
+            with open(_VS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = None
+    _vs_cache = data if isinstance(data, dict) else _vs_empty()
+    return _vs_cache
+
+def _vs_push(data: dict):
+    """非公開リポジトリに保存。失敗したら例外（取込を成功扱いにしない）"""
+    global _vs_sha
+    with open(_VS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    if not GITHUB_TOKEN:
+        return
+    content_b64 = base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")).decode("ascii")
+    last = None
+    for attempt in range(3):
+        payload = {"message": "chore: update vessels", "content": content_b64, "branch": VESSEL_GH_BRANCH}
+        if _vs_sha:
+            payload["sha"] = _vs_sha
+        try:
+            req = urllib.request.Request(
+                _VS_API, data=json.dumps(payload).encode("utf-8"),
+                headers={**_gh_headers(), "Content-Type": "application/json"}, method="PUT")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                _vs_sha = json.loads(resp.read()).get("content", {}).get("sha", _vs_sha)
+            return
+        except urllib.error.HTTPError as e:
+            last = f"HTTP {e.code}"
+            if e.code in (409, 422):      # SHA不一致 → 取り直す
+                try:
+                    r2 = urllib.request.Request(f"{_VS_API}?ref={VESSEL_GH_BRANCH}", headers=_gh_headers())
+                    with urllib.request.urlopen(r2, timeout=10) as resp:
+                        _vs_sha = json.loads(resp.read()).get("sha", "")
+                except urllib.error.HTTPError:
+                    _vs_sha = ""
+                continue
+            break
+        except Exception as e:
+            last = str(e)
+            time.sleep(1)
+    raise RuntimeError(f"非公開リポジトリへの保存に失敗しました ({last})")
+
+def _vs_key() -> bytes:
+    return hashlib.sha256(("vessel-auth|" + VESSEL_PASSWORD).encode("utf-8")).digest()
+
+def _vs_make_token() -> str:
+    exp = str(int(time.time()) + _VS_TTL)
+    sig = hmac.new(_vs_key(), exp.encode(), hashlib.sha256).hexdigest()
+    return f"{exp}.{sig}"
+
+def _vs_token_ok(tok: str) -> bool:
+    try:
+        exp, sig = tok.split(".", 1)
+        if int(exp) < time.time():
+            return False
+        good = hmac.new(_vs_key(), exp.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(sig, good)
+    except Exception:
+        return False
+
+def _vs_require(request: Request):
+    """パスワード未設定なら 503、未ログインなら 401"""
+    if not VESSEL_PASSWORD:
+        raise HTTPException(status_code=503, detail="船データの閲覧パスワードが未設定です（管理者が VESSEL_PASSWORD を設定してください）")
+    if not _vs_token_ok(request.cookies.get(_VS_COOKIE, "")):
+        raise HTTPException(status_code=401, detail="パスワードが必要です")
+
+class VesselLogin(BaseModel):
+    password: str
+
+def _client_ip(request: Request) -> str:
+    xf = request.headers.get("x-forwarded-for", "")
+    return (xf.split(",")[0].strip() if xf else (request.client.host if request.client else "?"))
+
+@app.post("/api/vessels/login")
+def vessels_login(body: VesselLogin, request: Request):
+    if not VESSEL_PASSWORD:
+        raise HTTPException(status_code=503, detail="船データの閲覧パスワードが未設定です（管理者が VESSEL_PASSWORD を設定してください）")
+    ip, now = _client_ip(request), time.time()
+    fails = [t for t in _vs_fail.get(ip, []) if now - t < 600]
+    if len(fails) >= 5:
+        raise HTTPException(status_code=429, detail="試行回数が多すぎます。10分ほど待ってからやり直してください")
+    if not hmac.compare_digest(body.password.encode("utf-8"), VESSEL_PASSWORD.encode("utf-8")):
+        fails.append(now)
+        _vs_fail[ip] = fails
+        raise HTTPException(status_code=401, detail="パスワードが違います")
+    _vs_fail.pop(ip, None)
+    resp = JSONResponse({"ok": True})
+    secure = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+    resp.set_cookie(_VS_COOKIE, _vs_make_token(), max_age=_VS_TTL, httponly=True,
+                    samesite="lax", secure=secure, path="/api/vessels")
+    return resp
+
+@app.post("/api/vessels/logout")
+def vessels_logout():
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(_VS_COOKIE, path="/api/vessels")
+    return resp
+
 @app.get("/api/vessels")
-def get_vessels():
-    data = load_data()
-    return {"vessels": data.get("vessels", []), "meta": data.get("vessels_meta", {})}
+def get_vessels(request: Request):
+    _vs_require(request)
+    with _VS_LOCK:
+        d = _vs_load()
+    resp = JSONResponse({"vessels": d.get("vessels", []), "meta": d.get("meta", {})})
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 @app.post("/api/vessels/import")
-async def import_vessels(file: UploadFile = File(...)):
+async def import_vessels(request: Request, file: UploadFile = File(...)):
+    _vs_require(request)
     filename = file.filename or ""
     if not filename.lower().endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="拡張子が .xlsx のファイルを選んでください")
@@ -679,28 +831,36 @@ async def import_vessels(file: UploadFile = File(...)):
     if not vessels:
         raise HTTPException(status_code=400, detail="船のデータが1件も見つかりませんでした")
 
-    async with _DATA_LOCK:
-        data = load_data()
-        old = {v.get("key"): v for v in data.get("vessels", [])}
-        changed = new = 0
-        for v in vessels:
-            o = old.get(v["key"])
-            if o is None:
-                if old:                      # 初回取込のときは「新規」扱いにしない
-                    v["is_new"] = True
-                    new += 1
-            elif (o.get("delivery") or "") != (v["delivery"] or ""):
-                v["prev_delivery"] = o.get("delivery") or ""
-                changed += 1
-        data["vessels"] = vessels
-        data["vessels_meta"] = {
-            "source_file": filename,
-            "sheet": info["sheet"],
-            "table_name": info["table_name"],
-            "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "count": len(vessels),
-        }
-        save_data(data)
+    def _apply():
+        global _vs_cache
+        with _VS_LOCK:
+            cur = _vs_load()
+            old = {v.get("key"): v for v in cur.get("vessels", [])}
+            changed = new = 0
+            for v in vessels:
+                o = old.get(v["key"])
+                if o is None:
+                    if old:                      # 初回取込のときは「新規」扱いにしない
+                        v["is_new"] = True
+                        new += 1
+                elif (o.get("delivery") or "") != (v["delivery"] or ""):
+                    v["prev_delivery"] = o.get("delivery") or ""
+                    changed += 1
+            data = {"vessels": vessels, "meta": {
+                "source_file": filename,
+                "sheet": info["sheet"],
+                "table_name": info["table_name"],
+                "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "count": len(vessels),
+            }}
+            _vs_push(data)       # 保存に成功してからメモリへ反映
+            _vs_cache = data
+            return changed, new
+
+    try:
+        changed, new = await asyncio.to_thread(_apply)
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
     dated = sum(1 for v in vessels if v["delivery_date"])
     return {

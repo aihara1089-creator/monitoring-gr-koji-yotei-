@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 # data.json はGitHub APIで管理するためgitignoreしない
 # (Renderが再起動するたびに復元できるようにGitHub上に保持)
+
+# 新造船データ(機密): 非公開リポジトリでのみ管理する
+vessels.json
