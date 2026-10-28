@@ -1,21 +1,23 @@
 """
 工事作業予定表 - バックエンドAPI (FastAPI)
 """
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
+import io
 import json
 import os
+import re
 import uuid
 import asyncio
 import base64
 import urllib.request
 import urllib.error
 import threading
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import calendar
 try:
     import jpholiday
@@ -224,6 +226,8 @@ def _ensure_fields(d: dict) -> dict:
     if "reminders" not in d:
         d["reminders"] = []
         d["reminder_next_id"] = 1
+    d.setdefault("vessels", [])        # 新造船の竣工予定（MOL新造船工程表の取込結果）
+    d.setdefault("vessels_meta", {})
     return d
 
 def _init_local_data():
@@ -550,6 +554,160 @@ def get_months():
         months_set.add((s["year"], s["month"]))
     months = sorted(months_set)
     return {"months": [{"year": y, "month": m} for y, m in months]}
+
+# -------------------------------------------------------
+# 新造船 竣工予定API（MOL「新造船の工程スケジュール」Excelの取込）
+# -------------------------------------------------------
+_VESSEL_MAX_BYTES = 10 * 1024 * 1024
+_VESSEL_COLS = {
+    "BUILDER_YARD": "yard",
+    "BUILDERS_VESSEL_NUMBER": "hull_no",
+    "VESSEL_NAME": "name",
+    "VESSEL_TYPE": "type",
+    "OWNERSHIP_TYPE_BEFORE_DELIVERY": "ownership",
+    "PLANNED_SEA_TRIALS_DATE": "sea_trial",
+    "PLANNED_CONSTRUCTION_COMPLETE_DATE": "complete",
+    "PLANNED_DATE_OF_BUILD_DATE": "delivery",
+    "変更フラグ": "change_flag",
+    "変更内容": "change_note",
+}
+_YMD_RE = re.compile(r"^\s*(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?\s*$")
+
+def _cell_text(v) -> str:
+    """セル値を表示用の文字列にする（空・0 は空文字）"""
+    if v is None:
+        return ""
+    if isinstance(v, datetime):
+        return v.strftime("%Y/%m/%d")
+    if isinstance(v, date):
+        return v.strftime("%Y/%m/%d")
+    if isinstance(v, (int, float)):
+        if v == 0:
+            return ""
+        return str(int(v)) if float(v).is_integer() else str(v)
+    s = str(v).strip()
+    return "" if s in ("", "0") else s
+
+def _to_iso_date(text: str):
+    """'2026/12/11' '2027-12-31' のような完全な日付のみ ISO 形式にする。TBD や '2027/03/FH' は None"""
+    m = _YMD_RE.match(text or "")
+    if not m:
+        return None
+    try:
+        return date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
+    except ValueError:
+        return None
+
+def _parse_vessel_workbook(content: bytes):
+    """Excel（xlsx）から新造船リストを取り出す。最新（右端）の、見出しが読めるシートを使う。"""
+    try:
+        from openpyxl import load_workbook
+    except ImportError:
+        raise HTTPException(status_code=500, detail="サーバーに openpyxl がインストールされていません")
+    try:
+        wb = load_workbook(io.BytesIO(content), data_only=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Excelファイル(.xlsx)として読み込めませんでした")
+
+    for ws in reversed(wb.worksheets):
+        if ws.sheet_state != "visible":
+            continue
+        rows = [tuple(r) for r in ws.iter_rows(values_only=True)]
+        hdr_idx, colmap = None, {}
+        for i, row in enumerate(rows[:15]):
+            heads = [str(c).strip() if c is not None else "" for c in row]
+            if "VESSEL_NAME" in heads and "PLANNED_DATE_OF_BUILD_DATE" in heads:
+                hdr_idx = i
+                colmap = {_VESSEL_COLS[h]: j for j, h in enumerate(heads) if h in _VESSEL_COLS}
+                break
+        if hdr_idx is None:
+            continue
+
+        # 見出しより上の行から「テーブル名(今月)」の値を拾う
+        table_name = ""
+        for row in rows[:hdr_idx]:
+            for j, c in enumerate(row):
+                t = str(c) if c is not None else ""
+                if "テーブル名" in t and "今月" in t:
+                    for nxt in row[j + 1:]:
+                        if nxt not in (None, ""):
+                            table_name = str(nxt).strip()
+                            break
+        vessels, seen = [], {}
+        for row in rows[hdr_idx + 1:]:
+            def g(field):
+                j = colmap.get(field)
+                return _cell_text(row[j]) if j is not None and j < len(row) else ""
+            name, hull = g("name"), g("hull_no")
+            if not name and not hull:
+                continue
+            yard = g("yard")
+            key = f"{yard}|{hull}" if hull else f"{yard}|{name}"
+            seen[key] = seen.get(key, 0) + 1
+            if seen[key] > 1:
+                key = f"{key}#{seen[key]}"
+            delivery, complete = g("delivery"), g("complete")
+            vessels.append({
+                "key": key, "yard": yard, "hull_no": hull, "name": name,
+                "type": g("type"), "ownership": g("ownership"),
+                "sea_trial": g("sea_trial"),
+                "complete": complete, "complete_date": _to_iso_date(complete),
+                "delivery": delivery, "delivery_date": _to_iso_date(delivery),
+                "change_flag": g("change_flag"), "change_note": g("change_note"),
+            })
+        return vessels, {"sheet": ws.title, "table_name": table_name}
+
+    raise HTTPException(
+        status_code=400,
+        detail="「VESSEL_NAME」「PLANNED_DATE_OF_BUILD_DATE」の見出しが見つかりません。MOLの新造船工程表か確認してください",
+    )
+
+@app.get("/api/vessels")
+def get_vessels():
+    data = load_data()
+    return {"vessels": data.get("vessels", []), "meta": data.get("vessels_meta", {})}
+
+@app.post("/api/vessels/import")
+async def import_vessels(file: UploadFile = File(...)):
+    filename = file.filename or ""
+    if not filename.lower().endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="拡張子が .xlsx のファイルを選んでください")
+    content = await file.read()
+    if len(content) > _VESSEL_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="ファイルが大きすぎます（10MBまで）")
+    vessels, info = await asyncio.to_thread(_parse_vessel_workbook, content)
+    if not vessels:
+        raise HTTPException(status_code=400, detail="船のデータが1件も見つかりませんでした")
+
+    async with _DATA_LOCK:
+        data = load_data()
+        old = {v.get("key"): v for v in data.get("vessels", [])}
+        changed = new = 0
+        for v in vessels:
+            o = old.get(v["key"])
+            if o is None:
+                if old:                      # 初回取込のときは「新規」扱いにしない
+                    v["is_new"] = True
+                    new += 1
+            elif (o.get("delivery") or "") != (v["delivery"] or ""):
+                v["prev_delivery"] = o.get("delivery") or ""
+                changed += 1
+        data["vessels"] = vessels
+        data["vessels_meta"] = {
+            "source_file": filename,
+            "sheet": info["sheet"],
+            "table_name": info["table_name"],
+            "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "count": len(vessels),
+        }
+        save_data(data)
+
+    dated = sum(1 for v in vessels if v["delivery_date"])
+    return {
+        "ok": True, "count": len(vessels), "dated": dated, "tbd": len(vessels) - dated,
+        "changed": changed, "new": new,
+        "sheet": info["sheet"], "table_name": info["table_name"],
+    }
 
 # -------------------------------------------------------
 # 静的ファイル配信
