@@ -2449,10 +2449,16 @@ function vsSortByDate(a, b) { return a.delivery_date < b.delivery_date ? -1 : a.
 
 async function loadVessels() {
   try {
-    const r = await fetch('/api/vessels');
+    const r = await fetch('/api/vessels', { cache: 'no-store' });
+    if (r.status === 401 || r.status === 503) {
+      vesselData = { vessels: [], meta: {}, loaded: true, locked: r.status === 401 ? 'login' : 'unset' };
+      renderVesselSide();
+      if (!document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
+      return;
+    }
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const next = await r.json();
-    const changed = (next.meta || {}).imported_at !== (vesselData.meta || {}).imported_at || !vesselData.loaded;
+    const changed = (next.meta || {}).imported_at !== (vesselData.meta || {}).imported_at || !vesselData.loaded || vesselData.locked;
     vesselData = { ...next, loaded: true };
     renderVesselSide();
     if (changed && !document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
@@ -2466,6 +2472,14 @@ function renderVesselSide() {
   const el = document.getElementById('vesselSideList');
   if (!el) return;
   const all = vesselData.vessels || [];
+  if (vesselData.locked === 'login') {
+    el.innerHTML = '🔒 チーム共通パスワードで表示できます。';
+    return;
+  }
+  if (vesselData.locked === 'unset') {
+    el.innerHTML = '🔒 閲覧パスワードが未設定です（管理者に連絡してください）。';
+    return;
+  }
   if (!all.length) {
     el.innerHTML = 'まだ取り込まれていません。<br>MOLの新造船工程表(Excel)を取り込むと、竣工日が表示されます。';
     return;
@@ -2482,9 +2496,57 @@ function renderVesselSide() {
   el.innerHTML = html;
 }
 
+function renderVesselLock(box) {
+  if (vesselData.locked === 'unset') {
+    box.innerHTML = '<div class="loading" style="padding:30px;">🔒 閲覧パスワードが未設定です。<br>管理者が Render の環境変数 VESSEL_PASSWORD を設定してください。</div>';
+    return;
+  }
+  box.innerHTML = `<div style="padding:30px; text-align:center;">
+    <div style="font-size:14px; font-weight:600; margin-bottom:4px;">🔒 船データは機密情報のためパスワードが必要です</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">チーム共通のパスワードを入力してください</div>
+    <form onsubmit="vesselLogin(event)" style="display:inline-flex; gap:8px;">
+      <input type="password" id="vesselPw" autocomplete="current-password" placeholder="パスワード" style="min-width:180px;" autofocus>
+      <button type="submit" class="btn btn-primary btn-sm" id="vesselPwBtn">開く</button>
+    </form>
+  </div>`;
+  setTimeout(() => { const i = document.getElementById('vesselPw'); if (i) i.focus(); }, 30);
+}
+
+async function vesselLogin(ev) {
+  ev.preventDefault();
+  const pw = document.getElementById('vesselPw').value;
+  if (!pw) return;
+  const btn = document.getElementById('vesselPwBtn');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/vessels/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : 'ログインに失敗しました');
+    vesselData = { vessels: [], meta: {}, loaded: false };
+    await loadVessels();
+    renderVesselModal();
+  } catch (e) {
+    showToast(e.message, 'error');
+    btn.disabled = false;
+    const i = document.getElementById('vesselPw'); if (i) { i.value = ''; i.focus(); }
+  }
+}
+
+async function vesselLogout() {
+  await fetch('/api/vessels/logout', { method: 'POST' }).catch(() => {});
+  vesselData = { vessels: [], meta: {}, loaded: false };
+  await loadVessels();
+  renderVesselModal();
+}
+
 function renderVesselModal() {
   const box = document.getElementById('vesselListContent');
   const all = vesselData.vessels || [];
+  if (vesselData.locked) {
+    renderVesselLock(box);
+    document.getElementById('vesselMeta').innerHTML = '';
+    return;
+  }
   const q = vesselQuery.trim().toLowerCase();
   let list = all.filter(v => !q || [v.name, v.hull_no, v.yard, v.type, v.ownership].join(' ').toLowerCase().includes(q));
   const todayIso = (() => { const t = vsToday(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })();
@@ -2531,9 +2593,9 @@ function renderVesselModal() {
 
   const m = vesselData.meta || {};
   const when = m.imported_at ? new Date(m.imported_at).toLocaleString('ja-JP') : '';
-  document.getElementById('vesselMeta').innerHTML = m.source_file
-    ? `表示 ${list.length} / 全${all.length}隻　取込元: ${escHtml(m.table_name || m.sheet || '')}（${escHtml(m.source_file)}）　取込日時: ${escHtml(when)}`
-    : '';
+  document.getElementById('vesselMeta').innerHTML = (m.source_file
+    ? `表示 ${list.length} / 全${all.length}隻　取込元: ${escHtml(m.table_name || m.sheet || '')}（${escHtml(m.source_file)}）　取込日時: ${escHtml(when)}　`
+    : '') + '<a href="#" onclick="vesselLogout();return false;" style="color:var(--text-muted);">🔓 ロック</a>';
 }
 
 function openVesselModal() {
@@ -2549,6 +2611,7 @@ async function uploadVesselFile(input) {
   const f = input.files && input.files[0];
   input.value = '';
   if (!f) return;
+  if (vesselData.locked) { showToast('先にパスワードを入力してください', 'error'); return; }
   if (!/\.xlsx$/i.test(f.name)) { showToast('.xlsx のファイルを選んでください', 'error'); return; }
   if ((vesselData.vessels || []).length &&
       !confirm(`現在の一覧（${(vesselData.meta || {}).table_name || '取込済み'}）を、\n「${f.name}」の内容で置き換えます。よろしいですか？\n（前回と竣工日が変わった船には「変更」が付きます）`)) return;
@@ -2559,6 +2622,7 @@ async function uploadVesselFile(input) {
     fd.append('file', f);
     const r = await fetch('/api/vessels/import', { method: 'POST', body: fd });
     const j = await r.json().catch(() => ({}));
+    if (r.status === 401) { await loadVessels(); throw new Error('ログインの有効期限が切れました。パスワードを入力し直してください'); }
     if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : '取り込みに失敗しました (HTTP ' + r.status + ')');
     vesselFilter = 'upcoming';
     document.getElementById('vesselFilter').value = 'upcoming';
