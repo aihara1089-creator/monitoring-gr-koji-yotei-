@@ -341,6 +341,30 @@
     .remind-banner-item .badge.today { background: #dc2626; }
     .remind-banner-item .badge.soon { background: #d97706; }
 
+    /* ===== 新造船 竣工予定 ===== */
+    .vs-item { display:flex; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+    .vs-item:last-child { border-bottom:none; }
+    .vs-item:hover { background:#f8fafc; }
+    .vs-date { font-size:11px; font-weight:700; color:var(--primary); min-width:52px; }
+    .vs-name { font-size:12px; font-weight:600; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .vs-badge { display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; background:#e2e8f0; color:#475569; white-space:nowrap; }
+    .vs-badge.today { background:#dc2626; color:#fff; }
+    .vs-badge.soon { background:#f59e0b; color:#fff; }
+    .vs-badge.near { background:#dbeafe; color:#1e40af; }
+    .vs-badge.past { background:#f1f5f9; color:#94a3b8; }
+    .vs-tag { display:inline-block; font-size:10px; font-weight:700; padding:0 5px; border-radius:4px; margin-left:4px; }
+    .vs-tag.new { background:#dcfce7; color:#166534; }
+    .vs-tag.chg { background:#fee2e2; color:#991b1b; }
+    .vs-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .vs-table th { position:sticky; top:0; background:#f1f5f9; text-align:left; padding:6px 8px; font-size:11px; color:var(--text-muted); border-bottom:1px solid var(--border); white-space:nowrap; }
+    .vs-table td { padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+    .vs-table tr.vs-month td { background:#eff6ff; color:var(--primary); font-weight:700; font-size:11px; padding:4px 8px; }
+    .vs-table tr.vs-past td { color:#94a3b8; }
+    .vs-sub { font-size:10px; color:var(--text-muted); }
+    .vs-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+    .vs-toolbar select, .vs-toolbar input[type=text] { padding:5px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; }
+    .vs-meta { font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5; }
+
     /* ===== リマインドモーダル ===== */
     .remind-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; background: #fffbeb; }
     .remind-list-item .ri-info { flex: 1; font-size: 12px; }
@@ -372,6 +396,7 @@
       <input type="text" class="search-input" id="searchInput" placeholder="担当者・工事名検索">
     </div>
     <button class="btn btn-ghost" id="remindBellBtn" onclick="openRemindListModal()" title="リマインド一覧">🔔 <span id="remindBadge" style="display:none; background:#ef4444; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; margin-left:2px;"></span></button>
+    <button class="btn btn-ghost" onclick="openVesselModal()" title="新造船の竣工予定">🚢 竣工予定</button>
     <button class="btn btn-ghost" onclick="openAddModal()">＋ 予定追加</button>
     <button class="btn btn-ghost" onclick="window.print()">印刷</button>
   </div>
@@ -455,6 +480,12 @@
 
     <!-- サイドパネル -->
     <div class="side-panel">
+      <div class="panel-card">
+        <div class="panel-title">🚢 新造船 竣工予定</div>
+        <div id="vesselSideList" style="font-size:12px; color:var(--text-muted);">読み込み中...</div>
+        <button class="btn btn-outline btn-sm" onclick="openVesselModal()" style="margin-top:8px; width:100%; justify-content:center;">一覧を開く / Excel取込</button>
+      </div>
+
       <div class="panel-card">
         <div class="panel-title">担当者管理</div>
         <div id="staffList"></div>
@@ -571,6 +602,33 @@
       <button class="btn btn-warning btn-sm" id="remindBtn" onclick="openRemindFromEdit()" style="display:none;" title="リマインドを設定">🔔 リマインド</button>
       <button class="btn btn-outline btn-sm" onclick="closeModal()">キャンセル</button>
       <button class="btn btn-primary btn-sm" onclick="saveEntry()" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 新造船 竣工予定モーダル ===== -->
+<div class="modal-overlay hidden" id="vesselModal">
+  <div class="modal" style="max-width:980px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#0f766e,#0d9488);">
+      <div class="modal-title">🚢 新造船 竣工予定（MOL 新造船工程表）</div>
+      <button class="modal-close" onclick="closeVesselModal()">×</button>
+    </div>
+    <div class="modal-body" style="padding:14px 20px;">
+      <div class="vs-toolbar">
+        <select id="vesselFilter" onchange="setVesselFilter(this.value)">
+          <option value="upcoming">これからの竣工予定</option>
+          <option value="all">すべて</option>
+          <option value="tbd">日付未定（TBD等）</option>
+        </select>
+        <input type="text" id="vesselSearch" placeholder="船名・造船所・船種で検索" oninput="setVesselQuery(this.value)" style="flex:1; min-width:160px;">
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('vesselFile').click()">📥 Excelを取り込む</button>
+        <input type="file" id="vesselFile" accept=".xlsx" style="display:none;" onchange="uploadVesselFile(this)">
+      </div>
+      <div id="vesselListContent" style="max-height:55vh; overflow:auto; border:1px solid var(--border); border-radius:8px;"></div>
+      <div class="vs-meta" id="vesselMeta"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeVesselModal()">閉じる</button>
     </div>
   </div>
 </div>
@@ -858,6 +916,7 @@ async function init() {
   } catch (e) {}
   await loadSchedule();
   await checkReminders();
+  loadVessels();
   adjustStickyTop(); // ヘッダー高さを計測
   window.addEventListener('scroll', updateTheadPosition, { passive: true });
   window.addEventListener('resize', () => { adjustStickyTop(); overlayBarLabels(); });
@@ -876,6 +935,7 @@ async function autoRefresh() {
     scheduleData = data;
     renderTable();
     renderSummary();
+    loadVessels();
   } catch (e) {}
 }
 
@@ -2333,13 +2393,14 @@ document.addEventListener('keydown', (e) => {
     closeModal();
     closeRemindListModal();
     closeRemindSetModal();
+    closeVesselModal();
   }
   if (e.key === 'ArrowLeft' && !isModalOpen()) changeMonth(-1);
   if (e.key === 'ArrowRight' && !isModalOpen()) changeMonth(1);
 });
 
 function isModalOpen() {
-  return ['scheduleModal','remindListModal','remindSetModal'].some(
+  return ['scheduleModal','remindListModal','remindSetModal','vesselModal'].some(
     id => !document.getElementById(id).classList.contains('hidden')
   );
 }
@@ -2363,6 +2424,151 @@ document.getElementById('newStaffInput').addEventListener('keydown', (e) => {
 // ===== ユーティリティ =====
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== 新造船 竣工予定 =====
+let vesselData = { vessels: [], meta: {} };
+let vesselFilter = 'upcoming';
+let vesselQuery = '';
+const VS_WD = ['日','月','火','水','木','金','土'];
+
+function vsParseISO(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); }
+function vsToday() { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
+function vsDaysLeft(iso) { return Math.round((vsParseISO(iso) - vsToday()) / 86400000); }
+function vsFmtDate(iso) { const d = vsParseISO(iso); return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}(${VS_WD[d.getDay()]})`; }
+function vsFmtShort(iso) { const d = vsParseISO(iso); return `${d.getMonth()+1}/${d.getDate()}(${VS_WD[d.getDay()]})`; }
+function vsName(v) { return v.name && v.name !== '未定' ? v.name : `（船名未定）${v.hull_no || ''}`; }
+function vsBadge(iso) {
+  const n = vsDaysLeft(iso);
+  if (n < 0) return '<span class="vs-badge past">済</span>';
+  if (n === 0) return '<span class="vs-badge today">本日</span>';
+  const cls = n <= 7 ? 'soon' : n <= 30 ? 'near' : '';
+  return `<span class="vs-badge ${cls}">あと${n}日</span>`;
+}
+function vsSortByDate(a, b) { return a.delivery_date < b.delivery_date ? -1 : a.delivery_date > b.delivery_date ? 1 : 0; }
+
+async function loadVessels() {
+  try {
+    const r = await fetch('/api/vessels');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const next = await r.json();
+    const changed = (next.meta || {}).imported_at !== (vesselData.meta || {}).imported_at || !vesselData.loaded;
+    vesselData = { ...next, loaded: true };
+    renderVesselSide();
+    if (changed && !document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
+  } catch (e) {
+    const el = document.getElementById('vesselSideList');
+    if (el && !vesselData.loaded) el.textContent = '読み込めませんでした';
+  }
+}
+
+function renderVesselSide() {
+  const el = document.getElementById('vesselSideList');
+  if (!el) return;
+  const all = vesselData.vessels || [];
+  if (!all.length) {
+    el.innerHTML = 'まだ取り込まれていません。<br>MOLの新造船工程表(Excel)を取り込むと、竣工日が表示されます。';
+    return;
+  }
+  const up = all.filter(v => v.delivery_date && vsDaysLeft(v.delivery_date) >= 0).sort(vsSortByDate).slice(0, 6);
+  let html = up.length ? up.map(v => `
+    <div class="vs-item" onclick="openVesselModal()" title="${escHtml(vsName(v))}\n${escHtml(v.yard)} / ${escHtml(v.type)}">
+      <span class="vs-date">${vsFmtShort(v.delivery_date)}</span>
+      <span class="vs-name">${escHtml(vsName(v))}</span>
+      ${vsBadge(v.delivery_date)}
+    </div>`).join('') : '<div>これからの竣工予定はありません</div>';
+  const m = vesselData.meta || {};
+  if (m.table_name) html += `<div class="vs-meta">取込元: ${escHtml(m.table_name)}</div>`;
+  el.innerHTML = html;
+}
+
+function renderVesselModal() {
+  const box = document.getElementById('vesselListContent');
+  const all = vesselData.vessels || [];
+  const q = vesselQuery.trim().toLowerCase();
+  let list = all.filter(v => !q || [v.name, v.hull_no, v.yard, v.type, v.ownership].join(' ').toLowerCase().includes(q));
+  const todayIso = (() => { const t = vsToday(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })();
+  if (vesselFilter === 'upcoming') list = list.filter(v => v.delivery_date && v.delivery_date >= todayIso);
+  else if (vesselFilter === 'tbd') list = list.filter(v => !v.delivery_date);
+  const dated = list.filter(v => v.delivery_date).sort(vsSortByDate);
+  const undated = list.filter(v => !v.delivery_date);
+
+  const rowHtml = v => {
+    const past = v.delivery_date && vsDaysLeft(v.delivery_date) < 0;
+    const tags = (v.is_new ? '<span class="vs-tag new">NEW</span>' : '')
+      + (v.prev_delivery !== undefined ? `<span class="vs-tag chg" title="前回: ${escHtml(v.prev_delivery || '未定')}">変更</span>` : '');
+    const prev = v.prev_delivery !== undefined ? `<div class="vs-sub">前回: ${escHtml(v.prev_delivery || '未定')}</div>` : '';
+    const note = (v.change_note || v.change_flag) ? `<div class="vs-sub">MOL: ${escHtml(v.change_note || v.change_flag)}</div>` : '';
+    return `<tr class="${past ? 'vs-past' : ''}">
+      <td style="white-space:nowrap;"><b>${v.delivery_date ? vsFmtDate(v.delivery_date) : escHtml(v.delivery || 'TBD')}</b>${tags}${prev}</td>
+      <td style="white-space:nowrap;">${v.delivery_date ? vsBadge(v.delivery_date) : ''}</td>
+      <td><b>${escHtml(vsName(v))}</b>${note}</td>
+      <td>${escHtml(v.type)}</td>
+      <td>${escHtml(v.yard)}<div class="vs-sub">${escHtml(v.hull_no)}</div></td>
+      <td>${escHtml(v.complete || '')}</td>
+      <td>${escHtml(v.sea_trial || '')}</td>
+    </tr>`;
+  };
+
+  if (!all.length) {
+    box.innerHTML = '<div class="loading" style="padding:30px;">まだ取り込まれていません。<br>右上の「Excelを取り込む」から、MOLの新造船工程表(.xlsx)を選んでください。</div>';
+  } else if (!list.length) {
+    box.innerHTML = '<div class="loading" style="padding:30px;">該当する船がありません</div>';
+  } else {
+    let body = '', lastMonth = '';
+    for (const v of dated) {
+      const ym = v.delivery_date.slice(0, 7);
+      if (ym !== lastMonth) { lastMonth = ym; body += `<tr class="vs-month"><td colspan="7">${ym.slice(0,4)}年${Number(ym.slice(5))}月</td></tr>`; }
+      body += rowHtml(v);
+    }
+    if (undated.length) {
+      body += `<tr class="vs-month"><td colspan="7">日付未定（TBD等）</td></tr>` + undated.map(rowHtml).join('');
+    }
+    box.innerHTML = `<table class="vs-table"><thead><tr>
+      <th>竣工予定</th><th>残り</th><th>船名</th><th>船種</th><th>造船所 / 番号</th><th>完工予定</th><th>海上公試</th>
+    </tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  const m = vesselData.meta || {};
+  const when = m.imported_at ? new Date(m.imported_at).toLocaleString('ja-JP') : '';
+  document.getElementById('vesselMeta').innerHTML = m.source_file
+    ? `表示 ${list.length} / 全${all.length}隻　取込元: ${escHtml(m.table_name || m.sheet || '')}（${escHtml(m.source_file)}）　取込日時: ${escHtml(when)}`
+    : '';
+}
+
+function openVesselModal() {
+  document.getElementById('vesselModal').classList.remove('hidden');
+  renderVesselModal();
+  loadVessels();
+}
+function closeVesselModal() { document.getElementById('vesselModal').classList.add('hidden'); }
+function setVesselFilter(v) { vesselFilter = v; renderVesselModal(); }
+function setVesselQuery(v) { vesselQuery = v; renderVesselModal(); }
+
+async function uploadVesselFile(input) {
+  const f = input.files && input.files[0];
+  input.value = '';
+  if (!f) return;
+  if (!/\.xlsx$/i.test(f.name)) { showToast('.xlsx のファイルを選んでください', 'error'); return; }
+  if ((vesselData.vessels || []).length &&
+      !confirm(`現在の一覧（${(vesselData.meta || {}).table_name || '取込済み'}）を、\n「${f.name}」の内容で置き換えます。よろしいですか？\n（前回と竣工日が変わった船には「変更」が付きます）`)) return;
+  const box = document.getElementById('vesselListContent');
+  box.innerHTML = '<div class="loading" style="padding:30px;"><div class="spinner"></div><div>取り込み中...</div></div>';
+  try {
+    const fd = new FormData();
+    fd.append('file', f);
+    const r = await fetch('/api/vessels/import', { method: 'POST', body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : '取り込みに失敗しました (HTTP ' + r.status + ')');
+    vesselFilter = 'upcoming';
+    document.getElementById('vesselFilter').value = 'upcoming';
+    await loadVessels();
+    renderVesselModal();
+    showToast(`${j.count}隻を取り込みました（竣工日あり${j.dated}／未定${j.tbd}／変更${j.changed}／新規${j.new}）`, 'success');
+  } catch (e) {
+    renderVesselModal();
+    showToast(e.message || '取り込みに失敗しました', 'error');
+  }
 }
 
 // ===== 起動 =====
