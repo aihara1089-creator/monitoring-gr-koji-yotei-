@@ -603,17 +603,10 @@ def _to_iso_date(text: str):
     except ValueError:
         return None
 
-def _parse_vessel_workbook(content: bytes):
-    """Excel（xlsx）から新造船リストを取り出す。最新（右端）の、見出しが読めるシートを使う。"""
-    try:
-        from openpyxl import load_workbook
-    except ImportError:
-        raise HTTPException(status_code=500, detail="サーバーに openpyxl がインストールされていません")
-    try:
-        wb = load_workbook(io.BytesIO(content), data_only=True)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Excelファイル(.xlsx)として読み込めませんでした")
+_VESSEL_SOURCES = {"mol": "MOL", "tsuneishi": "常石"}
 
+def _parse_mol(wb):
+    """MOL新造船工程表。最新（右端）の、見出しが読めるシートを使う。見つからなければ None"""
     for ws in reversed(wb.worksheets):
         if ws.sheet_state != "visible":
             continue
@@ -653,7 +646,7 @@ def _parse_vessel_workbook(content: bytes):
                 key = f"{key}#{seen[key]}"
             delivery, complete = g("delivery"), g("complete")
             vessels.append({
-                "key": key, "yard": yard, "hull_no": hull, "name": name,
+                "key": key, "source": "mol", "yard": yard, "hull_no": hull, "work_no": "", "name": name,
                 "type": g("type"), "ownership": g("ownership"),
                 "sea_trial": g("sea_trial"),
                 "complete": complete, "complete_date": _to_iso_date(complete),
@@ -661,10 +654,83 @@ def _parse_vessel_workbook(content: bytes):
                 "change_flag": g("change_flag"), "change_note": g("change_note"),
             })
         return vessels, {"sheet": ws.title, "table_name": table_name}
+    return None
 
+def _one_line(v) -> str:
+    """改行・連続空白を1つの空白にまとめる"""
+    return re.sub(r"\s+", " ", _cell_text(v)).strip()
+
+def _parse_tsuneishi(wb):
+    """常石造船の標準搭載スケジュール表（工事番号／番船／船名／海上試運転／デリバリー日予定）。
+    顧客連絡先などの列は読み込まない。見つからなければ None"""
+    sheets = [ws for ws in wb.worksheets if ws.sheet_state == "visible"]
+    sheets.sort(key=lambda w: 0 if "常石標準搭載" in w.title else 1)   # 該当名のシートを優先
+    for ws in sheets:
+        rows = [tuple(r) for r in ws.iter_rows(values_only=True)]
+        hdr_idx, colmap = None, {}
+        for i, row in enumerate(rows[:15]):
+            cm = {}
+            for j, c in enumerate(row):
+                h = re.sub(r"\s+", "", str(c)) if c is not None else ""
+                if h.startswith("工事番号"):
+                    cm.setdefault("work_no", j)
+                elif h.startswith("番船"):
+                    cm.setdefault("hull_no", j)
+                elif h.startswith("船名"):
+                    cm.setdefault("name", j)
+                elif h.startswith("海上試運転"):
+                    cm.setdefault("sea_trial", j)
+                elif h.startswith("デリバリー日"):
+                    cm.setdefault("delivery", j)
+            if "hull_no" in cm and "delivery" in cm:
+                hdr_idx, colmap = i, cm
+                break
+        if hdr_idx is None:
+            continue
+        vessels, seen = [], {}
+        for row in rows[hdr_idx + 1:]:
+            def g(field):
+                j = colmap.get(field)
+                return _one_line(row[j]) if j is not None and j < len(row) else ""
+            hull, name = g("hull_no"), g("name")
+            if name in ("無", "未定", "-", "－"):
+                name = ""
+            if not hull and not name:
+                continue
+            key = f"常石|{hull}" if hull else f"常石|{name}"
+            seen[key] = seen.get(key, 0) + 1
+            if seen[key] > 1:
+                key = f"{key}#{seen[key]}"
+            delivery = g("delivery")
+            vessels.append({
+                "key": key, "source": "tsuneishi", "yard": "常石", "hull_no": hull, "work_no": g("work_no"),
+                "name": name, "type": "", "ownership": "",
+                "sea_trial": g("sea_trial"),
+                "complete": "", "complete_date": None,
+                "delivery": delivery, "delivery_date": _to_iso_date(delivery),
+                "change_flag": "", "change_note": "",
+            })
+        return vessels, {"sheet": ws.title, "table_name": ws.title.strip()}
+    return None
+
+def _parse_vessel_workbook(content: bytes):
+    """Excel（.xlsx / .xlsm）から新造船リストを取り出す。MOL形式か常石形式かを自動判別する。
+    戻り値: (source, vessels, info)"""
+    try:
+        from openpyxl import load_workbook
+    except ImportError:
+        raise HTTPException(status_code=500, detail="サーバーに openpyxl がインストールされていません")
+    try:
+        wb = load_workbook(io.BytesIO(content), data_only=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Excelファイル(.xlsx / .xlsm)として読み込めませんでした")
+    for source, fn in (("mol", _parse_mol), ("tsuneishi", _parse_tsuneishi)):
+        r = fn(wb)
+        if r is not None:
+            return source, r[0], r[1]
     raise HTTPException(
         status_code=400,
-        detail="「VESSEL_NAME」「PLANNED_DATE_OF_BUILD_DATE」の見出しが見つかりません。MOLの新造船工程表か確認してください",
+        detail="MOLの新造船工程表（VESSEL_NAME／PLANNED_DATE_OF_BUILD_DATE）か、常石のスケジュール表（番船／デリバリー日予定）の見出しが見つかりません",
     )
 
 # -------------------------------------------------------
@@ -683,11 +749,12 @@ _VS_COOKIE       = "vessel_auth"
 _VS_TTL          = 30 * 24 * 3600
 _VS_LOCK         = threading.Lock()
 _vs_sha          = ""
-_vs_cache        = None   # {"vessels": [...], "meta": {...}}
+_vs_cache        = None   # {"vessels": [...], "sources": {"mol": {...}, "tsuneishi": {...}}}
 _vs_fail         = {}     # ip -> [失敗時刻...]  （総当たり対策）
+_vs_fail_all     = []     # 全体の失敗時刻
 
 def _vs_empty():
-    return {"vessels": [], "meta": {}}
+    return {"vessels": [], "sources": {}}
 
 def _vs_load() -> dict:
     """メモリ → GitHub(非公開) → ローカルファイル の順で取得"""
@@ -713,8 +780,18 @@ def _vs_load() -> dict:
                 data = json.load(f)
         except Exception:
             data = None
-    _vs_cache = data if isinstance(data, dict) else _vs_empty()
+    _vs_cache = _vs_normalize(data) if isinstance(data, dict) else _vs_empty()
     return _vs_cache
+
+def _vs_normalize(d: dict) -> dict:
+    """旧形式（meta のみ・source なし）を sources 形式にそろえる"""
+    d.setdefault("vessels", [])
+    for v in d["vessels"]:
+        v.setdefault("source", "mol")
+    if "sources" not in d:
+        d["sources"] = {"mol": d["meta"]} if d.get("meta") else {}
+    d.pop("meta", None)
+    return d
 
 def _vs_push(data: dict):
     """非公開リポジトリに保存。失敗したら例外（取込を成功扱いにしない）"""
@@ -790,11 +867,14 @@ def vessels_login(body: VesselLogin, request: Request):
         raise HTTPException(status_code=503, detail="船データの閲覧パスワードが未設定です（管理者が VESSEL_PASSWORD を設定してください）")
     ip, now = _client_ip(request), time.time()
     fails = [t for t in _vs_fail.get(ip, []) if now - t < 600]
-    if len(fails) >= 5:
+    _vs_fail_all[:] = [t for t in _vs_fail_all if now - t < 600]
+    # IPごとの上限 + 全体の上限（IPを偽装した総当たりでも、短いパスワードを破られにくくする）
+    if len(fails) >= 5 or len(_vs_fail_all) >= 20:
         raise HTTPException(status_code=429, detail="試行回数が多すぎます。10分ほど待ってからやり直してください")
     if not hmac.compare_digest(body.password.encode("utf-8"), VESSEL_PASSWORD.encode("utf-8")):
         fails.append(now)
         _vs_fail[ip] = fails
+        _vs_fail_all.append(now)
         raise HTTPException(status_code=401, detail="パスワードが違います")
     _vs_fail.pop(ip, None)
     resp = JSONResponse({"ok": True})
@@ -814,7 +894,7 @@ def get_vessels(request: Request):
     _vs_require(request)
     with _VS_LOCK:
         d = _vs_load()
-    resp = JSONResponse({"vessels": d.get("vessels", []), "meta": d.get("meta", {})})
+    resp = JSONResponse({"vessels": d.get("vessels", []), "sources": d.get("sources", {})})
     resp.headers["Cache-Control"] = "no-store"
     return resp
 
@@ -822,12 +902,12 @@ def get_vessels(request: Request):
 async def import_vessels(request: Request, file: UploadFile = File(...)):
     _vs_require(request)
     filename = file.filename or ""
-    if not filename.lower().endswith(".xlsx"):
-        raise HTTPException(status_code=400, detail="拡張子が .xlsx のファイルを選んでください")
+    if not filename.lower().endswith((".xlsx", ".xlsm")):
+        raise HTTPException(status_code=400, detail="拡張子が .xlsx / .xlsm のファイルを選んでください")
     content = await file.read()
     if len(content) > _VESSEL_MAX_BYTES:
         raise HTTPException(status_code=413, detail="ファイルが大きすぎます（10MBまで）")
-    vessels, info = await asyncio.to_thread(_parse_vessel_workbook, content)
+    source, vessels, info = await asyncio.to_thread(_parse_vessel_workbook, content)
     if not vessels:
         raise HTTPException(status_code=400, detail="船のデータが1件も見つかりませんでした")
 
@@ -835,24 +915,29 @@ async def import_vessels(request: Request, file: UploadFile = File(...)):
         global _vs_cache
         with _VS_LOCK:
             cur = _vs_load()
-            old = {v.get("key"): v for v in cur.get("vessels", [])}
+            # 差分比較・置き換えは同じ種類（MOL／常石）の中だけで行う
+            same = [v for v in cur.get("vessels", []) if v.get("source", "mol") == source]
+            others = [v for v in cur.get("vessels", []) if v.get("source", "mol") != source]
+            old = {v.get("key"): v for v in same}
             changed = new = 0
             for v in vessels:
                 o = old.get(v["key"])
                 if o is None:
-                    if old:                      # 初回取込のときは「新規」扱いにしない
+                    if old:                      # その種類の初回取込のときは「新規」扱いにしない
                         v["is_new"] = True
                         new += 1
                 elif (o.get("delivery") or "") != (v["delivery"] or ""):
                     v["prev_delivery"] = o.get("delivery") or ""
                     changed += 1
-            data = {"vessels": vessels, "meta": {
+            sources = dict(cur.get("sources", {}))
+            sources[source] = {
                 "source_file": filename,
                 "sheet": info["sheet"],
                 "table_name": info["table_name"],
                 "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 "count": len(vessels),
-            }}
+            }
+            data = {"vessels": others + vessels, "sources": sources}
             _vs_push(data)       # 保存に成功してからメモリへ反映
             _vs_cache = data
             return changed, new
@@ -864,7 +949,8 @@ async def import_vessels(request: Request, file: UploadFile = File(...)):
 
     dated = sum(1 for v in vessels if v["delivery_date"])
     return {
-        "ok": True, "count": len(vessels), "dated": dated, "tbd": len(vessels) - dated,
+        "ok": True, "source": source, "label": _VESSEL_SOURCES[source],
+        "count": len(vessels), "dated": dated, "tbd": len(vessels) - dated,
         "changed": changed, "new": new,
         "sheet": info["sheet"], "table_name": info["table_name"],
     }
