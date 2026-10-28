@@ -15794,6 +15794,15 @@
       "day": 23,
       "content": "LC-A 竣工270108",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1879",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 30,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15817,7 +15826,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1879,
+  "next_id": 1880,
   "reminders": [
     {
       "id": "1",
