@@ -15812,6 +15812,15 @@
       "day": 2,
       "content": "NORDEN",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1882",
+      "year": 2026,
+      "month": 11,
+      "staff": "松永",
+      "day": 2,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -15835,7 +15844,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1882,
+  "next_id": 1883,
   "reminders": [
     {
       "id": "1",
