@@ -20,7 +20,7 @@ import base64
 import urllib.request
 import urllib.error
 import threading
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 import calendar
 try:
     import jpholiday
@@ -384,6 +384,23 @@ def get_schedule(year: int, month: int):
         "schedules": entries,
         "staff": data["staff"]
     }
+
+@app.get("/api/schedules/upcoming")
+def get_upcoming_schedules():
+    """今日（日本時間）以降の工事予定を返す。船の竣工日とのずれチェック用（予定は公開データのみ）"""
+    today = datetime.now(timezone(timedelta(hours=9))).date()
+    key = (today.year, today.month, today.day)
+    data = load_data()
+    out = [
+        {"id": s["id"], "year": s["year"], "month": s["month"], "day": s["day"],
+         "staff": s.get("staff", ""), "content": s.get("content", "")}
+        for s in data["schedules"]
+        if (s["year"], s["month"], s["day"]) >= key
+    ]
+    out.sort(key=lambda s: (s["year"], s["month"], s["day"]))
+    resp = JSONResponse({"today": today.isoformat(), "schedules": out})
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 @app.post("/api/schedule")
 async def create_schedule(item: ScheduleCreate):
