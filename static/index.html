@@ -363,6 +363,22 @@
     .vs-sub { font-size:10px; color:var(--text-muted); }
     .vs-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
     .vs-toolbar select, .vs-toolbar input[type=text] { padding:5px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; }
+    .vsw-item { padding:7px 0; border-bottom:1px solid var(--border); cursor:pointer; font-size:12px; }
+    .vsw-item:last-child { border-bottom:none; }
+    .vsw-item:hover { background:#f8fafc; }
+    .vsw-top { display:flex; align-items:center; gap:6px; }
+    .vsw-date { font-weight:700; color:var(--text); white-space:nowrap; }
+    .vsw-staff { color:var(--text-muted); font-size:11px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .vsw-content { color:var(--text); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .vsw-note { font-size:11px; margin-top:2px; line-height:1.4; }
+    .vsw-note.bad { color:#b91c1c; }
+    .vsw-note.chg { color:#b45309; }
+    .vsw-note.ok { color:var(--text-muted); }
+    .vsw-badge { font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; white-space:nowrap; color:#fff; }
+    .vsw-badge.bad { background:#dc2626; }
+    .vsw-badge.chg { background:#f59e0b; }
+    .vsw-badge.ok { background:#e2e8f0; color:#475569; }
+    .vsw-toggle { font-size:11px; color:var(--primary); cursor:pointer; margin-top:6px; display:inline-block; }
     .vs-meta { font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5; }
 
     /* ===== リマインドモーダル ===== */
@@ -480,6 +496,11 @@
 
     <!-- サイドパネル -->
     <div class="side-panel">
+      <div class="panel-card" id="vsWarnCard" style="display:none;">
+        <div class="panel-title">竣工日とのずれ <span id="vsWarnCount" class="vsw-badge bad" style="margin-left:4px;"></span></div>
+        <div id="vsWarnList"></div>
+      </div>
+
       <div class="panel-card">
         <div class="panel-title">新造船 竣工予定</div>
         <div id="vesselSideList" style="font-size:12px; color:var(--text-muted);">読み込み中...</div>
@@ -953,6 +974,7 @@ async function loadSchedule() {
     renderTable();
     renderStaffPanel();
     renderSummary();
+    if (vesselData && vesselData.loaded && !vesselData.locked) vsWarnRefresh();
   } catch (e) {
     document.getElementById('scheduleTable').innerHTML = `<div class="loading" style="color:#ef4444;">読み込みエラー: ${e.message}</div>`;
   }
@@ -2462,6 +2484,7 @@ async function loadVessels() {
     if (r.status === 401 || r.status === 503) {
       vesselData = { vessels: [], sources: {}, loaded: true, locked: r.status === 401 ? 'login' : 'unset' };
       renderVesselSide();
+      vsWarnRefresh();
       if (!document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
       return;
     }
@@ -2470,6 +2493,7 @@ async function loadVessels() {
     const changed = vsStamp(next) !== vsStamp(vesselData) || !vesselData.loaded || vesselData.locked;
     vesselData = { ...next, loaded: true };
     renderVesselSide();
+    vsWarnRefresh();
     if (changed && !document.getElementById('vesselModal').classList.contains('hidden')) renderVesselModal();
   } catch (e) {
     const el = document.getElementById('vesselSideList');
@@ -2649,6 +2673,131 @@ async function uploadVesselFile(input) {
     renderVesselModal();
     showToast(e.message || '取り込みに失敗しました', 'error');
   }
+}
+
+// ===== 工事予定と竣工日のずれ警告 =====
+// 工事予定(自由記述)の内容に船名・船番が含まれていれば、その船の竣工日と突き合わせる。
+// 竣工データは機密のため、パスワード認証済みのときだけブラウザ内で照合する。
+let vsWarnShowAll = false;
+let vsWarnBusy = false;
+function vsNorm(t) { return String(t || '').normalize('NFKC').toUpperCase().replace(/[\s\p{P}\p{S}]/gu, ''); }
+function vsTokens(v) {
+  const base = String(v.hull_no || '').normalize('NFKC').replace(/[(（][^)）]*[)）]/g, '');
+  const toks = vsNorm(base).match(/[A-Z]{0,3}\d{3,}[A-Z]?/g) || [];
+  return toks.filter(t => t.length >= 4);
+}
+function vsHasToken(text, tok) {
+  let i = text.indexOf(tok);
+  while (i >= 0) {
+    const before = text[i - 1], after = text[i + tok.length];
+    if (!(before && /\d/.test(before)) && !(after && /\d/.test(after))) return true;
+    i = text.indexOf(tok, i + 1);
+  }
+  return false;
+}
+function vsBuildMatchers(vessels) {
+  return vessels.map(v => {
+    const nm = (v.name && v.name !== '未定') ? vsNorm(v.name) : '';
+    return { v, name: nm.length >= 4 ? nm : '', toks: vsTokens(v) };
+  }).filter(m => m.name || m.toks.length);
+}
+function vsMatchVessel(content, matchers) {
+  const t = vsNorm(content);
+  if (!t) return null;
+  const hit = matchers.filter(m => (m.name && t.includes(m.name)) || m.toks.some(k => vsHasToken(t, k)));
+  if (!hit.length) return null;
+  const keys = new Set(hit.map(m => m.v.key));
+  return keys.size === 1 ? hit[0].v : null; // 複数の船に当たるものは誤判定を避けて対象外
+}
+function vsIso(y, m, d) { return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`; }
+
+function vsComputeWarnings(schedules, vessels) {
+  const matchers = vsBuildMatchers(vessels);
+  const groups = new Map();
+  for (const s of schedules) {
+    const v = vsMatchVessel(s.content, matchers);
+    if (!v) continue;
+    const k = `${v.key}\u0001${s.staff}\u0001${s.content}`;
+    if (!groups.has(k)) groups.set(k, { v, staff: s.staff, content: s.content, dates: [] });
+    groups.get(k).dates.push(vsIso(s.year, s.month, s.day));
+  }
+  const rows = [];
+  for (const g of groups.values()) {
+    g.dates.sort();
+    const first = g.dates[0], last = g.dates[g.dates.length - 1];
+    const dd = g.v.delivery_date;
+    const changed = g.v.prev_delivery !== undefined;
+    let level = 'ok', note = '';
+    if (dd && last > dd) {
+      const late = Math.round((vsParseISO(last) - vsParseISO(dd)) / 86400000);
+      level = 'bad';
+      note = `竣工日(${vsFmtShort(dd)})より${late}日後に予定されています`;
+    } else if (changed) {
+      level = 'chg';
+      note = `竣工日が変更されました（前回: ${g.v.prev_delivery || '未定'} → 今回: ${dd ? vsFmtShort(dd) : (g.v.delivery || '未定')}）。日程の見直しが必要か確認してください`;
+    } else if (dd) {
+      const gap = Math.round((vsParseISO(dd) - vsParseISO(first)) / 86400000);
+      note = `竣工まであと${vsDaysLeft(dd)}日（竣工日 ${vsFmtShort(dd)} / 工事日はその${gap}日前）`;
+    } else {
+      note = '竣工日が未定のため比較できません';
+    }
+    if (level === 'bad' && changed) note += `（竣工日は変更あり: 前回 ${g.v.prev_delivery || '未定'}）`;
+    rows.push({ level, note, first, last, staff: g.staff, content: g.content, vessel: g.v });
+  }
+  const order = { bad: 0, chg: 1, ok: 2 };
+  rows.sort((a, b) => order[a.level] - order[b.level] || (a.first < b.first ? -1 : a.first > b.first ? 1 : 0));
+  return rows;
+}
+
+function renderVsWarnings(rows) {
+  const card = document.getElementById('vsWarnCard');
+  if (!card) return;
+  if (rows === null) { card.style.display = 'none'; return; }
+  const warns = rows.filter(r => r.level !== 'ok');
+  const oks = rows.filter(r => r.level === 'ok');
+  if (!warns.length && !oks.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const cnt = document.getElementById('vsWarnCount');
+  cnt.textContent = warns.length ? `${warns.length}件` : '';
+  cnt.style.display = warns.length ? '' : 'none';
+  const shown = vsWarnShowAll ? rows : warns;
+  const label = { bad: '竣工後', chg: '要確認', ok: '' };
+  let html = shown.map(r => {
+    const range = r.first === r.last ? vsFmtShort(r.first) : `${vsFmtShort(r.first)}〜${vsFmtShort(r.last)}`;
+    return `<div class="vsw-item" data-date="${r.first}" onclick="vsWarnJump('${r.first}')" title="${escHtml(r.content)}">
+      <div class="vsw-top"><span class="vsw-date">${range}</span><span class="vsw-staff">${escHtml(r.staff || '')}</span>${label[r.level] ? `<span class="vsw-badge ${r.level}">${label[r.level]}</span>` : ''}</div>
+      <div class="vsw-content">${escHtml(r.content)}</div>
+      <div class="vsw-note ${r.level}">${escHtml(vsName(r.vessel))}：${escHtml(r.note)}</div>
+    </div>`;
+  }).join('');
+  if (!warns.length) html = '<div style="font-size:12px;color:#15803d;">ずれはありません（竣工日と照合できた予定 ' + oks.length + '件）</div>' + html;
+  if (oks.length) html += `<span class="vsw-toggle" onclick="vsWarnToggle()">${vsWarnShowAll ? '問題のない予定を隠す' : `問題のない予定も表示（${oks.length}件）`}</span>`;
+  html += '<div class="vs-meta">工事内容に船名・船番が書かれた予定だけ照合します。</div>';
+  document.getElementById('vsWarnList').innerHTML = html;
+}
+let _vsWarnRows = null;
+function vsWarnToggle() { vsWarnShowAll = !vsWarnShowAll; renderVsWarnings(_vsWarnRows); }
+function vsWarnJump(iso) {
+  const [y, m] = iso.split('-').map(Number);
+  currentYear = y; currentMonth = m;
+  loadSchedule();
+}
+
+async function vsWarnRefresh() {
+  if (vsWarnBusy) return;
+  if (!vesselData || !vesselData.loaded || vesselData.locked || !(vesselData.vessels || []).length) {
+    _vsWarnRows = null; renderVsWarnings(null); return;
+  }
+  vsWarnBusy = true;
+  try {
+    const r = await fetch('/api/schedules/upcoming', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    _vsWarnRows = vsComputeWarnings(j.schedules || [], vesselData.vessels);
+    renderVsWarnings(_vsWarnRows);
+  } catch (e) {
+    console.warn('vsWarnRefresh', e);
+  } finally { vsWarnBusy = false; }
 }
 
 // ===== 起動 =====
