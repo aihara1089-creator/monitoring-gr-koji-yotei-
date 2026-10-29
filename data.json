@@ -15803,6 +15803,15 @@
       "day": 9,
       "content": "テレコムセンター面談16:30~",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1881",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 2,
+      "content": "NORDEN",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15826,7 +15835,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1881,
+  "next_id": 1882,
   "reminders": [
     {
       "id": "1",
