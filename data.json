@@ -15830,6 +15830,15 @@
       "day": 30,
       "content": "在宅",
       "color": "#ec4899"
+    },
+    {
+      "id": "1884",
+      "year": 2026,
+      "month": 11,
+      "staff": "川北",
+      "day": 4,
+      "content": "年休　通院",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15852,7 +15861,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1884,
+  "next_id": 1885,
   "reminders": [
     {
       "id": "1",
