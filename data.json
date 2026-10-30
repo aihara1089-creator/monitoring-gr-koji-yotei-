@@ -15839,6 +15839,15 @@
       "day": 4,
       "content": "年休　通院",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1885",
+      "year": 2026,
+      "month": 12,
+      "staff": "松永",
+      "day": 10,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15861,7 +15870,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1885,
+  "next_id": 1886,
   "reminders": [
     {
       "id": "1",
