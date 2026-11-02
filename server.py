@@ -386,10 +386,13 @@ def get_schedule(year: int, month: int):
     }
 
 @app.get("/api/schedules/upcoming")
-def get_upcoming_schedules():
-    """今日（日本時間）以降の工事予定を返す。船の竣工日とのずれチェック用（予定は公開データのみ）"""
+def get_upcoming_schedules(back: int = 0):
+    """今日（日本時間）以降の工事予定を返す。船の竣工日とのずれチェック用（予定は公開データのみ）。
+    back=N を付けると N 日前（最大400）からの予定も返す（「予定が登録済みか」の判定用）"""
     today = datetime.now(timezone(timedelta(hours=9))).date()
-    key = (today.year, today.month, today.day)
+    back = max(0, min(int(back), 400))
+    start = today - timedelta(days=back)
+    key = (start.year, start.month, start.day)
     data = load_data()
     out = [
         {"id": s["id"], "year": s["year"], "month": s["month"], "day": s["day"],
@@ -401,6 +404,7 @@ def get_upcoming_schedules():
     resp = JSONResponse({"today": today.isoformat(), "schedules": out})
     resp.headers["Cache-Control"] = "no-store"
     return resp
+
 
 @app.post("/api/schedule")
 async def create_schedule(item: ScheduleCreate):

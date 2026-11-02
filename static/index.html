@@ -378,6 +378,7 @@
     .vsw-badge.bad { background:#dc2626; }
     .vsw-badge.chg { background:#f59e0b; }
     .vsw-badge.ok { background:#e2e8f0; color:#475569; }
+    .vsw-sel { font-size:11px; padding:1px 4px; border:1px solid var(--border); border-radius:4px; margin-left:auto; }
     .vsw-toggle { font-size:11px; color:var(--primary); cursor:pointer; margin-top:6px; display:inline-block; }
     .vs-meta { font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5; }
 
@@ -499,6 +500,19 @@
       <div class="panel-card" id="vsWarnCard" style="display:none;">
         <div class="panel-title">竣工日とのずれ <span id="vsWarnCount" class="vsw-badge bad" style="margin-left:4px;"></span></div>
         <div id="vsWarnList"></div>
+      </div>
+
+      <div class="panel-card" id="vsChgCard" style="display:none;">
+        <div class="panel-title">竣工日が変わった船 <span id="vsChgCount" class="vsw-badge chg" style="margin-left:4px;"></span></div>
+        <div id="vsChgList"></div>
+      </div>
+
+      <div class="panel-card" id="vsMissCard" style="display:none;">
+        <div class="panel-title">工事予定が未登録の船 <span id="vsMissCount" class="vsw-badge bad" style="margin-left:4px;"></span>
+          <select id="vsMissDays" class="vsw-sel" onchange="vsMissSetDays(this.value)" title="竣工までの日数">
+            <option value="30">30日以内</option><option value="60">60日以内</option><option value="90">90日以内</option>
+          </select></div>
+        <div id="vsMissList"></div>
       </div>
 
       <div class="panel-card">
@@ -2783,18 +2797,130 @@ function vsWarnJump(iso) {
   loadSchedule();
 }
 
-async function vsWarnRefresh() {
-  if (vsWarnBusy) return;
+function vsMatchAll(content, matchers) {
+  const t = vsNorm(content);
+  if (!t) return [];
+  const seen = new Set(), out = [];
+  for (const m of matchers) {
+    if (seen.has(m.v.key)) continue;
+    if ((m.name && t.includes(m.name)) || m.toks.some(k => vsHasToken(t, k))) { seen.add(m.v.key); out.push(m.v); }
+  }
+  return out;
+}
+
+// 竣工日が変わった船／工事予定が未登録の船を計算する
+// allSchedules: 過去90日〜未来の予定。todayIso 以降の予定の担当者を「連絡先」にする
+function vsComputeExtras(allSchedules, todayIso, vessels, windowDays) {
+  const matchers = vsBuildMatchers(vessels);
+  const matchable = new Set(matchers.map(m => m.v.key));
+  const registered = new Set();
+  const info = new Map(); // key -> { staff: Map, first }
+  for (const s of allSchedules) {
+    const hits = vsMatchAll(s.content, matchers);
+    if (!hits.length) continue;
+    const iso = vsIso(s.year, s.month, s.day);
+    for (const v of hits) {
+      registered.add(v.key);
+      if (iso < todayIso) continue;
+      if (!info.has(v.key)) info.set(v.key, { staff: new Map(), first: iso, count: 0 });
+      const o = info.get(v.key);
+      o.staff.set(s.staff || '', (o.staff.get(s.staff || '') || 0) + 1);
+      o.count++;
+      if (iso < o.first) o.first = iso;
+    }
+  }
+  const dateOf = v => v.delivery_date || '9999-99-99';
+  const changed = vessels.filter(v => v.prev_delivery !== undefined)
+    .map(v => ({ v, info: info.get(v.key) || null }))
+    .sort((a, b) => dateOf(a.v) < dateOf(b.v) ? -1 : dateOf(a.v) > dateOf(b.v) ? 1 : 0);
+  const missing = vessels.filter(v => v.delivery_date && matchable.has(v.key) && !registered.has(v.key)
+      && vsDaysLeft(v.delivery_date) >= 0 && vsDaysLeft(v.delivery_date) <= windowDays)
+    .sort(vsSortByDate);
+  return { changed, missing };
+}
+
+function vsParseLoose(txt) {
+  const m = String(txt || '').match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  return m ? vsIso(+m[1], +m[2], +m[3]) : null;
+}
+function vsDiffText(prev, nowIso) {
+  const p = vsParseLoose(prev);
+  if (!p || !nowIso) return '';
+  const d = Math.round((vsParseISO(nowIso) - vsParseISO(p)) / 86400000);
+  return d === 0 ? '' : d > 0 ? `（${d}日遅れ）` : `（${-d}日前倒し）`;
+}
+
+function renderVsChanged(list) {
+  const card = document.getElementById('vsChgCard');
+  if (!card) return;
+  if (!list || !list.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.getElementById('vsChgCount').textContent = `${list.length}件`;
+  let html = list.map(({ v, info }) => {
+    const now = v.delivery_date ? vsFmtShort(v.delivery_date) : (v.delivery || '未定');
+    const staff = info ? [...info.staff.keys()].filter(Boolean).join('、') : '';
+    const who = info
+      ? `<div class="vsw-note chg">工事予定あり: ${escHtml(staff || '担当者未設定')}（${info.count}件・初日 ${vsFmtShort(info.first)}）→ 日程の見直しを連絡</div>`
+      : '<div class="vsw-note ok">今後の工事予定は未登録</div>';
+    const click = info ? `vsWarnJump('${info.first}')` : `vsOpenVesselFor(${JSON.stringify(vsName(v)).replace(/"/g, '&quot;')})`;
+    return `<div class="vsw-item" onclick="${click}">
+      <div class="vsw-top"><span class="vsw-date">${escHtml(vsName(v))}</span><span class="vsw-staff">${escHtml(vsSrcLabel(v))}</span></div>
+      <div class="vsw-content">${escHtml(v.prev_delivery || '未定')} → ${escHtml(now)} ${vsDiffText(v.prev_delivery, v.delivery_date)}</div>
+      ${who}
+    </div>`;
+  }).join('');
+  html += '<div class="vs-meta">Excelを取り込み直したときに、前回から竣工日が変わった船です。次回の取込で更新されます。</div>';
+  document.getElementById('vsChgList').innerHTML = html;
+}
+
+function renderVsMissing(list, windowDays) {
+  const card = document.getElementById('vsMissCard');
+  if (!card) return;
+  if (list === null) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const sel = document.getElementById('vsMissDays');
+  if (sel) sel.value = String(windowDays);
+  const cnt = document.getElementById('vsMissCount');
+  cnt.textContent = list.length ? `${list.length}件` : '';
+  cnt.style.display = list.length ? '' : 'none';
+  let html = list.length ? list.map(v => `
+    <div class="vsw-item" onclick="vsOpenVesselFor(${JSON.stringify(vsName(v)).replace(/"/g, '&quot;')})" title="${escHtml(v.yard || '')}">
+      <div class="vsw-top"><span class="vsw-date">${vsFmtShort(v.delivery_date)}</span><span class="vsw-staff">${escHtml(vsSideName(v))}</span>${vsBadge(v.delivery_date)}</div>
+    </div>`).join('')
+    : `<div style="font-size:12px;color:#15803d;">竣工${windowDays}日以内で、予定が未登録の船はありません</div>`;
+  html += '<div class="vs-meta">予定の工事内容に船名・船番が1度も出てこない船です（直近90日の予定も含めて判定）。船名か船番を予定に書くと一覧から消えます。</div>';
+  document.getElementById('vsMissList').innerHTML = html;
+}
+
+function vsMissDays() { const n = parseInt(localStorage.getItem('vsMissDays') || '60', 10); return [30, 60, 90].includes(n) ? n : 60; }
+function vsMissSetDays(v) { try { localStorage.setItem('vsMissDays', v); } catch (e) {} vsWarnRefresh(true); }
+function vsOpenVesselFor(name) {
+  vesselQuery = name; vesselFilter = 'all'; vesselSource = 'all';
+  const q = document.getElementById('vesselSearch'); if (q) q.value = name;
+  const f = document.getElementById('vesselFilter'); if (f) f.value = 'all';
+  const sc = document.getElementById('vesselSource'); if (sc) sc.value = 'all';
+  openVesselModal();
+}
+
+async function vsWarnRefresh(force) {
+  if (vsWarnBusy && !force) return;
   if (!vesselData || !vesselData.loaded || vesselData.locked || !(vesselData.vessels || []).length) {
-    _vsWarnRows = null; renderVsWarnings(null); return;
+    _vsWarnRows = null; renderVsWarnings(null); renderVsChanged(null); renderVsMissing(null, vsMissDays()); return;
   }
   vsWarnBusy = true;
   try {
-    const r = await fetch('/api/schedules/upcoming', { cache: 'no-store' });
+    const r = await fetch('/api/schedules/upcoming?back=90', { cache: 'no-store' });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
-    _vsWarnRows = vsComputeWarnings(j.schedules || [], vesselData.vessels);
+    const all = j.schedules || [];
+    const todayIso = j.today;
+    const upcoming = all.filter(s => vsIso(s.year, s.month, s.day) >= todayIso);
+    _vsWarnRows = vsComputeWarnings(upcoming, vesselData.vessels);
     renderVsWarnings(_vsWarnRows);
+    const days = vsMissDays();
+    const ex = vsComputeExtras(all, todayIso, vesselData.vessels, days);
+    renderVsChanged(ex.changed);
+    renderVsMissing(ex.missing, days);
   } catch (e) {
     console.warn('vsWarnRefresh', e);
   } finally { vsWarnBusy = false; }
