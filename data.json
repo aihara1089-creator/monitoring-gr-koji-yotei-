@@ -15857,6 +15857,15 @@
       "day": 3,
       "content": "入院（手術）",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1894",
+      "year": 2026,
+      "month": 11,
+      "staff": "櫻田",
+      "day": 4,
+      "content": "出張",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15879,7 +15888,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1894,
+  "next_id": 1895,
   "reminders": [
     {
       "id": "1",
