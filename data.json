@@ -15866,6 +15866,15 @@
       "day": 4,
       "content": "出張",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1895",
+      "year": 2026,
+      "month": 11,
+      "staff": "櫻田",
+      "day": 5,
+      "content": "出張",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15888,7 +15897,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1895,
+  "next_id": 1896,
   "reminders": [
     {
       "id": "1",
