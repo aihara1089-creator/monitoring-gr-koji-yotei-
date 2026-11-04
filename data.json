@@ -15911,6 +15911,33 @@
       "day": 16,
       "content": "SC483福山入港",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1902",
+      "year": 2026,
+      "month": 11,
+      "staff": "村上",
+      "day": 6,
+      "content": "KYBELE HORIZON 11/4-7\n停電対応・訪船調査\n大分港",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "1903",
+      "year": 2026,
+      "month": 11,
+      "staff": "村上",
+      "day": 7,
+      "content": "KYBELE HORIZON 11/4-7\n停電対応・訪船調査\n大分港",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "1904",
+      "year": 2026,
+      "month": 11,
+      "staff": "村上",
+      "day": 8,
+      "content": "KYBELE HORIZON 11/4-7\n停電対応・訪船調査\n大分港",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -15933,7 +15960,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1902,
+  "next_id": 1905,
   "reminders": [
     {
       "id": "1",
