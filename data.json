@@ -15911,6 +15911,15 @@
       "day": 12,
       "content": "常石商品企画・中国総業訪問",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1901",
+      "year": 2026,
+      "month": 11,
+      "staff": "常石標準搭載",
+      "day": 16,
+      "content": "SC483福山入港",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -15933,7 +15942,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1901,
+  "next_id": 1902,
   "reminders": [
     {
       "id": "1",
