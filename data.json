@@ -15893,6 +15893,15 @@
       "day": 8,
       "content": "KYBELE HORIZON 11/4-7\n停電対応・訪船調査\n大分港",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1899",
+      "year": 2026,
+      "month": 11,
+      "staff": "野村",
+      "day": 12,
+      "content": "常石商品企画・中国総業訪問",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15915,7 +15924,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1899,
+  "next_id": 1900,
   "reminders": [
     {
       "id": "1",
