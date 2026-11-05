@@ -15956,6 +15956,15 @@
       "day": 16,
       "content": "SC462竣工",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1912",
+      "year": 2026,
+      "month": 11,
+      "staff": "常石標準搭載",
+      "day": 17,
+      "content": "SS393 竣工",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -15978,7 +15987,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1912,
+  "next_id": 1913,
   "reminders": [
     {
       "id": "1",
