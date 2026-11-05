@@ -15938,6 +15938,15 @@
       "day": 6,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "1910",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 19,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15960,7 +15969,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1910,
+  "next_id": 1911,
   "reminders": [
     {
       "id": "1",
