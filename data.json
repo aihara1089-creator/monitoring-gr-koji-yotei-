@@ -15911,6 +15911,42 @@
       "day": 7,
       "content": "KYBELE HORIZON 11/4-7\n停電対応・訪船調査\n大分港",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1905",
+      "year": 2026,
+      "month": 12,
+      "staff": "川北",
+      "day": 1,
+      "content": "入院（手術）",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1906",
+      "year": 2026,
+      "month": 12,
+      "staff": "川北",
+      "day": 2,
+      "content": "入院（手術）",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1907",
+      "year": 2026,
+      "month": 12,
+      "staff": "川北",
+      "day": 3,
+      "content": "入院（手術）",
+      "color": "#fca5a5"
+    },
+    {
+      "id": "1908",
+      "year": 2026,
+      "month": 12,
+      "staff": "川北",
+      "day": 4,
+      "content": "入院（手術）",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -15933,7 +15969,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1905,
+  "next_id": 1909,
   "reminders": [
     {
       "id": "1",
