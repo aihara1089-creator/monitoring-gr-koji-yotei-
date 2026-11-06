@@ -16100,6 +16100,15 @@
       "day": 9,
       "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
       "color": "#f97316"
+    },
+    {
+      "id": "1930",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 1,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
     }
   ],
   "staff": [
@@ -16122,7 +16131,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1930,
+  "next_id": 1931,
   "reminders": [
     {
       "id": "1",
