@@ -16046,6 +16046,15 @@
       "day": 8,
       "content": "SUNRISE ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1923",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 4,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16068,7 +16077,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1923,
+  "next_id": 1924,
   "reminders": [
     {
       "id": "1",
