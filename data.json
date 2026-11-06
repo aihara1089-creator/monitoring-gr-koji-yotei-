@@ -16028,6 +16028,15 @@
       "day": 20,
       "content": "CARNATION ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1921",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 1,
+      "content": "SUPREME ACE",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16050,7 +16059,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1921,
+  "next_id": 1922,
   "reminders": [
     {
       "id": "1",
