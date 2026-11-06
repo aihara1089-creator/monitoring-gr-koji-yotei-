@@ -16145,6 +16145,60 @@
       "day": 5,
       "content": "ASIAN PROGRESS VI",
       "color": "#f97316"
+    },
+    {
+      "id": "1936",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 1,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
+    },
+    {
+      "id": "1937",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 2,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
+    },
+    {
+      "id": "1938",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 3,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
+    },
+    {
+      "id": "1939",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 4,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
+    },
+    {
+      "id": "1940",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 5,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
+    },
+    {
+      "id": "1941",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 6,
+      "content": "【要確認】ASIAN PROGRESS VI",
+      "color": "#f97316"
     }
   ],
   "staff": [
@@ -16167,7 +16221,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1936,
+  "next_id": 1942,
   "reminders": [
     {
       "id": "1",
