@@ -16019,6 +16019,15 @@
       "day": 1,
       "content": "SS388 試運転",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1920",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 20,
+      "content": "CARNATION ACE",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16041,7 +16050,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1920,
+  "next_id": 1921,
   "reminders": [
     {
       "id": "1",
