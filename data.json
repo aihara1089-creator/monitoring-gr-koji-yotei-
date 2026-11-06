@@ -16172,6 +16172,42 @@
       "day": 30,
       "content": "在宅（岡山）",
       "color": "#fdba74"
+    },
+    {
+      "id": "1943",
+      "year": 2026,
+      "month": 12,
+      "staff": "井手",
+      "day": 1,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1944",
+      "year": 2026,
+      "month": 12,
+      "staff": "井手",
+      "day": 2,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1945",
+      "year": 2026,
+      "month": 12,
+      "staff": "井手",
+      "day": 3,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
+    },
+    {
+      "id": "1946",
+      "year": 2026,
+      "month": 12,
+      "staff": "井手",
+      "day": 4,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16194,7 +16230,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1943,
+  "next_id": 1947,
   "reminders": [
     {
       "id": "1",
