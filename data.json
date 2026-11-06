@@ -16109,6 +16109,15 @@
       "day": 12,
       "content": "CERULEAN ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1931",
+      "year": 2027,
+      "month": 2,
+      "staff": "サイバーセキュリティー",
+      "day": 1,
+      "content": "ASIAN PROGRESS VI",
+      "color": "#f97316"
     }
   ],
   "staff": [
@@ -16131,7 +16140,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1931,
+  "next_id": 1932,
   "reminders": [
     {
       "id": "1",
