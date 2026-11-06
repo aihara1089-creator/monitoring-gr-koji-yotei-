@@ -16037,6 +16037,15 @@
       "day": 1,
       "content": "SUPREME ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1922",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 8,
+      "content": "SUNRISE ACE",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16059,7 +16068,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1922,
+  "next_id": 1923,
   "reminders": [
     {
       "id": "1",
