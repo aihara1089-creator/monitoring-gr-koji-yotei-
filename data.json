@@ -16046,6 +16046,60 @@
       "day": 8,
       "content": "SUNRISE ACE",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1924",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 4,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#f97316"
+    },
+    {
+      "id": "1925",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 5,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#f97316"
+    },
+    {
+      "id": "1926",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 6,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#f97316"
+    },
+    {
+      "id": "1927",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 7,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#f97316"
+    },
+    {
+      "id": "1928",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 8,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#f97316"
+    },
+    {
+      "id": "1929",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 9,
+      "content": "【要確認】AQUAMARINE PROGRESSⅡ、PHOENIX JAMNAGAR",
+      "color": "#f97316"
     }
   ],
   "staff": [
@@ -16068,7 +16122,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1924,
+  "next_id": 1930,
   "reminders": [
     {
       "id": "1",
