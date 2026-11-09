@@ -16262,6 +16262,15 @@
       "day": 15,
       "content": "大島11187／seawise (NIOVIS) \n　テラテック\n11/18竣工",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "1957",
+      "year": 2026,
+      "month": 12,
+      "staff": "石井",
+      "day": 7,
+      "content": "S1639　搭載工事",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16284,7 +16293,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1957,
+  "next_id": 1958,
   "reminders": [
     {
       "id": "1",
