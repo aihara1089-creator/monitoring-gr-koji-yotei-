@@ -16316,6 +16316,42 @@
       "day": 5,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1964",
+      "year": 2027,
+      "month": 1,
+      "staff": "TSSD",
+      "day": 12,
+      "content": "RURI WAVE",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1965",
+      "year": 2027,
+      "month": 1,
+      "staff": "TSSD",
+      "day": 13,
+      "content": "RURI WAVE",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1966",
+      "year": 2027,
+      "month": 1,
+      "staff": "TSSD",
+      "day": 14,
+      "content": "RURI WAVE",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1967",
+      "year": 2027,
+      "month": 1,
+      "staff": "TSSD",
+      "day": 15,
+      "content": "RURI WAVE",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16338,7 +16374,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1964,
+  "next_id": 1968,
   "reminders": [
     {
       "id": "1",
