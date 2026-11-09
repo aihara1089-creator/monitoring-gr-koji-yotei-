@@ -16217,6 +16217,15 @@
       "day": 28,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "1948",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 17,
+      "content": "LC-A連携",
+      "color": "#86efac"
     }
   ],
   "staff": [
@@ -16239,7 +16248,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1948,
+  "next_id": 1949,
   "reminders": [
     {
       "id": "1",
