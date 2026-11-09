@@ -16208,6 +16208,15 @@
       "day": 4,
       "content": "在宅（岡山）",
       "color": "#fdba74"
+    },
+    {
+      "id": "1947",
+      "year": 2026,
+      "month": 12,
+      "staff": "定免",
+      "day": 28,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -16230,7 +16239,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1947,
+  "next_id": 1948,
   "reminders": [
     {
       "id": "1",
