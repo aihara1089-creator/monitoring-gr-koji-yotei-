@@ -16235,6 +16235,15 @@
       "day": 18,
       "content": "LC-A連携",
       "color": "#86efac"
+    },
+    {
+      "id": "1950",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 10,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16257,7 +16266,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1950,
+  "next_id": 1951,
   "reminders": [
     {
       "id": "1",
