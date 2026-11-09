@@ -16253,6 +16253,15 @@
       "day": 13,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "1952",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 18,
+      "content": "大島11187／seawise (NIOVIS) \n　テラテック\n11/18竣工",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -16275,7 +16284,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1952,
+  "next_id": 1953,
   "reminders": [
     {
       "id": "1",
