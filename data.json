@@ -16433,6 +16433,33 @@
       "day": 25,
       "content": "CAPILANO SUN/武田",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1994",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 15,
+      "content": "CARNATION ACE/吉田",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1995",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 16,
+      "content": "CARNATION ACE/吉田",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1996",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 17,
+      "content": "CARNATION ACE/吉田",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16455,7 +16482,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1994,
+  "next_id": 1997,
   "reminders": [
     {
       "id": "1",
