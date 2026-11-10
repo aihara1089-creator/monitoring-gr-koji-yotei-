@@ -16489,38 +16489,11 @@
       "color": "#3b82f6"
     },
     {
-      "id": "2009",
+      "id": "2010",
       "year": 2026,
       "month": 10,
       "staff": "サイバーセキュリティー",
       "day": 20,
-      "content": "CENTAURUS DREAM",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "2012",
-      "year": 2026,
-      "month": 10,
-      "staff": "サイバーセキュリティー",
-      "day": 20,
-      "content": "CENTAURUS DREAM",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "2013",
-      "year": 2026,
-      "month": 10,
-      "staff": "サイバーセキュリティー",
-      "day": 21,
-      "content": "CENTAURUS DREAM",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "2014",
-      "year": 2026,
-      "month": 10,
-      "staff": "サイバーセキュリティー",
-      "day": 22,
       "content": "CENTAURUS DREAM",
       "color": "#3b82f6"
     }
@@ -16545,7 +16518,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2015,
+  "next_id": 2012,
   "reminders": [
     {
       "id": "1",
