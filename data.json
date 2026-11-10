@@ -15409,20 +15409,20 @@
       "color": "#3b82f6"
     },
     {
+      "id": "1828",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 23,
+      "content": "CAPILANO SUN",
+      "color": "#3b82f6"
+    },
+    {
       "id": "1829",
       "year": 2026,
       "month": 11,
       "staff": "サイバーセキュリティー",
       "day": 24,
-      "content": "CAPILANO SUN",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "1830",
-      "year": 2026,
-      "month": 11,
-      "staff": "サイバーセキュリティー",
-      "day": 25,
       "content": "CAPILANO SUN",
       "color": "#3b82f6"
     },
@@ -16433,33 +16433,6 @@
       "day": 25,
       "content": "WARRAMBOO/三橋",
       "color": "#3b82f6"
-    },
-    {
-      "id": "1991",
-      "year": 2026,
-      "month": 11,
-      "staff": "サイバーセキュリティー",
-      "day": 23,
-      "content": "CAPILANO SUN/武田",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "1992",
-      "year": 2026,
-      "month": 11,
-      "staff": "サイバーセキュリティー",
-      "day": 24,
-      "content": "CAPILANO SUN/武田",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "1993",
-      "year": 2026,
-      "month": 11,
-      "staff": "サイバーセキュリティー",
-      "day": 25,
-      "content": "CAPILANO SUN/武田",
-      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16482,7 +16455,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1994,
+  "next_id": 1991,
   "reminders": [
     {
       "id": "1",
