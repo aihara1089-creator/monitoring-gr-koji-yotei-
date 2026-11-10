@@ -15490,6 +15490,24 @@
       "color": "#8b5cf6"
     },
     {
+      "id": "1850",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 9,
+      "content": "OPAL ACE　未定",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1851",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 10,
+      "content": "OPAL ACE",
+      "color": "#3b82f6"
+    },
+    {
       "id": "1852",
       "year": 2026,
       "month": 10,
@@ -15901,15 +15919,6 @@
       "staff": "常石標準搭載",
       "day": 1,
       "content": "SS388 試運転",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "1921",
-      "year": 2026,
-      "month": 12,
-      "staff": "サイバーセキュリティー",
-      "day": 1,
-      "content": "SUPREME ACE",
       "color": "#3b82f6"
     },
     {
@@ -16478,6 +16487,33 @@
       "day": 15,
       "content": "SUPREME ACE/吉田",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2003",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 9,
+      "content": "SUNRISE ACE/伊東",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2004",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 10,
+      "content": "SUNRISE ACE/伊東",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2005",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 11,
+      "content": "SUNRISE ACE/伊東",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16500,7 +16536,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2003,
+  "next_id": 2006,
   "reminders": [
     {
       "id": "1",
