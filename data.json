@@ -16433,6 +16433,15 @@
       "day": 26,
       "content": "OXEXPO",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1985",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 12,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16455,7 +16464,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1985,
+  "next_id": 1986,
   "reminders": [
     {
       "id": "1",
