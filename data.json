@@ -16487,6 +16487,24 @@
       "day": 13,
       "content": "SUPREME ACE/吉田",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2001",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 14,
+      "content": "SUPREME ACE/吉田",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2002",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 15,
+      "content": "SUPREME ACE/吉田",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16509,7 +16527,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2001,
+  "next_id": 2003,
   "reminders": [
     {
       "id": "1",
