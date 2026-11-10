@@ -16433,6 +16433,33 @@
       "day": 18,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "1988",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 23,
+      "content": "WARRAMBOO/三橋",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1989",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 24,
+      "content": "WARRAMBOO/三橋",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "1990",
+      "year": 2026,
+      "month": 11,
+      "staff": "サイバーセキュリティー",
+      "day": 25,
+      "content": "WARRAMBOO/三橋",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16455,7 +16482,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1988,
+  "next_id": 1991,
   "reminders": [
     {
       "id": "1",
