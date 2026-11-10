@@ -16433,6 +16433,15 @@
       "day": 28,
       "content": "納会",
       "color": "#3b82f6"
+    },
+    {
+      "id": "1987",
+      "year": 2026,
+      "month": 12,
+      "staff": "相原",
+      "day": 18,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16455,7 +16464,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 1987,
+  "next_id": 1988,
   "reminders": [
     {
       "id": "1",
