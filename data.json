@@ -16487,6 +16487,33 @@
       "day": 11,
       "content": "SUNRISE ACE/伊東",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2006",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 20,
+      "content": "CENTAURUS DREAM",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2007",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 21,
+      "content": "CENTAURUS DREAM",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2008",
+      "year": 2026,
+      "month": 10,
+      "staff": "サイバーセキュリティー",
+      "day": 22,
+      "content": "CENTAURUS DREAM",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16509,7 +16536,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2006,
+  "next_id": 2009,
   "reminders": [
     {
       "id": "1",
