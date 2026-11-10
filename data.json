@@ -16469,6 +16469,33 @@
       "day": 20,
       "content": "OPAL ACE/三橋",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2000",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 9,
+      "content": "SUNRISE ACE/伊東",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2001",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 10,
+      "content": "SUNRISE ACE/伊東",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2002",
+      "year": 2026,
+      "month": 12,
+      "staff": "サイバーセキュリティー",
+      "day": 11,
+      "content": "SUNRISE ACE/伊東",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16491,7 +16518,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2000,
+  "next_id": 2003,
   "reminders": [
     {
       "id": "1",
