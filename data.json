@@ -16532,6 +16532,42 @@
       "day": 16,
       "content": "SS415　サイバー導入＋FT搭載（VDRのみ確認）",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2016",
+      "year": 2026,
+      "month": 11,
+      "staff": "常石標準搭載",
+      "day": 17,
+      "content": "SS415　サイバー導入＋FT搭載（VDRのみ確認）",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2017",
+      "year": 2026,
+      "month": 11,
+      "staff": "常石標準搭載",
+      "day": 18,
+      "content": "SS415　サイバー導入＋FT搭載（VDRのみ確認）",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2018",
+      "year": 2026,
+      "month": 11,
+      "staff": "常石標準搭載",
+      "day": 19,
+      "content": "SS415　サイバー導入＋FT搭載（VDRのみ確認）",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2019",
+      "year": 2026,
+      "month": 11,
+      "staff": "常石標準搭載",
+      "day": 20,
+      "content": "SS415　サイバー導入＋FT搭載（VDRのみ確認）",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16554,7 +16590,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2016,
+  "next_id": 2020,
   "reminders": [
     {
       "id": "1",
