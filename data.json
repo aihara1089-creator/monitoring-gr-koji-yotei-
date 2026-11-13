@@ -16514,6 +16514,15 @@
       "day": 29,
       "content": "年休取得推進日（事務所クローズ）",
       "color": "#fca5a5"
+    },
+    {
+      "id": "2014",
+      "year": 2027,
+      "month": 1,
+      "staff": "サイバーセキュリティー",
+      "day": 5,
+      "content": "年頭挨拶1000～",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16536,7 +16545,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2014,
+  "next_id": 2015,
   "reminders": [
     {
       "id": "1",
