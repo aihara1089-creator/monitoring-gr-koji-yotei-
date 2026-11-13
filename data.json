@@ -16577,6 +16577,24 @@
       "day": 9,
       "content": "S1639　試運転前に搭載",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2022",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 8,
+      "content": "S1639　試運転前に搭載　ノーマル船",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2023",
+      "year": 2026,
+      "month": 12,
+      "staff": "常石標準搭載",
+      "day": 9,
+      "content": "S1639　試運転前に搭載　ノーマル船",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16599,7 +16617,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2022,
+  "next_id": 2024,
   "reminders": [
     {
       "id": "1",
