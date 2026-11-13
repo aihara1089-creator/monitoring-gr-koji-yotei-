@@ -16496,6 +16496,15 @@
       "day": 20,
       "content": "CENTAURUS DREAM",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2012",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 16,
+      "content": "学会発表",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16518,7 +16527,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2012,
+  "next_id": 2013,
   "reminders": [
     {
       "id": "1",
