@@ -16577,6 +16577,15 @@
       "day": 1,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "2026",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 24,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16600,7 +16609,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2026,
+  "next_id": 2027,
   "reminders": [
     {
       "id": "1",
