@@ -16568,6 +16568,15 @@
       "day": 4,
       "content": "HO2576　ENERGY BLOOM",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "2032",
+      "year": 2026,
+      "month": 11,
+      "staff": "福島",
+      "day": 30,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -16591,7 +16600,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2032,
+  "next_id": 2033,
   "reminders": [
     {
       "id": "1",
