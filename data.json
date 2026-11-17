@@ -16568,6 +16568,33 @@
       "day": 4,
       "content": "HO2576　ENERGY BLOOM",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "2033",
+      "year": 2026,
+      "month": 12,
+      "staff": "福島",
+      "day": 1,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "2034",
+      "year": 2026,
+      "month": 12,
+      "staff": "福島",
+      "day": 2,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "2035",
+      "year": 2026,
+      "month": 12,
+      "staff": "福島",
+      "day": 3,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -16591,7 +16618,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2033,
+  "next_id": 2036,
   "reminders": [
     {
       "id": "1",
