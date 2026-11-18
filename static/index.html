@@ -761,6 +761,7 @@ let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1;
 let scheduleData = null;
 let editingId = null;
+let editingGroup = [];   // 編集中の予定が属する連続期間（日付昇順）。追加モードでは空
 let selectedColor = '#3b82f6';
 let searchQuery = '';
 let allMonths = [];
@@ -1957,7 +1958,14 @@ function toggleRangeMode() {
   document.getElementById('singleDateSection').style.display = useRange ? 'none' : 'flex';
   document.getElementById('rangeDateSection').style.display = useRange ? 'block' : 'none';
   document.getElementById('saveBtn').textContent = useRange ? '一括保存' : '保存';
-  if (useRange) {
+  if (useRange && editingId && editingGroup.length > 1) {
+    // 期間予定の編集中は、元の期間を開始日・終了日に復元する
+    const f = editingGroup[0], l = editingGroup[editingGroup.length - 1];
+    const fmt = e => `${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`;
+    document.getElementById('formDateStart').value = fmt(f);
+    document.getElementById('formDateEnd').value = fmt(l);
+    updateRangePreview();
+  } else if (useRange) {
     // 単日モードの値を開始日・終了日に引き継ぐ
     const y = document.getElementById('formYear').value;
     const m = String(document.getElementById('formMonth').value).padStart(2,'0');
@@ -1985,6 +1993,7 @@ function updateRangePreview() {
 // ===== モーダル =====
 function openAddModal(staffName, day) {
   editingId = null;
+  editingGroup = [];
   document.getElementById('modalTitle').textContent = '予定を追加';
   document.getElementById('deleteBtn').style.display = 'none';
   document.getElementById('remindBtn').style.display = 'none';
@@ -2018,29 +2027,91 @@ function openAddModal(staffName, day) {
   document.getElementById('formDateEnd').onchange = updateRangePreview;
 }
 
-function editEntry(event, id) {
+// ===== 編集対象が属する「連続期間」を取得 =====
+// 同一担当者・同一内容・同一色で日付が連続する予定を、月をまたいでも辿って集める
+const _schedMonthCache = {};
+async function _getMonthSchedules(year, month) {
+  if (scheduleData && scheduleData.year === year && scheduleData.month === month) {
+    return scheduleData.schedules;
+  }
+  const k = `${year}-${month}`;
+  if (!_schedMonthCache[k]) {
+    try {
+      const d = await API.getSchedule(year, month);
+      _schedMonthCache[k] = d.schedules || [];
+    } catch (e) {
+      _schedMonthCache[k] = [];
+    }
+  }
+  return _schedMonthCache[k];
+}
+
+async function findEditGroup(entry) {
+  const keyOf = e => (e.content || '') + '|' + (e.color || '#3b82f6');
+  const key = keyOf(entry);
+  const used = new Set([entry.id]);
+  const group = [entry];
+  for (const dir of [-1, 1]) {
+    const cur = new Date(entry.year, entry.month - 1, entry.day);
+    for (let i = 0; i < 400; i++) {
+      cur.setDate(cur.getDate() + dir);
+      const y = cur.getFullYear(), m = cur.getMonth() + 1, d = cur.getDate();
+      const list = await _getMonthSchedules(y, m);
+      const hit = list.find(e => !used.has(e.id) && e.staff === entry.staff &&
+                                 e.year === y && e.month === m && Number(e.day) === d &&
+                                 keyOf(e) === key);
+      if (!hit) break;
+      used.add(hit.id);
+      if (dir < 0) group.unshift(hit); else group.push(hit);
+    }
+  }
+  // 月キャッシュは毎回破棄（最新データで判定するため）
+  for (const k of Object.keys(_schedMonthCache)) delete _schedMonthCache[k];
+  return group;
+}
+
+async function editEntry(event, id) {
   event.stopPropagation();
   const entry = scheduleData.schedules.find(s => s.id === id);
   if (!entry) return;
 
+  // 連続期間（バー）全体を編集対象にする。これをしないと1日分だけ更新されて期間が分かれてしまう
+  let group = [entry];
+  try { group = await findEditGroup(entry); } catch (e) { group = [entry]; }
+
   editingId = id;
+  editingGroup = group;
+  const isSpan = group.length > 1;
   document.getElementById('modalTitle').textContent = '予定を編集';
   document.getElementById('deleteBtn').style.display = 'inline-flex';
   document.getElementById('remindBtn').style.display = 'inline-flex';
 
-  // 編集時も期間指定セクションを表示（チェックOFFでリセット）
   document.getElementById('rangeSection').style.display = 'block';
-  document.getElementById('useRange').checked = false;
-  document.getElementById('singleDateSection').style.display = 'flex';
-  document.getElementById('rangeDateSection').style.display = 'none';
-  document.getElementById('saveBtn').textContent = '保存';
-  document.getElementById('rangePreview').textContent = '';
-  // 編集時のチェックボックスラベルを変更
-  document.getElementById('useRangeLabel').textContent = '「〜から〜まで」に変更する';
-
   document.getElementById('formYear').value = entry.year;
   document.getElementById('formMonth').value = entry.month;
   document.getElementById('formDay').value = entry.day;
+
+  if (isSpan) {
+    // 期間予定は「〜から〜まで」モードで開く（期間全体を一括で更新）
+    const f = group[0], l = group[group.length - 1];
+    const fmt = e => `${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`;
+    document.getElementById('useRange').checked = true;
+    document.getElementById('singleDateSection').style.display = 'none';
+    document.getElementById('rangeDateSection').style.display = 'block';
+    document.getElementById('formDateStart').value = fmt(f);
+    document.getElementById('formDateEnd').value = fmt(l);
+    document.getElementById('saveBtn').textContent = '一括保存';
+    document.getElementById('useRangeLabel').textContent = '期間全体を編集する（OFFでこの日だけ編集）';
+    updateRangePreview();
+  } else {
+    document.getElementById('useRange').checked = false;
+    document.getElementById('singleDateSection').style.display = 'flex';
+    document.getElementById('rangeDateSection').style.display = 'none';
+    document.getElementById('saveBtn').textContent = '保存';
+    document.getElementById('rangePreview').textContent = '';
+    document.getElementById('useRangeLabel').textContent = '「〜から〜まで」に変更する';
+  }
+
   document.getElementById('formContent').value = entry.content;
   selectedColor = entry.color || '#3b82f6';
   updateColorPicker();
@@ -2108,17 +2179,47 @@ async function saveEntry() {
 
       btn.textContent = '処理中...';
 
+      // 直列で処理（並列だとサーバー側のGitHub pushが競合してデータが欠落するため）
       if (editingId) {
-        // 既存1件を削除してから期間分を追加
-        await API.deleteSchedule(editingId);
+        // 既存の期間（editingGroup）と新しい期間を突き合わせて差分だけ反映する。
+        // 既存レコードは可能な限り再利用（IDを維持→リマインド等も保持）し、
+        // 期間が分割されたり、重複レコードができたりしないようにする。
+        const dk = o => `${o.year}-${o.month}-${Number(o.day)}`;
+        const old = (editingGroup && editingGroup.length)
+          ? editingGroup
+          : [scheduleData.schedules.find(s => s.id === editingId)].filter(Boolean);
+        const newKeys = new Set(dates.map(dk));
+        const oldKeys = new Set(old.map(dk));
+        const sameDay = old.filter(e => newKeys.has(dk(e)));
+        const freeOld = old.filter(e => !newKeys.has(dk(e)));
+        const addDates = dates.filter(d => !oldKeys.has(dk(d)));
+
+        // 日付が変わらない分: 内容・色・担当者が違う場合だけ更新
+        for (const e of sameDay) {
+          if (e.staff !== staff || e.content !== content || (e.color || '#3b82f6') !== selectedColor) {
+            await API.updateSchedule(e.id, { staff, content, color: selectedColor });
+          }
+        }
+        // 日付が変わる分: 余った既存レコードを新しい日付へ移動（足りなければ新規作成）
+        for (const d of addDates) {
+          const e = freeOld.shift();
+          if (e) {
+            await API.updateSchedule(e.id, { staff, year: d.year, month: d.month, day: d.day, content, color: selectedColor });
+          } else {
+            await API.createSchedule({ staff, year: d.year, month: d.month, day: d.day, content, color: selectedColor });
+          }
+        }
+        // 期間が短くなった分は削除
+        for (const e of freeOld) {
+          await API.deleteSchedule(e.id);
+        }
+      } else {
+        for (const { year, month, day } of dates) {
+          await API.createSchedule({ staff, year, month, day, content, color: selectedColor });
+        }
       }
 
-      // 直列で追加（並列だとサーバー側のGitHub pushが競合してデータが欠落するため）
-      for (const { year, month, day } of dates) {
-        await API.createSchedule({ staff, year, month, day, content, color: selectedColor });
-      }
-
-      const label = editingId ? '期間に変更しました' : '追加しました';
+      const label = editingId ? '期間を更新しました' : '追加しました';
       showToast(`${label}（${dates.length}日分）`, 'success');
 
     } else {
