@@ -16579,12 +16579,12 @@
       "color": "#ef4444"
     },
     {
-      "id": "2050",
+      "id": "2051",
       "year": 2026,
       "month": 11,
       "staff": "井手",
-      "day": 25,
-      "content": "MIRAI 2",
+      "day": 24,
+      "content": "MIRAI 2 11/24～11/30の期間でFTS試験",
       "color": "#3b82f6"
     },
     {
@@ -16604,42 +16604,6 @@
       "day": 27,
       "content": "MIRAI 2",
       "color": "#3b82f6"
-    },
-    {
-      "id": "2055",
-      "year": 2026,
-      "month": 11,
-      "staff": "井手",
-      "day": 24,
-      "content": "MIRAI 2 11/24～11/30の期間でFTS試験",
-      "color": "#8b5cf6"
-    },
-    {
-      "id": "2056",
-      "year": 2026,
-      "month": 11,
-      "staff": "井手",
-      "day": 25,
-      "content": "MIRAI 2 11/24～11/30の期間でFTS試験",
-      "color": "#8b5cf6"
-    },
-    {
-      "id": "2057",
-      "year": 2026,
-      "month": 11,
-      "staff": "井手",
-      "day": 26,
-      "content": "MIRAI 2 11/24～11/30の期間でFTS試験",
-      "color": "#8b5cf6"
-    },
-    {
-      "id": "2058",
-      "year": 2026,
-      "month": 11,
-      "staff": "井手",
-      "day": 27,
-      "content": "MIRAI 2 11/24～11/30の期間でFTS試験",
-      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -16663,7 +16627,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2059,
+  "next_id": 2055,
   "reminders": [
     {
       "id": "1",
