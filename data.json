@@ -16649,6 +16649,24 @@
       "day": 26,
       "content": "OEXPO　パシフィコ横浜",
       "color": "#10b981"
+    },
+    {
+      "id": "2076",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 25,
+      "content": "OEXPO　横浜",
+      "color": "#10b981"
+    },
+    {
+      "id": "2077",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 26,
+      "content": "OEXPO　横浜",
+      "color": "#10b981"
     }
   ],
   "staff": [
@@ -16672,7 +16690,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2076,
+  "next_id": 2078,
   "reminders": [
     {
       "id": "1",
