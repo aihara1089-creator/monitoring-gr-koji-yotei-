@@ -981,17 +981,22 @@ async def import_vessels(request: Request, file: UploadFile = File(...)):
 # -------------------------------------------------------
 app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
+# index.html / 静的ファイルは常に再検証させる（no-cache）。
+# 付けないとブラウザがヒューリスティックキャッシュで古い index.html を使い続け、
+# デプロイ後も修正前のJSが動いてしまう。
+_NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
 @app.get("/")
 def index():
-    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"), headers=_NO_CACHE)
 
 @app.get("/{path:path}")
 def catch_all(path: str):
     static_dir = os.path.join(os.path.dirname(__file__), "static")
     file_path = os.path.join(static_dir, path)
     if os.path.exists(file_path) and os.path.isfile(file_path):
-        return FileResponse(file_path)
-    return FileResponse(os.path.join(static_dir, "index.html"))
+        return FileResponse(file_path, headers=_NO_CACHE)
+    return FileResponse(os.path.join(static_dir, "index.html"), headers=_NO_CACHE)
 
 if __name__ == "__main__":
     import uvicorn
