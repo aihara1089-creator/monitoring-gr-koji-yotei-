@@ -16613,6 +16613,15 @@
       "day": 27,
       "content": "MIRAI 2　11/24～11/30の期間でFTS試験",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "2063",
+      "year": 2027,
+      "month": 1,
+      "staff": "MSR森",
+      "day": 12,
+      "content": "JMU 津 5313",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16636,7 +16645,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2063,
+  "next_id": 2064,
   "reminders": [
     {
       "id": "1",
