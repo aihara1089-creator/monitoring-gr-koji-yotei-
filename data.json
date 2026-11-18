@@ -16640,6 +16640,15 @@
       "day": 27,
       "content": "大島S11188\n2月竣工？",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2070",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 25,
+      "content": "OEXPO",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16663,7 +16672,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2070,
+  "next_id": 2071,
   "reminders": [
     {
       "id": "1",
