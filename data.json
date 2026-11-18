@@ -16649,6 +16649,15 @@
       "day": 25,
       "content": "OEXPO",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2071",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 26,
+      "content": "OEXPO",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16672,7 +16681,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2071,
+  "next_id": 2072,
   "reminders": [
     {
       "id": "1",
