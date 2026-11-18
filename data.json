@@ -16654,19 +16654,10 @@
       "id": "2081",
       "year": 2026,
       "month": 12,
-      "staff": "井手",
-      "day": 3,
-      "content": "在宅（岡山）",
-      "color": "#fdba74"
-    },
-    {
-      "id": "2082",
-      "year": 2026,
-      "month": 12,
-      "staff": "井手",
-      "day": 4,
-      "content": "在宅（岡山）",
-      "color": "#fdba74"
+      "staff": "野村",
+      "day": 2,
+      "content": "研究開発報告会",
+      "color": "#bfdbfe"
     }
   ],
   "staff": [
@@ -16690,7 +16681,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2083,
+  "next_id": 2082,
   "reminders": [
     {
       "id": "1",
