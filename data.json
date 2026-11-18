@@ -16586,6 +16586,15 @@
       "day": 24,
       "content": "MIRAI 2",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2050",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 25,
+      "content": "MIRAI 2",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16609,7 +16618,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2050,
+  "next_id": 2051,
   "reminders": [
     {
       "id": "1",
