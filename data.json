@@ -16604,6 +16604,42 @@
       "day": 27,
       "content": "MIRAI 2 11/24～11/30の期間でFTS試験",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "2059",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 24,
+      "content": "MIRAI 2　11/24～11/30の期間でFTS試験",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "2060",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 25,
+      "content": "MIRAI 2　11/24～11/30の期間でFTS試験",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "2061",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 26,
+      "content": "MIRAI 2　11/24～11/30の期間でFTS試験",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "2062",
+      "year": 2026,
+      "month": 11,
+      "staff": "井手",
+      "day": 27,
+      "content": "MIRAI 2　11/24～11/30の期間でFTS試験",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -16627,7 +16663,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2059,
+  "next_id": 2063,
   "reminders": [
     {
       "id": "1",
