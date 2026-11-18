@@ -16642,29 +16642,11 @@
       "color": "#3b82f6"
     },
     {
-      "id": "2071",
-      "year": 2026,
-      "month": 11,
-      "staff": "相原",
-      "day": 26,
-      "content": "OEXPO",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "2072",
+      "id": "2070",
       "year": 2026,
       "month": 11,
       "staff": "相原",
       "day": 25,
-      "content": "OEXPO　横浜",
-      "color": "#10b981"
-    },
-    {
-      "id": "2073",
-      "year": 2026,
-      "month": 11,
-      "staff": "相原",
-      "day": 26,
       "content": "OEXPO　横浜",
       "color": "#10b981"
     }
@@ -16690,7 +16672,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2074,
+  "next_id": 2072,
   "reminders": [
     {
       "id": "1",
