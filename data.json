@@ -16568,6 +16568,33 @@
       "day": 3,
       "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル 12/11竣工　ローターセイル竣工後",
       "color": "#ef4444"
+    },
+    {
+      "id": "2046",
+      "year": 2026,
+      "month": 12,
+      "staff": "TOWATECHNO",
+      "day": 1,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル 12/11竣工　ローターセイル竣工後",
+      "color": "#ef4444"
+    },
+    {
+      "id": "2047",
+      "year": 2026,
+      "month": 12,
+      "staff": "TOWATECHNO",
+      "day": 2,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル 12/11竣工　ローターセイル竣工後",
+      "color": "#ef4444"
+    },
+    {
+      "id": "2048",
+      "year": 2026,
+      "month": 12,
+      "staff": "TOWATECHNO",
+      "day": 3,
+      "content": "大島11162/MOLDB\n11/2 VSATコミッショニング、その後、サイバー導入（MOLTT）、ローターセイル 12/11竣工　ローターセイル竣工後",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -16591,7 +16618,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2046,
+  "next_id": 2049,
   "reminders": [
     {
       "id": "1",
