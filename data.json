@@ -16640,6 +16640,24 @@
       "day": 25,
       "content": "大島S11188",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2066",
+      "year": 2027,
+      "month": 1,
+      "staff": "MSR森",
+      "day": 26,
+      "content": "大島S11188",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2067",
+      "year": 2027,
+      "month": 1,
+      "staff": "MSR森",
+      "day": 27,
+      "content": "大島S11188",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16663,7 +16681,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2066,
+  "next_id": 2068,
   "reminders": [
     {
       "id": "1",
