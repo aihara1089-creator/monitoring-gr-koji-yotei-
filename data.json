@@ -16649,6 +16649,24 @@
       "day": 27,
       "content": "大島S11188\n2月竣工？",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2068",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 25,
+      "content": "OXEXPO　横浜",
+      "color": "#10b981"
+    },
+    {
+      "id": "2069",
+      "year": 2026,
+      "month": 11,
+      "staff": "相原",
+      "day": 26,
+      "content": "OXEXPO　横浜",
+      "color": "#10b981"
     }
   ],
   "staff": [
@@ -16672,7 +16690,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2068,
+  "next_id": 2070,
   "reminders": [
     {
       "id": "1",
