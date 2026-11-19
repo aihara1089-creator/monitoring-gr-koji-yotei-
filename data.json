@@ -16667,6 +16667,15 @@
       "day": 2,
       "content": "研究開発報告会",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "2083",
+      "year": 2026,
+      "month": 11,
+      "staff": "定免",
+      "day": 19,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16690,7 +16699,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2083,
+  "next_id": 2084,
   "reminders": [
     {
       "id": "1",
