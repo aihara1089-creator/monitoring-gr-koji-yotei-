@@ -16739,6 +16739,15 @@
       "day": 27,
       "content": "KHI 坂出 1771",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2091",
+      "year": 2027,
+      "month": 2,
+      "staff": "技術部：山田",
+      "day": 16,
+      "content": "JMU 津 5313\n大洋電機　ソフト完成　1月中旬　技師派遣1月下旬\nVSAT開通時期確認\n海上公試2027/1月末\n2027/2/20竣工",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16762,7 +16771,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2091,
+  "next_id": 2092,
   "reminders": [
     {
       "id": "1",
