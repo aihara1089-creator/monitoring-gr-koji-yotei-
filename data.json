@@ -16721,6 +16721,24 @@
       "day": 25,
       "content": "KHI1771",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2089",
+      "year": 2027,
+      "month": 1,
+      "staff": "MSR森",
+      "day": 26,
+      "content": "KHI1771",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2090",
+      "year": 2027,
+      "month": 1,
+      "staff": "MSR森",
+      "day": 27,
+      "content": "KHI1771",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16744,7 +16762,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2089,
+  "next_id": 2091,
   "reminders": [
     {
       "id": "1",
