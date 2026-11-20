@@ -16694,6 +16694,15 @@
       "day": 15,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "2086",
+      "year": 2027,
+      "month": 1,
+      "staff": "松永",
+      "day": 18,
+      "content": "午前休？",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16717,7 +16726,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2086,
+  "next_id": 2087,
   "reminders": [
     {
       "id": "1",
