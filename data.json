@@ -16712,6 +16712,15 @@
       "day": 22,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "2088",
+      "year": 2027,
+      "month": 1,
+      "staff": "MSR森",
+      "day": 25,
+      "content": "KHI1771",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16735,7 +16744,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2088,
+  "next_id": 2089,
   "reminders": [
     {
       "id": "1",
