@@ -16866,7 +16866,14 @@
       "remind_days_before": 3,
       "note": "",
       "created_at": "2026-11-24T08:24:27.800499"
+    },
+    {
+      "id": "4",
+      "schedule_id": "1913",
+      "remind_days_before": 1,
+      "note": "軸馬力他確認する",
+      "created_at": "2026-11-24T11:17:50.813721"
     }
   ],
-  "reminder_next_id": 4
+  "reminder_next_id": 5
 }
