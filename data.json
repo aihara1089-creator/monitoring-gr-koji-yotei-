@@ -16766,6 +16766,15 @@
       "day": 23,
       "content": "SC470 竣工",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2094",
+      "year": 2027,
+      "month": 9,
+      "staff": "サイバーセキュリティー",
+      "day": 29,
+      "content": "SC471竣工",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16789,7 +16798,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2094,
+  "next_id": 2095,
   "reminders": [
     {
       "id": "1",
