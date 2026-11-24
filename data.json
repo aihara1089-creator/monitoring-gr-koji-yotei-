@@ -16820,6 +16820,15 @@
       "day": 18,
       "content": "12:00～不在（※ウエルストーン出社のため）",
       "color": "#ef4444"
+    },
+    {
+      "id": "2101",
+      "year": 2027,
+      "month": 2,
+      "staff": "井手",
+      "day": 2,
+      "content": "GRAND SAKURA\nMguard故障後の作動確認",
+      "color": "#bfdbfe"
     }
   ],
   "staff": [
@@ -16844,7 +16853,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2101,
+  "next_id": 2102,
   "reminders": [
     {
       "id": "1",
