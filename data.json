@@ -16757,6 +16757,15 @@
       "day": 17,
       "content": "JMU 津 5313\n大洋電機　ソフト完成　1月中旬　技師派遣1月下旬\nVSAT開通時期確認\n海上公試2027/1月末\n2027/2/20竣工",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2093",
+      "year": 2027,
+      "month": 4,
+      "staff": "常石標準搭載",
+      "day": 23,
+      "content": "SC470 竣工",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16780,7 +16789,7 @@
     "TOWATECHNO",
     "TSSD"
   ],
-  "next_id": 2093,
+  "next_id": 2094,
   "reminders": [
     {
       "id": "1",
