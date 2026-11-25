@@ -16865,6 +16865,15 @@
       "day": 1,
       "content": "HO2378",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2106",
+      "year": 2027,
+      "month": 8,
+      "staff": "TSSD",
+      "day": 9,
+      "content": "HO2379",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16889,7 +16898,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2106,
+  "next_id": 2107,
   "reminders": [
     {
       "id": "1",
