@@ -16928,6 +16928,15 @@
       "day": 3,
       "content": "旭タンカー　研究開発打ち合わせ\n14:00-15:00",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "2114",
+      "year": 2026,
+      "month": 11,
+      "staff": "石井",
+      "day": 27,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16952,7 +16961,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2114,
+  "next_id": 2115,
   "reminders": [
     {
       "id": "1",
