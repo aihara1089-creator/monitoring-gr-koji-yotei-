@@ -16919,6 +16919,15 @@
       "day": 3,
       "content": "在宅（岡山）",
       "color": "#fdba74"
+    },
+    {
+      "id": "2112",
+      "year": 2026,
+      "month": 12,
+      "staff": "井手",
+      "day": 4,
+      "content": "在宅（岡山）",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16943,7 +16952,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2112,
+  "next_id": 2113,
   "reminders": [
     {
       "id": "1",
