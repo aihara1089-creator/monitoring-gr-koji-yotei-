@@ -16901,6 +16901,15 @@
       "day": 12,
       "content": "HO2379",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2110",
+      "year": 2026,
+      "month": 12,
+      "staff": "備考",
+      "day": 3,
+      "content": "ヤンマー打ち合わせ（台場）",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -16925,7 +16934,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2110,
+  "next_id": 2111,
   "reminders": [
     {
       "id": "1",
