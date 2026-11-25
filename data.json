@@ -16937,6 +16937,15 @@
       "day": 27,
       "content": "在宅",
       "color": "#fdba74"
+    },
+    {
+      "id": "2115",
+      "year": 2026,
+      "month": 12,
+      "staff": "石井",
+      "day": 2,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -16961,7 +16970,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2115,
+  "next_id": 2116,
   "reminders": [
     {
       "id": "1",
