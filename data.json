@@ -16946,6 +16946,15 @@
       "day": 2,
       "content": "年休",
       "color": "#fca5a5"
+    },
+    {
+      "id": "2116",
+      "year": 2026,
+      "month": 12,
+      "staff": "石井",
+      "day": 15,
+      "content": "年休",
+      "color": "#fca5a5"
     }
   ],
   "staff": [
@@ -16970,7 +16979,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2116,
+  "next_id": 2117,
   "reminders": [
     {
       "id": "1",
