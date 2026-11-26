@@ -17027,6 +17027,15 @@
       "day": 14,
       "content": "seawise SLA打ち合わせ（常石、sw、常ソル）\n11:00～",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "2125",
+      "year": 2026,
+      "month": 12,
+      "staff": "櫻田",
+      "day": 14,
+      "content": "seawise SLA打ち合わせ（常石、sw、常ソル）\n11:00～",
+      "color": "#bfdbfe"
     }
   ],
   "staff": [
@@ -17051,7 +17060,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2125,
+  "next_id": 2126,
   "reminders": [
     {
       "id": "1",
