@@ -17000,6 +17000,15 @@
       "day": 8,
       "content": "午前在宅、午後休",
       "color": "#fdba74"
+    },
+    {
+      "id": "2122",
+      "year": 2026,
+      "month": 12,
+      "staff": "水梨",
+      "day": 14,
+      "content": "休み",
+      "color": "#ef4444"
     }
   ],
   "staff": [
@@ -17024,7 +17033,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2122,
+  "next_id": 2123,
   "reminders": [
     {
       "id": "1",
