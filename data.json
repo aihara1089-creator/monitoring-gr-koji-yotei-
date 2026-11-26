@@ -16973,6 +16973,15 @@
       "day": 14,
       "content": "午後私用のため中抜け",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2119",
+      "year": 2026,
+      "month": 11,
+      "staff": "定免",
+      "day": 24,
+      "content": "在宅",
+      "color": "#fdba74"
     }
   ],
   "staff": [
@@ -16997,7 +17006,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2119,
+  "next_id": 2120,
   "reminders": [
     {
       "id": "1",
