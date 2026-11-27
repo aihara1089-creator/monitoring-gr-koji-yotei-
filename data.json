@@ -17054,6 +17054,15 @@
       "day": 3,
       "content": "JUNO HORIZON 停電対策\n戸畑　ETB 11/30　ETD12/4",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "2128",
+      "year": 2026,
+      "month": 11,
+      "staff": "村上",
+      "day": 30,
+      "content": "みらい２",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -17078,7 +17087,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2128,
+  "next_id": 2129,
   "reminders": [
     {
       "id": "1",
