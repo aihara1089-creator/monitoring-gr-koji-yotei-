@@ -17107,7 +17107,14 @@
       "remind_days_before": 1,
       "note": "軸馬力他確認する",
       "created_at": "2026-11-24T11:17:50.813721"
+    },
+    {
+      "id": "5",
+      "schedule_id": "1913",
+      "remind_days_before": 1,
+      "note": "",
+      "created_at": "2026-11-27T01:07:55.901871"
     }
   ],
-  "reminder_next_id": 5
+  "reminder_next_id": 6
 }
