@@ -17036,6 +17036,15 @@
       "day": 14,
       "content": "seawise SLA打ち合わせ（常石、sw、常ソル）\n11:00～",
       "color": "#bfdbfe"
+    },
+    {
+      "id": "2126",
+      "year": 2026,
+      "month": 12,
+      "staff": "村上",
+      "day": 2,
+      "content": "JUNO HORIZON 停電対策\n戸畑　ETB 11/30　ETD12/4",
+      "color": "#8b5cf6"
     }
   ],
   "staff": [
@@ -17060,7 +17069,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2126,
+  "next_id": 2127,
   "reminders": [
     {
       "id": "1",
