@@ -17063,6 +17063,15 @@
       "day": 15,
       "content": "MOL対面",
       "color": "#3b82f6"
+    },
+    {
+      "id": "2130",
+      "year": 2026,
+      "month": 12,
+      "staff": "野村",
+      "day": 9,
+      "content": "東北電技SOL　打ち合わせ",
+      "color": "#bfdbfe"
     }
   ],
   "staff": [
@@ -17087,7 +17096,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2130,
+  "next_id": 2131,
   "reminders": [
     {
       "id": "1",
