@@ -17054,6 +17054,15 @@
       "day": 30,
       "content": "みらい２",
       "color": "#8b5cf6"
+    },
+    {
+      "id": "2129",
+      "year": 2026,
+      "month": 12,
+      "staff": "相原",
+      "day": 15,
+      "content": "MOL対面",
+      "color": "#3b82f6"
     }
   ],
   "staff": [
@@ -17078,7 +17087,7 @@
     "TSSD",
     "備考"
   ],
-  "next_id": 2129,
+  "next_id": 2130,
   "reminders": [
     {
       "id": "1",
